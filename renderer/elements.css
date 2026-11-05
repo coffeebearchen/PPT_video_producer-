@@ -1,0 +1,32 @@
+.page { position: relative; }
+.el-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  color: var(--element-ink, var(--ink));
+  overflow: hidden;
+}
+.el-item {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.el-item svg { width: 100%; height: 100%; display: block; stroke-width: 3; }
+.slot-right-top { right: 74px; top: 180px; }
+.slot-left-top { left: 74px; top: 190px; }
+.slot-left-bottom { left: 74px; bottom: 170px; }
+.slot-right-bottom { right: 74px; bottom: 170px; }
+.slot-center-back { left: 50%; top: 42%; transform: translateX(-50%); }
+.slot-right-middle { right: 54px; top: 46%; }
+.slot-left-middle { left: 54px; top: 46%; }
+.slot-bottom-center { left: 50%; bottom: 130px; transform: translateX(-50%); }
+.slot-top-center { left: 50%; top: 120px; transform: translateX(-50%); }
+body.theme-archive { --element-ink: #101112; }
+body.theme-terminal { --element-ink: #D9FF57; }
+body.theme-editorial { --element-ink: #F6F1E7; }
+body.theme-blueprint { --element-ink: #0B1B33; }
+body.theme-noir { --element-ink: #FFD23F; }
+body.theme-earth { --element-ink: #C9D46B; }

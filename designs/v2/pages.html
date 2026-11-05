@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin:0; background:#0b0d0f; font-family:"Microsoft YaHei","Noto Sans SC",sans-serif; }
+  .slide { position:relative; width:1080px; height:1920px; overflow:hidden; color:#f3eee3; }
+  .paper { background:#F3EDE1; color:#181818; }
+  .dark { background:#0b0d0f; }
+  .green { background:#0e2119; }
+  .safe { position:absolute; left:108px; right:108px; top:192px; bottom:192px; display:flex; flex-direction:column; text-align:center; }
+  .brand { position:absolute; left:108px; top:90px; font-size:24px; letter-spacing:.18em; color:#8d8a82; display:flex; gap:16px; align-items:center; }
+  .brand i { width:6px; height:50px; background:#C73520; display:block; }
+  .paper .brand { color:#7D776B; }
+  .meta { display:none; }
+  .cover-lead { margin-top:150px; font-size:58px; line-height:1.3; font-weight:700; text-align:center; }
+  .cover-gap { height:110px; }
+  .cover-punch { font-family:"Noto Serif SC","Songti SC",serif; font-size:104px; line-height:1.12; font-weight:900; text-align:center; }
+  .brush { display:inline-block; padding:0 .08em; background:#d8ff3e; color:#101112; }
+  .kicker { font-size:30px; color:#B8B3A7; text-align:center; margin-bottom:70px; }
+  .paper .kicker { color:#6E685E; }
+  .title { font-family:"Noto Serif SC","Songti SC",serif; font-size:78px; line-height:1.18; font-weight:900; text-align:center; }
+  .ctx-rows { flex:1; display:flex; flex-direction:column; justify-content:center; gap:56px; }
+  .ctx-row { padding-top:24px; border-top:1px solid rgba(20,20,20,.16); }
+  .ctx-label { font-size:28px; color:#C73520; font-weight:900; letter-spacing:.1em; }
+  .ctx-value { margin-top:8px; font-size:42px; line-height:1.45; font-weight:800; }
+  .bottom-note { padding-top:20px; border-top:1px solid rgba(242,235,221,.16); font-size:30px; line-height:1.5; color:#BDB8AC; }
+  .paper .bottom-note { border-top-color:rgba(20,20,20,.16); color:#6E685E; }
+  .compare { flex:1; display:flex; flex-direction:column; justify-content:center; gap:110px; }
+  .cmp-row { position:relative; text-align:center; }
+  .setup { font-size:38px; color:#B8B3A7; }
+  .turn { font-family:"Noto Serif SC","Songti SC",serif; font-size:94px; line-height:1.16; font-weight:900; margin:6px 0; }
+  .turn.hl { display:inline-block; padding:0 .08em; background:#d8ff3e; color:#101112; }
+  .sub { font-size:28px; color:#9A958A; }
+  .mark { position:absolute; right:12%; top:8px; font-size:150px; line-height:1; font-weight:900; }
+  .mark.bad { color:#E5482C; }
+  .mark.good { color:#d8ff3e; }
+  .conclusion { text-align:center; padding-top:24px; border-top:1px solid rgba(242,235,221,.16); font-size:52px; line-height:1.3; font-weight:850; }
+  .conclusion b { color:#d8ff3e; }
+  .points { flex:1; display:flex; flex-direction:column; justify-content:center; gap:34px; max-width:840px; margin:0 auto; }
+  .point { font-size:36px; line-height:1.5; font-weight:750; }
+  .point.hl { align-self:center; padding:0 .08em; background:#d8ff3e; color:#101112; }
+  .quote-line1 { margin-top:230px; font-family:"Noto Serif SC","Songti SC",serif; font-size:72px; line-height:1.2; text-align:center; }
+  .quote-line2 { margin-top:14px; font-family:"Noto Serif SC","Songti SC",serif; font-size:88px; line-height:1.2; font-weight:900; text-align:center; }
+  .quote-note { margin-top:70px; font-size:30px; line-height:1.6; text-align:center; color:#BDB8AC; }
+  .ask { position:absolute; right:108px; bottom:200px; font-size:24px; color:#BDB8AC; }
+  .foot { position:absolute; left:108px; right:108px; bottom:130px; border-top:1px solid rgba(242,235,221,.16); padding-top:20px; display:flex; justify-content:space-between; font-size:24px; color:#8d8a82; }
+  .paper .foot { border-top-color:rgba(20,20,20,.16); color:#7D776B; }
+</style>
+</head>
+<body>
+
+<!-- 1 COVER -->
+<section class="slide paper">
+  <div class="brand"><i></i> FIXED ADDRESS</div>
+  <div class="safe">
+    <div class="cover-lead">很多人把 RAG 当知识库用</div>
+    <div class="cover-gap"></div>
+    <div class="cover-punch"><span class="brush">方向一开始就错</span></div>
+  </div>
+</section>
+
+<!-- 2 CONTEXT -->
+<section class="slide paper">
+  <div class="brand"><i></i> FIXED ADDRESS</div>
+  <div class="safe">
+    <div class="title">RAG 不是知识库</div>
+    <div class="ctx-rows">
+      <div class="ctx-row"><div class="ctx-label">场景</div><div class="ctx-value">短视频博主在镜头前讲 RAG 误区</div></div>
+      <div class="ctx-row"><div class="ctx-label">角色</div><div class="ctx-value">A 是检索增强生成，B 是静态知识库</div></div>
+      <div class="ctx-row"><div class="ctx-label">限制</div><div class="ctx-value">别把向量库直接当成答案来源</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 COMPARE -->
+<section class="slide dark">
+  <div class="brand"><i></i> FIXED ADDRESS</div>
+  <div class="safe">
+    <div class="kicker">知识库 vs. RAG</div>
+    <div class="compare">
+      <div class="cmp-row">
+        <div class="mark bad">×</div>
+        <div class="setup">静态存储</div>
+        <div class="turn">答案固定</div>
+        <div class="sub">更新慢</div>
+      </div>
+      <div class="cmp-row">
+        <div class="mark good">✓</div>
+        <div class="setup">动态检索</div>
+        <div class="turn hl">实时生成</div>
+        <div class="sub">跟资料走</div>
+      </div>
+    </div>
+    <div class="conclusion">不是替代，是 <b>协作</b></div>
+  </div>
+</section>
+
+<!-- 4 EVIDENCE -->
+<section class="slide green">
+  <div class="brand"><i></i> FIXED ADDRESS</div>
+  <div class="safe">
+    <div class="title">看一个卡壳现场</div>
+    <div class="points">
+      <div class="point">用户让 Agent 发一封邮件</div>
+      <div class="point hl">没有权限、没有回执、失败了不重试</div>
+      <div class="point">就不叫 Agent</div>
+    </div>
+    <div class="bottom-note">能处理失败，才叫执行。</div>
+  </div>
+</section>
+
+<!-- 5 QUOTE / END -->
+<section class="slide dark">
+  <div class="brand"><i></i> FIXED ADDRESS</div>
+  <div class="safe">
+    <div class="quote-line1">RAG 不是知识库</div>
+    <div class="quote-line2">检索和生成，分开看</div>
+    <div class="quote-note">先把流程看清楚，再谈工具。</div>
+  </div>
+  <div class="ask">有问题，评论区问</div>
+  <div class="foot"><span>固定地址</span><span>FIXED ADDRESS · CONTENT STUDIO</span></div>
+</section>
+
+</body>
+</html>
+

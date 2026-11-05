@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>模板库 UI 原型</title>
+<style>
+  @font-face { font-family:'NotoSC'; src:url('./assets/NotoSansSC-VF.ttf') format('truetype'); font-weight:100 900; font-display:block; }
+  @font-face { font-family:'NotoSerifSC'; src:url('./assets/NotoSerifSC-VF.ttf') format('truetype'); font-weight:200 900; font-display:block; }
+  :root{--paper:#F6F1E7;--paper2:#EFE7D8;--ink:#101112;--muted:#7E776B;--line:rgba(16,17,18,.16);--lime:#D9FF57;--red:#E5482C;--orange:#FF6A3D}
+  *{margin:0;padding:0;box-sizing:border-box}html,body{width:1600px;height:1100px;overflow:hidden;background:var(--paper)}
+  body{font-family:'NotoSC','Microsoft YaHei',sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+  .shell{display:grid;grid-template-columns:230px 1fr;height:1100px}
+  .side{background:#101112;color:#F6F1E7;padding:28px 20px;display:flex;flex-direction:column}
+  .brand{display:flex;gap:10px;align-items:center;margin-bottom:40px}.mark{width:42px;height:42px;border-radius:9px;background:var(--lime);color:var(--ink);display:grid;place-items:center;font-weight:900}
+  .brand strong{display:block;font-size:16px}.brand small{display:block;margin-top:3px;font-size:8px;letter-spacing:.22em;color:#8E8B82}
+  .label{font-size:9px;letter-spacing:.2em;color:#6F6A61;margin:16px 10px 8px}.nav a{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:8px;color:#B9B3A8;font-size:12px;text-decoration:none;margin-bottom:2px}
+  .nav a.on{background:var(--lime);color:var(--ink);font-weight:800}.nav i{width:14px;height:14px;border:1.5px solid currentColor;border-radius:4px;opacity:.8}.foot{margin-top:auto;font-size:9px;color:#6F6A61;line-height:1.7;padding:0 10px}
+  .main{padding:34px 48px 28px;overflow:hidden}.eyebrow{font-size:10px;letter-spacing:.2em;font-weight:800;color:#847C6D}
+  h1{font-family:'NotoSerifSC',serif;font-size:42px;line-height:1.1;margin:10px 0 9px}h1 em{font-style:normal;color:var(--red)}.sub{font-size:12px;line-height:1.65;color:#6F685C;max-width:820px}
+  .row{display:flex;justify-content:space-between;align-items:flex-start;gap:20px}.btn{display:inline-flex;align-items:center;justify-content:center;height:36px;padding:0 15px;border:1px solid var(--ink);border-radius:7px;background:transparent;color:var(--ink);font:inherit;font-size:11px;font-weight:750;cursor:pointer}.btn.primary{background:var(--ink);color:var(--lime)}.btn.lime{background:var(--lime);color:var(--ink)}.btn.sm{height:28px;padding:0 9px;font-size:9px}
+  .tag{display:inline-flex;align-items:center;height:21px;padding:0 7px;border:1px solid var(--line);border-radius:5px;font-size:9px;color:#6F685C;background:rgba(255,255,255,.35);white-space:nowrap}.tag.dark{background:var(--ink);color:var(--lime);border-color:var(--ink)}.tag.red{color:var(--red);border-color:rgba(229,72,44,.35)}
+  .screen{display:none}.screen.on{display:block}
+  .stepbar{display:flex;gap:6px;align-items:center;margin:18px 0 16px}.stepbar b{width:20px;height:20px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center;font-size:9px;color:var(--muted)}.stepbar .on{background:var(--lime);border-color:var(--ink);color:var(--ink)}.stepbar span{font-size:9px;color:var(--muted);margin-right:12px}.stepbar .on+span{color:var(--ink);font-weight:700}
+  .layout{display:grid;grid-template-columns:1fr 330px;gap:18px;align-items:start}
+  .card{border:1px solid var(--line);background:rgba(255,255,255,.36);border-radius:9px;padding:14px 16px}.card h2{font-family:'NotoSerifSC',serif;font-size:22px;line-height:1.2}.card .sub2{font-size:9px;color:var(--muted);margin-top:4px;line-height:1.5}
+  .selected{border:1px solid var(--ink);background:var(--lime);border-radius:9px;padding:14px}.selected h3{font-family:'NotoSerifSC',serif;font-size:20px;margin:6px 0}.selected .mapping{display:flex;flex-direction:column;gap:5px;margin-top:8px}.selected .mapping div{display:grid;grid-template-columns:1fr 15px 1fr;gap:4px;font-size:9.5px;border-top:1px dashed rgba(16,17,18,.2);padding-top:5px}.selected .mapping i{font-style:normal;text-align:center;color:var(--red)}.selected .boundary{font-size:9px;line-height:1.5;margin-top:8px;color:#4D4A3F}
+  .section-title{display:flex;align-items:center;justify-content:space-between;margin:18px 0 9px}.section-title strong{font-size:12px;letter-spacing:.03em}.section-title span{font-size:9px;color:var(--muted)}
+  .pagechoice{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.pagechoice div{border:1px solid var(--line);border-radius:6px;padding:9px 8px;background:rgba(255,255,255,.3)}.pagechoice div.on{border-color:var(--ink);background:var(--lime)}.pagechoice b{display:block;font-size:11px}.pagechoice small{display:block;font-size:8px;color:var(--muted);margin-top:3px;line-height:1.35}
+  .themes{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.theme{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff;cursor:pointer}.theme.on{outline:2px solid var(--ink);outline-offset:1px}.thumb{height:128px;padding:14px;position:relative;overflow:hidden}.thumb .mini-kicker{font-size:7px;letter-spacing:.16em;font-weight:800}.thumb .mini-title{font-family:'NotoSerifSC',serif;font-size:23px;line-height:1.02;margin-top:20px;font-weight:900;letter-spacing:-.04em}.thumb .mini-line{width:54px;height:3px;margin-top:10px}.thumb .mini-bottom{position:absolute;left:14px;right:14px;bottom:10px;display:flex;justify-content:space-between;font-size:6px;letter-spacing:.12em;font-weight:700;opacity:.55}
+  .th-archive{background:#F2EBDD;color:#101112}.th-archive .mini-line{background:var(--red)}.th-terminal{background:#101112;color:var(--lime)}.th-terminal .mini-line{background:var(--lime)}.th-editorial{background:var(--red);color:#F2EBDD}.th-editorial .mini-line{background:var(--lime)}
+  .theme .body{padding:9px 10px 10px}.theme strong{display:block;font-size:11px}.theme small{display:block;margin-top:3px;font-size:8.5px;color:var(--muted)}
+  .right .card{margin-bottom:12px}.right .mini-map div{display:grid;grid-template-columns:1fr 12px 1fr;gap:3px;font-size:9px;padding:5px 0;border-top:1px dashed var(--line)}.right .mini-map i{font-style:normal;color:var(--orange);text-align:center}.right .sig{margin-top:9px;padding:8px 9px;background:var(--lime);border:1px solid var(--ink);border-radius:5px;font-size:9.5px;line-height:1.45;font-weight:700}
+  .footeraction{display:flex;align-items:center;gap:10px;margin-top:16px;padding-top:13px;border-top:1px solid var(--line)}.footeraction span{font-size:9px;color:var(--muted)}
+  /* library screen */
+  .libhead{display:flex;justify-content:space-between;align-items:flex-start}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:18px 0}.stats div{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:rgba(255,255,255,.3)}.stats b{display:block;font-family:'NotoSerifSC',serif;font-size:24px}.stats span{display:block;margin-top:3px;font-size:8.5px;color:var(--muted)}
+  .family{border-top:1px solid var(--line);padding:14px 0}.family-head{display:flex;justify-content:space-between;align-items:center}.family-head strong{font-family:'NotoSerifSC',serif;font-size:19px}.family-head span{font-size:9px;color:var(--muted)}
+  .presets{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px}.preset{border:1px solid var(--line);border-radius:8px;padding:9px;display:flex;gap:10px;background:rgba(255,255,255,.3)}.preset .mini{width:76px;height:100px;border-radius:5px;flex:0 0 76px;position:relative;overflow:hidden;padding:8px}.preset .mini b{font-family:'NotoSerifSC',serif;font-size:13px;line-height:1.05;display:block;margin-top:14px}.preset .meta{min-width:0}.preset .meta strong{display:block;font-size:10.5px}.preset .meta small{display:block;margin-top:3px;font-size:8.5px;color:var(--muted);line-height:1.45}.preset .meta .tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}.preset .meta .tag{height:18px;font-size:8px}
+  .brandkit{display:flex;gap:8px;align-items:center;margin-top:10px}.swatch{width:24px;height:24px;border-radius:4px;border:1px solid var(--line)}.brandkit .type{font-family:'NotoSerifSC',serif;font-size:18px;margin-left:4px}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side">
+    <div class="brand"><div class="mark">FA</div><div><strong>固定地址</strong><small>CONTENT STUDIO</small></div></div>
+    <div class="label">工作台</div>
+    <nav class="nav"><a><i></i>总览</a><a data-k="create" class="on"><i></i>创作台</a><a><i></i>审批</a><a><i></i>发布</a></nav>
+    <div class="label">内容资产</div>
+    <nav class="nav"><a><i></i>结构库</a><a data-k="templates"><i></i>模板库</a><a><i></i>元素库</a><a><i></i>音乐库</a><a><i></i>知识库</a><a><i></i>素材库</a><a><i></i>灵魂档案</a></nav>
+    <div class="label">系统</div><nav class="nav"><a><i></i>设置</a></nav>
+    <div class="foot">v0.7.5 · 结构优先<br>模板是衣服，结构是骨架</div>
+  </aside>
+  <main class="main">
+    <section class="screen" id="s1">
+      <div class="row"><div><div class="eyebrow">CREATE / 创作台</div><h1>先定结构，<br>再选衣服。</h1><p class="sub">方向 → 结构 → 页数 → 模板。模板只决定视觉和运动，不替你做内容判断。</p></div><button class="btn primary">+ 新建内容</button></div>
+      <div class="stepbar"><b class="on">1</b><span>结构</span><b class="on">2</b><span>页数</span><b class="on">3</b><span>模板</span><b>4</b><span>任务书</span><b>5</b><span>生成</span></div>
+      <div class="layout">
+        <div class="stack">
+          <div class="selected">
+            <div style="display:flex;justify-content:space-between;align-items:center"><span class="tag dark">已选结构 · 误区</span><button class="btn sm">换结构</button></div>
+            <h3>邮局只认登记过的寄件地址</h3>
+            <div class="mapping"><div><span>地址登记</span><i>→</i><span>IP 白名单</span></div><div><span>地址每天换</span><i>→</i><span>动态公网 IP</span></div><div><span>固定柜台</span><i>→</i><span>云服务器出口</span></div></div>
+            <div class="boundary">边界：不适用于只校验 token、不校验来源的平台。</div>
+          </div>
+          <div class="section-title"><strong>页面结构</strong><span>金句固定为最后一页</span></div>
+          <div class="pagechoice"><div><b>3 页</b><small>钩子 / 对照 / 金句</small></div><div class="on"><b>4 页</b><small>钩子 / 背景 / 对照 / 金句</small></div><div><b>5 页</b><small>钩子 / 背景 / 对照 / 证据 / 金句</small></div><div><b>6 页</b><small>钩子 / 背景 / 反例 / 对照 / 证据 / 金句</small></div></div>
+          <div class="section-title"><strong>模板预设</strong><span>3 个主题 · 先选一个看低清预览</span></div>
+          <div class="themes">
+            <div class="theme"><div class="thumb th-archive"><div class="mini-kicker">ARCHIVE / 01</div><div class="mini-title">先解决<br>入口。</div><div class="mini-line"></div><div class="mini-bottom"><span>FIXED ADDRESS</span><span>04 / 04</span></div></div><div class="body"><strong>Archive Paper</strong><small>暖纸 / 红章 / 冷静叙事</small></div></div>
+            <div class="theme on"><div class="thumb th-terminal"><div class="mini-kicker">TERMINAL / 02</div><div class="mini-title">不是工具<br>不行。</div><div class="mini-line"></div><div class="mini-bottom"><span>NO ADDRESS / NO DELIVERY</span><span>04 / 04</span></div></div><div class="body"><strong>Terminal Black</strong><small>黑底 / 荧光 / 强节奏</small></div></div>
+            <div class="theme"><div class="thumb th-editorial"><div class="mini-kicker">EDITORIAL / 03</div><div class="mini-title">先有地址，<br>再谈自动化。</div><div class="mini-line"></div><div class="mini-bottom"><span>THE ADDRESS IS THE PRODUCT</span><span>04 / 04</span></div></div><div class="body"><strong>Editorial Red</strong><small>红底 / 海报 / 强观点</small></div></div>
+          </div>
+          <div class="footeraction"><button class="btn lime">用这个结构继续</button><button class="btn">低清预览 3 版</button><span>先低清选模板，再全片渲染。</span></div>
+        </div>
+        <aside class="right">
+          <div class="card"><div class="section-title" style="margin-top:0"><strong>当前决策</strong><span>3 / 5</span></div><p style="font-size:10px;color:var(--muted);line-height:1.6">结构已定。现在选页面结构和模板预设；内容由 AI 起草，你确认。</p></div>
+          <div class="card"><div class="section-title" style="margin-top:0"><strong>品牌底座</strong><span>锁定</span></div><div class="brandkit"><div class="swatch" style="background:#F2EBDD"></div><div class="swatch" style="background:#101112"></div><div class="swatch" style="background:#D9FF57"></div><div class="swatch" style="background:#E5482C"></div><div class="type">Aa</div></div><p style="font-size:9px;color:var(--muted);line-height:1.55;margin-top:8px">Logo / 字体 / 安全区 / HUD 不随模板变化。</p></div>
+          <div class="card"><div class="section-title" style="margin-top:0"><strong>模板规则</strong></div><p style="font-size:9.5px;color:var(--muted);line-height:1.65">主题只改背景、主视觉、装饰和强调色；不改结构、事实和边界。</p></div>
+        </aside>
+      </div>
+    </section>
+    <section class="screen" id="s2">
+      <div class="libhead"><div><div class="eyebrow">TEMPLATES / 模板库</div><h1>不是模板商店，<br>是品牌系列。</h1><p class="sub">每个主题可以复用；每个预设包含页数、转场、动效和音乐。选中后只改视觉，不改内容。</p></div><button class="btn primary">+ 新建模板预设</button></div>
+      <div class="stats"><div><b>3</b><span>品牌主题</span></div><div><b>6</b><span>模板预设</span></div><div><b>4</b><span>可复用页数</span></div></div>
+      <div class="card">
+        <div class="family"><div class="family-head"><strong>Archive Paper</strong><span>暖纸 / 红章 / 冷静叙事</span></div><div class="presets"><div class="preset"><div class="mini th-archive"><b>先解决<br>入口。</b></div><div class="meta"><strong>档案纸 · 4 页 · 上翻页</strong><small>钩子 / 背景 / 对照 / 金句</small><div class="tags"><span class="tag">轻动效</span><span class="tag">叙事</span></div></div></div><div class="preset"><div class="mini th-archive"><b>被退回<br>的信。</b></div><div class="meta"><strong>档案纸 · 5 页 · 横推</strong><small>钩子 / 背景 / 对照 / 证据 / 金句</small><div class="tags"><span class="tag">标准</span><span class="tag">解释</span></div></div></div></div></div>
+        <div class="family"><div class="family-head"><strong>Terminal Black</strong><span>黑底 / 荧光 / 强节奏</span></div><div class="presets"><div class="preset"><div class="mini th-terminal"><b>不是工具<br>不行。</b></div><div class="meta"><strong>黑底荧光 · 4 页 · 硬切</strong><small>钩子 / 背景 / 对照 / 金句</small><div class="tags"><span class="tag">强动效</span><span class="tag">科技</span></div></div></div><div class="preset"><div class="mini th-terminal"><b>地址<br>是入口。</b></div><div class="meta"><strong>黑底荧光 · 6 页 · 上翻</strong><small>钩子 / 背景 / 反例 / 对照 / 证据 / 金句</small><div class="tags"><span class="tag">强节奏</span><span class="tag">复杂</span></div></div></div></div></div>
+        <div class="family"><div class="family-head"><strong>Editorial Red</strong><span>红底 / 海报 / 强观点</span></div><div class="presets"><div class="preset"><div class="mini th-editorial"><b>先有地址，<br>再谈自动化。</b></div><div class="meta"><strong>红底海报 · 4 页 · 横推</strong><small>钩子 / 背景 / 对照 / 金句</small><div class="tags"><span class="tag">强观点</span><span class="tag">主推</span></div></div></div><div class="preset"><div class="mini th-editorial"><b>记住<br>这句。</b></div><div class="meta"><strong>红底海报 · 3 页 · 硬切</strong><small>钩子 / 对照 / 金句</small><div class="tags"><span class="tag">短</span><span class="tag">金句</span></div></div></div></div></div>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+  const s = new URLSearchParams(location.search).get('screen') || '1';
+  document.getElementById(s === '2' ? 's2' : 's1').classList.add('on');
+  document.querySelectorAll('.nav a').forEach(a => a.classList.toggle('on', a.dataset.k === (s === '2' ? 'templates' : 'create')));
+</script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<style>
+  *{box-sizing:border-box}html,body{margin:0;background:#111;font-family:"Microsoft YaHei",sans-serif;color:#f3eee3}
+  .screen{position:relative;width:1440px;height:1024px;overflow:hidden;background:#141414;border-bottom:1px solid #333}
+  .side{position:absolute;left:0;top:0;bottom:0;width:240px;background:#0d0f0e;padding:36px 28px;border-right:1px solid #292929}
+  .logo{font-size:30px;font-weight:900;color:#d8ff3e;letter-spacing:-.04em}.logo small{display:block;font-size:12px;letter-spacing:.22em;color:#70766c;margin-top:6px}
+  .nav{margin-top:50px;font-size:18px;line-height:2.7;color:#92988d}.nav b{display:block;color:#d8ff3e;font-weight:700}
+  .main{position:absolute;left:240px;right:0;top:0;bottom:0;padding:38px 44px}
+  h1{font-size:38px;margin:0 0 8px;font-family:"Noto Serif SC",serif}.sub{font-size:16px;color:#8e948a;margin:0 0 30px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  .card{background:#1a1d1b;border:1px solid #30342f;border-radius:4px;padding:24px}
+  label{display:block;font-size:13px;color:#8e948a;letter-spacing:.08em;margin:14px 0 8px}
+  input,select{width:100%;background:#0f1110;border:1px solid #343a34;color:#f3eee3;padding:13px 14px;font-size:16px;border-radius:3px}
+  .btn{display:inline-block;margin-top:22px;background:#d8ff3e;color:#111;font-weight:900;padding:14px 22px;border-radius:3px;font-size:16px}
+  .ghost{background:transparent;color:#b7bdb2;border:1px solid #444;margin-left:10px}
+  .thumb{width:100%;aspect-ratio:9/16;background:#0b0d0f;border:1px solid #333;display:grid;place-items:center;color:#6f766b;font-size:14px}
+  .field{padding:12px 0;border-bottom:1px solid #2c302c;font-size:14px;color:#b7bdb2}.field b{color:#f3eee3;font-size:16px;display:block;margin-top:4px}
+  .pill{display:inline-block;font-size:12px;padding:4px 8px;border:1px solid #3d443b;color:#9ba892;margin-left:8px}
+  table{width:100%;border-collapse:collapse;font-size:15px}th,td{text-align:left;padding:14px 10px;border-bottom:1px solid #2c302c}th{font-size:12px;color:#8e948a;letter-spacing:.1em}td b{color:#d8ff3e}
+  .tag{font-size:12px;padding:3px 7px;border:1px solid #445040;color:#b7c2ad}.tag.ok{color:#d8ff3e;border-color:#657b49}
+  .screen-label{position:absolute;right:44px;top:38px;font-size:12px;color:#5f665d;letter-spacing:.16em}
+</style>
+</head>
+<body>
+
+<!-- UI 1 LITE -->
+<div class="screen">
+  <div class="side"><div class="logo">FA<small>CONTENT STUDIO</small></div><div class="nav">总览<b>Lite 生成</b>字段审核<br>批量生产<br>发布<br><br>模板库<br>素材库</div></div>
+  <div class="main">
+    <div class="screen-label">UI 01 / LITE GENERATE</div>
+    <h1>Lite 生成</h1><p class="sub">一条内容只调用一次模型。命中缓存不消耗。</p>
+    <div class="row">
+      <div class="card">
+        <label>标题</label><input value="RAG 不是知识库">
+        <label>话题</label><input value="RAG">
+        <div class="row" style="grid-template-columns:1fr 1fr;gap:12px">
+          <div><label>页数</label><select><option>5 页</option><option>4 页</option><option>6 页</option></select></div>
+          <div><label>主题</label><select><option>Archive</option><option>Terminal</option></select></div>
+        </div>
+        <div class="row" style="grid-template-columns:1fr 1fr;gap:12px">
+          <div><label>结构</label><select><option>对照</option><option>因果</option></select></div>
+          <div><label>风格</label><select><option>克制 · 类比</option></select></div>
+        </div>
+        <div class="btn">生成</div><div class="btn ghost">使用缓存</div>
+      </div>
+      <div class="card">
+        <div class="thumb">封面预览 1080 × 1920</div>
+        <div class="field">cover.lead<b>很多人把 RAG 当知识库用</b></div>
+        <div class="field">cover.punch<b>方向一开始就错</b></div>
+        <div class="field">context.scene<b>短视频博主在镜头前讲 RAG 误区</b></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- UI 2 REVIEW -->
+<div class="screen">
+  <div class="side"><div class="logo">FA<small>CONTENT STUDIO</small></div><div class="nav">总览<br>Lite 生成<b>字段审核</b>批量生产<br>发布<br><br>模板库<br>素材库</div></div>
+  <div class="main">
+    <div class="screen-label">UI 02 / FIELD REVIEW</div>
+    <h1>字段审核</h1><p class="sub">只改一个字段，不重生成整条。</p>
+    <div class="row">
+      <div class="card" style="max-height:780px;overflow:auto">
+        <div class="field">cover.lead <span class="pill">已通过</span><b>很多人把 RAG 当知识库用</b></div>
+        <div class="field">cover.punch <span class="pill">已通过</span><b>方向一开始就错</b></div>
+        <div class="field">context.scene <span class="pill">已通过</span><b>短视频博主在镜头前讲 RAG 误区</b></div>
+        <div class="field">context.roles <span class="pill">已通过</span><b>A 是检索增强生成，B 是静态知识库</b></div>
+        <div class="field">context.constraint <span class="pill">改</span><b>别把向量库直接当成答案来源</b></div>
+        <div class="field">page2.left <span class="pill">已通过</span><b>静态存储 / 答案固定</b></div>
+        <div class="field">page2.right <span class="pill">已通过</span><b>动态检索 / 实时生成</b></div>
+        <div class="field">page3.points <span class="pill">高亮</span><b>没有权限、没有回执、失败了不重试</b></div>
+        <div class="btn">重生成此字段</div><div class="btn ghost">通过</div>
+      </div>
+      <div class="card">
+        <div class="thumb">页面预览</div>
+        <div class="field">5 页 · Archive · 对照</div>
+        <div class="field">字数检查 <span class="pill">通过</span></div>
+        <div class="field">结构词检查 <span class="pill">通过</span></div>
+        <div class="field">80% 安全区 <span class="pill">通过</span></div>
+        <div class="field">高亮 / 动效 <span class="pill">待预览</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- UI 3 BATCH -->
+<div class="screen">
+  <div class="side"><div class="logo">FA<small>CONTENT STUDIO</small></div><div class="nav">总览<br>Lite 生成<br>字段审核<b>批量生产</b>发布<br><br>模板库<br>素材库</div></div>
+  <div class="main">
+    <div class="screen-label">UI 03 / BATCH</div>
+    <h1>批量生产</h1><p class="sub">缓存命中直接渲染，不再调用模型。</p>
+    <div class="card">
+      <table>
+        <tr><th>#</th><th>标题</th><th>结构</th><th>缓存</th><th>状态</th><th>成本</th></tr>
+        <tr><td>01</td><td>RAG 不是知识库</td><td>对照</td><td><span class="tag ok">HIT</span></td><td>done</td><td><b>0</b></td></tr>
+        <tr><td>02</td><td>AI Agent 不是聊天机器人</td><td>类比</td><td><span class="tag ok">HIT</span></td><td>done</td><td><b>0</b></td></tr>
+        <tr><td>03</td><td>上下文窗口不是记忆力</td><td>因果</td><td><span class="tag">MISS</span></td><td>生成中</td><td>1</td></tr>
+        <tr><td>04</td><td>提示词不是越长越好</td><td>边界</td><td><span class="tag ok">HIT</span></td><td>queued</td><td><b>0</b></td></tr>
+        <tr><td>05</td><td>AI 评测不是跑分</td><td>清单</td><td><span class="tag">MISS</span></td><td>queued</td><td>1</td></tr>
+      </table>
+      <div class="btn">开始渲染</div><div class="btn ghost">导出 ZIP</div>
+    </div>
+    <div class="row" style="margin-top:24px">
+      <div class="card"><div class="field">命中缓存<b>24 条</b></div><div class="field">需要生成<b>12 条</b></div></div>
+      <div class="card"><div class="field">预计模型调用<b>12 次</b></div><div class="field">渲染调用<b>0 次</b></div></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

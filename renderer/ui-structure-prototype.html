@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>结构优先 UI 原型</title>
+<style>
+  @font-face { font-family:'NotoSC'; src:url('./assets/NotoSansSC-VF.ttf') format('truetype'); font-weight:100 900; font-display:block; }
+  @font-face { font-family:'NotoSerifSC'; src:url('./assets/NotoSerifSC-VF.ttf') format('truetype'); font-weight:200 900; font-display:block; }
+  :root {
+    --paper:#F6F1E7; --paper2:#EFE7D8; --ink:#101112; --muted:#7E776B;
+    --line:rgba(16,17,18,.16); --lime:#D9FF57; --red:#E5482C; --orange:#FF6A3D;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { width:1600px; height:1100px; overflow:hidden; background:var(--paper); }
+  body { font-family:'NotoSC','Microsoft YaHei',sans-serif; color:var(--ink); -webkit-font-smoothing:antialiased; }
+  .shell { display:grid; grid-template-columns:230px 1fr; height:1100px; }
+  .side { background:#101112; color:#F6F1E7; padding:28px 20px; display:flex; flex-direction:column; }
+  .brand { display:flex; gap:10px; align-items:center; margin-bottom:42px; }
+  .mark { width:42px; height:42px; border-radius:9px; background:var(--lime); color:var(--ink); display:grid; place-items:center; font-weight:900; font-size:17px; }
+  .brand strong { display:block; font-size:16px; letter-spacing:.02em; }
+  .brand small { display:block; margin-top:3px; font-size:8px; letter-spacing:.22em; color:#8E8B82; }
+  .label { font-size:9px; letter-spacing:.2em; color:#6F6A61; margin:18px 10px 8px; }
+  .nav a { display:flex; align-items:center; gap:10px; padding:11px 12px; border-radius:8px; color:#B9B3A8; font-size:12px; text-decoration:none; margin-bottom:2px; }
+  .nav a.on { background:var(--lime); color:#101112; font-weight:800; }
+  .nav i { width:15px; height:15px; border:1.5px solid currentColor; border-radius:4px; display:inline-block; opacity:.8; }
+  .side-foot { margin-top:auto; font-size:9px; color:#6F6A61; line-height:1.7; padding:0 10px; }
+  .main { padding:36px 48px 30px; overflow:hidden; position:relative; }
+  .eyebrow { font-size:10px; letter-spacing:.2em; font-weight:800; color:#847C6D; }
+  h1 { font-family:'NotoSerifSC',serif; font-size:46px; line-height:1.08; letter-spacing:-.02em; margin:12px 0 12px; }
+  h1 em { font-style:normal; color:var(--red); }
+  .sub { color:#6F685C; font-size:12px; line-height:1.7; max-width:760px; }
+  .row { display:flex; align-items:center; justify-content:space-between; gap:20px; }
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; height:38px; padding:0 16px; border-radius:7px; border:1px solid var(--ink); background:transparent; color:var(--ink); font-size:11px; font-weight:750; }
+  .btn.primary { background:var(--ink); color:var(--lime); border-color:var(--ink); }
+  .btn.lime { background:var(--lime); color:var(--ink); border-color:var(--ink); }
+  .tag { display:inline-flex; align-items:center; height:22px; padding:0 7px; border:1px solid var(--line); border-radius:5px; font-size:9px; color:#6F685C; background:rgba(255,255,255,.35); }
+  .tag.dark { background:var(--ink); color:var(--lime); border-color:var(--ink); }
+  .tag.red { color:var(--red); border-color:rgba(229,72,44,.35); background:rgba(229,72,44,.06); }
+  .screen { display:none; }
+  body[data-s="1"] .s1, body[data-s="2"] .s2, body[data-s="3"] .s3 { display:block; }
+
+  /* S1 */
+  .direction { margin-top:24px; border:1px solid var(--line); background:rgba(255,255,255,.32); border-radius:10px; padding:16px 18px; }
+  .direction label { display:block; font-size:9px; letter-spacing:.14em; color:var(--muted); margin-bottom:8px; }
+  .direction p { font-size:14px; line-height:1.7; }
+  .diag-head { display:flex; align-items:flex-end; justify-content:space-between; margin:22px 0 10px; }
+  .diag-head h2 { font-family:'NotoSerifSC',serif; font-size:24px; }
+  .diag-head span { font-size:10px; color:var(--muted); }
+  .theory { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  .theory-card { border:1px solid var(--line); background:rgba(255,255,255,.4); border-radius:9px; padding:14px 14px 12px; position:relative; min-height:388px; }
+  .theory-card.sel { border:2px solid var(--ink); background:var(--lime); box-shadow:0 8px 24px rgba(16,17,18,.08); }
+  .theory-card .top { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .theory-card h3 { font-family:'NotoSerifSC',serif; font-size:22px; line-height:1.15; margin:9px 0 6px; }
+  .theory-card .why { font-size:10px; color:#6F685C; line-height:1.55; min-height:46px; }
+  .map { margin-top:10px; border-top:1px solid var(--line); }
+  .map-row { display:grid; grid-template-columns:1fr 16px 1fr; gap:5px; align-items:center; padding:6px 0; border-bottom:1px dashed var(--line); font-size:10px; }
+  .map-row b { font-weight:750; }
+  .map-row i { color:var(--red); font-style:normal; text-align:center; }
+  .map-row small { grid-column:1/-1; color:#857D70; font-size:8.5px; }
+  .boundary { margin-top:8px; font-size:9px; color:#6F685C; line-height:1.5; }
+  .sig { margin-top:8px; font-size:10px; font-weight:700; border-left:2px solid var(--ink); padding-left:7px; line-height:1.45; }
+  .selmark { position:absolute; right:12px; bottom:12px; font-size:9px; font-weight:800; color:var(--ink); }
+  .select-row { display:flex; gap:6px; margin-top:10px; }
+  .select-row .btn { height:28px; padding:0 9px; font-size:9px; }
+
+  /* S2 */
+  .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:22px 0 14px; }
+  .stat { border:1px solid var(--line); background:rgba(255,255,255,.32); border-radius:8px; padding:12px 14px; }
+  .stat b { display:block; font-family:'NotoSerifSC',serif; font-size:27px; }
+  .stat span { display:block; margin-top:4px; font-size:9px; color:var(--muted); }
+  .filters { display:flex; gap:5px; align-items:center; margin-bottom:12px; }
+  .chip { height:27px; padding:0 9px; border:1px solid var(--line); border-radius:5px; background:transparent; font-size:9px; color:var(--muted); }
+  .chip.on { background:var(--lime); border-color:var(--ink); color:var(--ink); font-weight:800; }
+  .libgrid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .libcard { border:1px solid var(--line); background:rgba(255,255,255,.38); border-radius:9px; padding:14px; }
+  .libcard .top { display:flex; justify-content:space-between; gap:10px; }
+  .libcard h3 { font-family:'NotoSerifSC',serif; font-size:21px; margin-top:7px; }
+  .libcard .map { margin-top:8px; }
+  .libcard .sig { margin-top:8px; }
+
+  /* S3 */
+  .editor-grid { display:grid; grid-template-columns:1fr 360px; gap:18px; margin-top:22px; }
+  .formcard { border:1px solid var(--line); background:rgba(255,255,255,.34); border-radius:9px; padding:16px 18px; }
+  .formcard h2 { font-family:'NotoSerifSC',serif; font-size:22px; }
+  .formcard .field { margin-top:12px; }
+  .formcard label { display:block; font-size:9px; letter-spacing:.12em; color:var(--muted); margin-bottom:5px; }
+  .fake-input { border:1px solid var(--line); background:rgba(255,255,255,.5); border-radius:6px; padding:9px 10px; font-size:11px; color:#49443B; line-height:1.55; }
+  .fake-input.area { min-height:66px; }
+  .pinned { border:1px solid var(--ink); border-radius:9px; background:var(--ink); color:var(--paper); padding:16px; position:sticky; top:0; }
+  .pinned .tag { background:var(--lime); color:var(--ink); border-color:var(--lime); }
+  .pinned h2 { font-family:'NotoSerifSC',serif; font-size:24px; line-height:1.2; margin:9px 0 7px; color:var(--lime); }
+  .pinned .why { font-size:10px; color:#BDB8AC; line-height:1.6; }
+  .pinned .map { border-top-color:rgba(242,235,221,.18); }
+  .pinned .map-row { border-bottom-color:rgba(242,235,221,.14); color:#D6D2C7; }
+  .pinned .map-row i { color:var(--orange); }
+  .pinned .map-row small { color:#8E8B82; }
+  .pinned .boundary { color:#A9A398; }
+  .pinned .actions { display:flex; gap:7px; margin-top:14px; }
+  .pinned .btn { border-color:#5B574F; color:var(--paper); }
+  .pinned .btn.lime { border-color:var(--lime); color:var(--ink); }
+  .lockbar { display:flex; align-items:center; justify-content:space-between; gap:14px; margin:22px 0 1px; padding:12px 14px; border:1px solid var(--ink); border-radius:8px; background:var(--lime); }
+  .lockbar strong { display:block; font-size:11px; }
+  .lockbar span { display:block; margin-top:3px; font-size:9px; color:#4D4A3F; }
+  .lockbar > span { flex:0 0 auto; margin-top:0; color:#4D4A3F; }
+  body::after { content:'UI 原型 · 示例数据，不代表当前版本'; position:fixed; right:22px; bottom:14px; font-size:9px; letter-spacing:.08em; color:#9A9386; }
+</style>
+</head>
+<body data-s="1">
+<div class="shell">
+  <aside class="side">
+    <div class="brand"><div class="mark">FA</div><div><strong>固定地址</strong><small>CONTENT STUDIO</small></div></div>
+    <div class="label">工作台</div>
+    <nav class="nav"><a data-k="home"><i></i>总览</a><a data-k="create" class="on"><i></i>选题 / 结构</a><a data-k="review"><i></i>审批</a><a data-k="publish"><i></i>发布</a></nav>
+    <div class="label">内容资产</div>
+    <nav class="nav"><a data-k="structures"><i></i>结构库</a><a data-k="knowledge"><i></i>知识库</a><a data-k="music"><i></i>音乐库</a><a data-k="library"><i></i>素材库</a><a data-k="soul"><i></i>灵魂档案</a></nav>
+    <div class="label">系统</div>
+    <nav class="nav"><a><i></i>设置</a></nav>
+    <div class="side-foot">v0.7 · 结构优先<br>先选结构，再写内容</div>
+  </aside>
+
+  <main class="main">
+    <!-- S1 -->
+    <section class="screen s1">
+      <div class="row">
+        <div><div class="eyebrow">CREATE / 结构优先</div><h1>先选结构，<br>再写内容。</h1><p class="sub">同一个话题，用不同结构讲，会长成完全不同的视频。AI 先给结构方案，你选一个解释世界的方式。</p></div>
+        <button class="btn primary">+ 新建选题</button>
+      </div>
+      <div class="direction"><label>方向</label><p>解释为什么自动化发布要放云服务器，用邮局寄信做类比，给已经买 NAS 的内容创作者看。</p></div>
+      <div class="diag-head"><h2>3 个结构方案</h2><span>AI 诊断 · 人选一个 · 不自动决定</span></div>
+      <div class="theory">
+        <div class="theory-card">
+          <div class="top"><span class="tag">类比</span><span class="tag">4 条映射</span></div>
+          <h3>固定信箱<br>才能收退信</h3>
+          <div class="why">NAS 用户熟悉“本地存东西”，但容易忽略“对外收结果”也需要固定入口。</div>
+          <div class="map">
+            <div class="map-row"><b>寄信</b><i>→</i><b>调用平台接口</b><small>内容要送到平台</small></div>
+            <div class="map-row"><b>信箱地址</b><i>→</i><b>固定公网 IP</b><small>平台按地址送回结果</small></div>
+            <div class="map-row"><b>退信</b><i>→</i><b>平台报错 / 40164</b><small>回执得有人收得到</small></div>
+          </div>
+          <div class="boundary">边界：只适用于平台会主动回执的场景；黑箱推荐不成立。</div>
+          <div class="sig">“信寄出去不算完，回执得有人收得到。”</div>
+          <div class="select-row"><button class="btn">选这个结构</button></div>
+        </div>
+        <div class="theory-card sel">
+          <div class="top"><span class="tag dark">误区</span><span class="tag">已选</span></div>
+          <h3>邮局只认<br>登记过的寄件地址</h3>
+          <div class="why">不是内容审核，是来源准入；正好对应 NAS 用户“报错总以为是内容问题”的误解。</div>
+          <div class="map">
+            <div class="map-row"><b>地址登记</b><i>→</i><b>IP 白名单</b><small>不是内容审核，是入口准入</small></div>
+            <div class="map-row"><b>地址每天换</b><i>→</i><b>家庭宽带动态 IP</b><small>今天登记明天失效</small></div>
+            <div class="map-row"><b>固定柜台</b><i>→</i><b>云服务器固定出口</b><small>地址不变，长期有效</small></div>
+          </div>
+          <div class="boundary">边界：不适用于只校验 token、不校验来源的平台。</div>
+          <div class="sig">“你以为在改内容，其实平台在查你从哪寄的。”</div>
+          <div class="select-row"><button class="btn lime">已选 · 用这个创建</button></div>
+        </div>
+        <div class="theory-card">
+          <div class="top"><span class="tag">对照</span><span class="tag">4 条映射</span></div>
+          <h3>家里信箱<br>vs 街角邮筒</h3>
+          <div class="why">把云服务器的价值落在“持续可达”，而不是硬套算力对比。</div>
+          <div class="map">
+            <div class="map-row"><b>家里信箱</b><i>→</i><b>NAS 本地环境</b><small>人在才开、断电就停</small></div>
+            <div class="map-row"><b>街角邮筒</b><i>→</i><b>云服务器</b><small>一直在，随时能取</small></div>
+            <div class="map-row"><b>错过取信</b><i>→</i><b>定时发布失败</b><small>不是信写错，是没赶上</small></div>
+          </div>
+          <div class="boundary">边界：不适用于平台不回调、不校验在线的场景。</div>
+          <div class="sig">“信写得再好，邮差来的时候信箱得开着。”</div>
+          <div class="select-row"><button class="btn">选这个结构</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- S2 -->
+    <section class="screen s2">
+      <div class="row"><div><div class="eyebrow">STRUCTURES / 结构库</div><h1>结构不是素材，<br>是资产。</h1><p class="sub">每个结构写清楚：从什么映射到什么、哪里不能硬套、什么时候用、你的一句话签名。</p></div><button class="btn primary">+ 新建结构</button></div>
+      <div class="stats"><div class="stat"><b>12</b><span>全部结构</span></div><div class="stat"><b>5</b><span>类型</span></div><div class="stat"><b>38</b><span>累计使用</span></div><div class="stat"><b>3</b><span>本月新增</span></div></div>
+      <div class="filters"><span class="chip on">全部</span><span class="chip">类比</span><span class="chip">对照</span><span class="chip">因果</span><span class="chip">误区</span><span class="chip">边界</span><span class="chip">清单</span></div>
+      <div class="libgrid">
+        <div class="libcard"><div class="top"><span class="tag dark">误区</span><span class="tag">12 次使用</span></div><h3>邮局只认登记过的寄件地址</h3><div class="map"><div class="map-row"><b>地址登记</b><i>→</i><b>IP 白名单</b><small>来源准入</small></div><div class="map-row"><b>地址每天换</b><i>→</i><b>动态公网 IP</b><small>今天登记明天失效</small></div><div class="map-row"><b>固定柜台</b><i>→</i><b>云服务器出口</b><small>固定入口</small></div></div><div class="sig">“你以为在改内容，其实平台在查你从哪寄的。”</div></div>
+        <div class="libcard"><div class="top"><span class="tag">类比</span><span class="tag">8 次使用</span></div><h3>固定信箱才能收退信</h3><div class="map"><div class="map-row"><b>寄信</b><i>→</i><b>调用接口</b><small>内容送达</small></div><div class="map-row"><b>信箱地址</b><i>→</i><b>固定公网 IP</b><small>回执入口</small></div><div class="map-row"><b>退信</b><i>→</i><b>平台报错</b><small>结果可接收</small></div></div><div class="sig">“信寄出去不算完，回执得有人收得到。”</div></div>
+        <div class="libcard"><div class="top"><span class="tag">对照</span><span class="tag">6 次使用</span></div><h3>家里信箱 vs 街角邮筒</h3><div class="map"><div class="map-row"><b>家里信箱</b><i>→</i><b>NAS 本地</b><small>人在才开</small></div><div class="map-row"><b>街角邮筒</b><i>→</i><b>云服务器</b><small>持续在线</small></div><div class="map-row"><b>错过取信</b><i>→</i><b>定时发布失败</b><small>没赶上</small></div></div><div class="sig">“信写得再好，邮差来的时候信箱得开着。”</div></div>
+        <div class="libcard"><div class="top"><span class="tag">边界</span><span class="tag">4 次使用</span></div><h3>固定 IP 只解决入口</h3><div class="map"><div class="map-row"><b>门牌号</b><i>→</i><b>公网 IP</b><small>先能找到你</small></div><div class="map-row"><b>钥匙</b><i>→</i><b>接口权限</b><small>还得能进门</small></div><div class="map-row"><b>信箱大小</b><i>→</i><b>内容质量</b><small>不解决送达</small></div></div><div class="sig">“地址解决找到你，不解决内容好不好。”</div></div>
+      </div>
+    </section>
+
+    <!-- S3 -->
+    <section class="screen s3">
+      <div class="row"><div><div class="eyebrow">BRIEF / 结构已锁定</div><h1>这条内容，<br>只用一个结构。</h1><p class="sub">后面所有角度、页面、金句，都必须围绕这套映射展开；不能中途换比喻。</p></div><button class="btn">去审批</button></div>
+      <div class="lockbar"><div><strong>已锁定结构：邮局只认登记过的寄件地址</strong><span>误区 · 4 条映射 · 第 12 次使用</span></div><span>结构 ID: str_postal_whitelist</span></div>
+      <div class="editor-grid">
+        <div class="formcard"><h2>内容草稿</h2><div class="field"><label>标题</label><div class="fake-input">为什么自动化发布必须放在云服务器</div></div><div class="field"><label>第 1 页 · 钩子</label><div class="fake-input area">微信只给「登记过地址」的人寄信。<br>这个地址，叫固定公网 IP。</div></div><div class="field"><label>第 2 页 · 背景 / 误解</label><div class="fake-input area">买了 NAS，不等于能自动发布。<br>很多人卡住，不是因为不会写脚本，是因为公众号根本不认识你家网络的地址。</div></div><div class="field"><label>第 3 页 · 对照 + 证据</label><div class="fake-input area">左边：家里地址每天变。<br>右边：机房地址固定。<br>证据：IP 白名单 / 40164 / 地址变化。</div></div><div class="field"><label>第 4 页 · 金句</label><div class="fake-input">不是工具不行，是地址不行。</div></div></div>
+        <aside class="pinned"><span class="tag">当前结构 · 误区</span><h2>邮局只认登记过的寄件地址</h2><div class="why">不是内容审核，是来源准入；正好对应 NAS 用户“报错总以为是内容问题”的误解。</div><div class="map"><div class="map-row"><b>地址登记</b><i>→</i><b>IP 白名单</b><small>不是内容审核，是入口准入</small></div><div class="map-row"><b>地址每天换</b><i>→</i><b>动态公网 IP</b><small>今天登记明天失效</small></div><div class="map-row"><b>固定柜台</b><i>→</i><b>云服务器出口</b><small>地址不变，长期有效</small></div></div><div class="boundary">边界：不适用于只校验 token、不校验来源的平台。</div><div class="sig" style="color:var(--lime);border-left-color:var(--lime)">“你以为在改内容，其实平台在查你从哪寄的。”</div><div class="actions"><button class="btn">换结构</button><button class="btn lime">保存并生成</button></div></aside>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+  const s = new URLSearchParams(location.search).get('screen') || '1';
+  document.body.dataset.s = ['1','2','3'].includes(s) ? s : '1';
+  const activeKey = s === '2' ? 'structures' : 'create';
+  document.querySelectorAll('.nav a').forEach(a => a.classList.toggle('on', a.dataset.k === activeKey));
+</script>
+</body>
+</html>

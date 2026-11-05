@@ -1,0 +1,61 @@
+/* Hybrid: old template visual/motion, v2 typography and safe-area only. */
+
+
+body.pageframe-hybrid .p1-kicker,
+body.pageframe-hybrid .pctx-kicker,
+body.pageframe-hybrid .p3-kicker { font-size: 28px !important; letter-spacing: .08em; }
+
+body.pageframe-hybrid .p1-l1 { font-size: 58px !important; line-height: 1.28 !important; }
+body.pageframe-hybrid .p1-l2 { font-size: 100px !important; line-height: 1.12 !important; }
+body.pageframe-hybrid .p1-l3 { font-size: 46px !important; line-height: 1.35 !important; }
+
+body.pageframe-hybrid .ctxv-title, body.pageframe-hybrid .ctxc-title, body.pageframe-hybrid .pctx-title { font-size: 58px !important; line-height: 1.2 !important; white-space: nowrap !important; }
+body.pageframe-hybrid .ctxc-value { font-size: 40px !important; line-height: 1.45 !important; }
+body.pageframe-hybrid .ctxc-label { font-size: 28px !important; }
+body.pageframe-hybrid .ctxv-value { font-size: 42px !important; line-height: 1.45 !important; }
+body.pageframe-hybrid .ctxv-label { font-size: 28px !important; }
+
+body.pageframe-hybrid .p2v-setup { font-size: 36px !important; }
+body.pageframe-hybrid .p2v-turn { font-size: 90px !important; line-height: 1.16 !important; }
+body.pageframe-hybrid .p2v-sub { font-size: 28px !important; }
+body.pageframe-hybrid .p2v-conclusion { font-size: 50px !important; }
+
+body.pageframe-hybrid .p3v-title { font-size: 74px !important; line-height: 1.2 !important; }
+body.pageframe-hybrid .p3v-point { font-size: 36px !important; line-height: 1.5 !important; }
+body.pageframe-hybrid .p3v-bottom { font-size: 30px !important; }
+
+body.pageframe-hybrid .p4-l1 { font-size: 70px !important; line-height: 1.2 !important; }
+body.pageframe-hybrid .p4-l2 { font-size: 86px !important; line-height: 1.2 !important; }
+body.pageframe-hybrid .p4-note { font-size: 30px !important; }
+body.pageframe-hybrid .p4-ask { font-size: 24px !important; }
+
+
+
+
+
+/* Keep old background, hide old evidence scaffolding when v2 P3 is active. */
+body.pageframe-hybrid .structure-page,
+body.pageframe-hybrid .p3c-meta,
+body.pageframe-hybrid .p3c-kicker,
+body.pageframe-hybrid .p3c-title,
+body.pageframe-hybrid .p3c-note,
+body.pageframe-hybrid .p3c-bottom { display:none !important; }
+body.pageframe-hybrid .p3-v2 { display:flex !important; }
+
+body.pageframe-hybrid #p4-l1 { font-size: 64px !important; line-height: 1.18 !important; white-space: nowrap !important; }
+body.pageframe-hybrid #p4-l2 { font-size: 60px !important; line-height: 1.18 !important; white-space: nowrap !important; }
+
+/* Uniform highlighter: text appears first, then the block sweeps in. */
+body.pageframe-hybrid .p2v-hl,
+body.pageframe-hybrid .p3v-point.hl,
+body.pageframe-hybrid .p4-red {
+  background-image: linear-gradient(var(--lime), var(--lime)) !important;
+  background-repeat: no-repeat !important;
+  background-size: 0% 100% !important;
+  background-position: 0 0 !important;
+  color: var(--ink) !important;
+  display: inline-block;
+  padding: 0 .08em;
+}
+
+body.pageframe-hybrid .p4-outline { display:none !important; }
