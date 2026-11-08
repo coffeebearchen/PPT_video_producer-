@@ -864,9 +864,10 @@ async function route(req, res) {
       if (!accountId || !getWechatAccount(accountId) || getWechatAccount(accountId).group_id !== groupId) {
         accountId = (getDefaultWechatAccount(primaryChannel) || {}).id || '';
       }
-      db.prepare(`INSERT INTO briefs (id,title,topic,audience,quantity,analogy_domains,must_include,must_avoid,channels,tone,cta,deadline,structure_id,structure_name,structure_type,structure_snapshot,page_count,page_plan,theme,template_id,account_id,group_id,status,created_at,updated_at)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(
-        id, String(body.title).trim(), String(body.topic).trim(), String(body.audience || ''), Math.max(1, Math.min(6, Number(body.quantity) || 3)),
+      const contentId = newId('content');
+      db.prepare(`INSERT INTO briefs (id,content_id,title,topic,audience,quantity,analogy_domains,must_include,must_avoid,channels,tone,cta,deadline,structure_id,structure_name,structure_type,structure_snapshot,page_count,page_plan,theme,template_id,account_id,group_id,status,created_at,updated_at)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(
+        id, contentId, String(body.title).trim(), String(body.topic).trim(), String(body.audience || ''), Math.max(1, Math.min(6, Number(body.quantity) || 3)),
         jsonString(domains), String(body.must_include || ''), String(body.must_avoid || ''), jsonString(channels),
         String(body.tone || ''), String(body.cta || ''), String(body.deadline || ''),
         structureId, String(body.structure_name || ''), String(body.structure_type || ''),
@@ -1352,6 +1353,8 @@ async function route(req, res) {
         hashtags: String(bundle.brief.must_include || '').split('\n').map(x => x.trim()).filter(Boolean).map(x => `#${x.replace(/\s+/g, '')}`),
         files,
         music: spec.music || 'pulse',
+        content_id: bundle.brief?.content_id || '',
+        template_version: spec.template_version || 'hybrid-v2.2',
         sha256: bundle.render.sha256,
         account: accountMeta ? { id: accountMeta.id, name: accountMeta.name, color: accountMeta.color } : null,
         generated_at: now()
@@ -1369,11 +1372,11 @@ async function route(req, res) {
       let pub = db.prepare('SELECT * FROM publications WHERE render_id=? AND channel=? ORDER BY created_at DESC LIMIT 1').get(renderId, channel);
       const status = channel === 'wechat_channels' || channel === 'xiaohongshu' ? 'ready_for_manual' : 'scheduled';
       if (!pub) {
-        pub = { id: newId('pub'), render_id: renderId, channel, status, scheduled_at: body.scheduled_at || '', external_id: '', url: '', receipt_json: '{}', account_id: accountId, created_at: now(), updated_at: now() };
-        db.prepare('INSERT INTO publications (id,render_id,channel,status,scheduled_at,external_id,url,receipt_json,account_id,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)')
-          .run(pub.id, pub.render_id, pub.channel, pub.status, pub.scheduled_at, '', '', '{}', pub.account_id, pub.created_at, pub.updated_at);
+        pub = { id: newId('pub'), render_id: renderId, content_id: bundle.brief?.content_id || '', channel, status, scheduled_at: body.scheduled_at || '', external_id: '', url: '', receipt_json: '{}', account_id: accountId, template_version: spec.template_version || 'hybrid-v2.2', created_at: now(), updated_at: now() };
+        db.prepare('INSERT INTO publications (id,render_id,content_id,channel,status,scheduled_at,external_id,url,receipt_json,account_id,template_version,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)')
+          .run(pub.id, pub.render_id, pub.content_id, pub.channel, pub.status, pub.scheduled_at, '', '', '{}', pub.account_id, pub.template_version, pub.created_at, pub.updated_at);
       } else {
-        db.prepare('UPDATE publications SET status=?, scheduled_at=?, account_id=?, updated_at=? WHERE id=?').run(status, body.scheduled_at || pub.scheduled_at || '', accountId || pub.account_id || '', now(), pub.id);
+        db.prepare('UPDATE publications SET status=?, scheduled_at=?, account_id=?, content_id=?, template_version=?, updated_at=? WHERE id=?').run(status, body.scheduled_at || pub.scheduled_at || '', accountId || pub.account_id || '', bundle.brief?.content_id || '', spec.template_version || 'hybrid-v2.2', now(), pub.id);
       }
       event('publish', renderId, 'kit_created', channel);
       return send(res, 201, { publication: db.prepare('SELECT * FROM publications WHERE id=?').get(pub.id), files: { dir: relData(dir), ...meta.files } });
@@ -1762,6 +1765,11 @@ server.listen(PORT, HOST, () => {
   console.log(`[studio] http://${HOST}:${PORT}`);
   console.log(`[studio] data: ${DATA_DIR}`);
 });
+
+
+
+
+
 
 
 
