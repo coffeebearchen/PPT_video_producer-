@@ -1329,7 +1329,7 @@ async function renderWechatWorkspace(accountId = '') {
     </div>
 
     <div class="wx-switcher">
-      ${accounts.map(a => `<button class="wx-switch ${a.id === current.id ? 'active' : ''}" type="button" data-action="switch-wechat-account" data-id="${esc(a.id)}"><span class="wx-dot" style="background:${esc(a.color || '#C73520')}"></span><strong>${esc(a.name)}</strong><small>${a.channel === 'wechat_channels' ? '视频号' : '公众号'}</small>${a.is_default ? '<small>默认</small>' : ''}</button>`).join('')}
+      ${accounts.map(a => `<button class="wx-switch ${a.id === current.id ? 'active' : ''}" type="button" data-action="switch-wechat-account" data-id="${esc(a.id)}"><span class="wx-dot" style="background:${esc(a.color || '#C73520')}"></span><strong>${esc(a.name)}</strong><small>${a.platform === 'xiaohongshu' ? '小红书' : a.platform === 'douyin' ? '抖音' : a.platform === 'wechat_channels' ? '视频号' : '公众号'}</small>${a.is_default ? '<small>默认</small>' : ''}</button>`).join('')}
     </div>
 
     <div class="wx-hero" style="--wx:${esc(current.color || '#C73520')}">
@@ -1409,7 +1409,7 @@ async function renderAccountGroupWorkspace(groupId = '') {
   const published = mine.filter(p => p.status === 'published');
   const pubRow = (p, actions = '') => {
     const ch = pubChannel(p);
-    const type = p.channel === 'wechat_channels' ? '视频号' : '公众号';
+    const type = p.platform === 'xiaohongshu' ? '小红书' : p.platform === 'douyin' ? '抖音' : p.platform === 'wechat_channels' ? '视频号' : '公众号';
     return `<div class="wx-content-row">
       ${coverImg(p.cover_path, p.title, 'wx-content-cover')}
       <div class="wx-content-main">
@@ -2120,7 +2120,7 @@ async function renderSettings() {
                       <div class="wx-account">
                         <span class="wx-dot" style="background:${esc(a.color || g.color || '#C73520')}"></span>
                         <div class="wx-main">
-                          <div class="wx-title"><strong>${esc(a.name || '未命名')}</strong><span class="tag">${a.channel === 'wechat_channels' ? '视频号' : '公众号'}</span>${a.is_default ? '<span class="tag lime">默认</span>' : ''}</div>
+                          <div class="wx-title"><strong>${esc(a.name || '未命名')}</strong><span class="tag">${a.platform === 'xiaohongshu' ? '小红书' : a.platform === 'douyin' ? '抖音' : a.platform === 'wechat_channels' ? '视频号' : '公众号'}</span>${a.is_default ? '<span class="tag lime">默认</span>' : ''}</div>
                           <div class="wx-sub">${a.channel === 'wechat_channels' ? '人工发布空间' : esc(a.appid || '') + ' · ' + (a.secret_set ? 'Secret 已保存' : '未填 Secret')}${a.dry_run ? ' · Dry-run' : ''}</div>
                         </div>
                         <div class="wx-actions">
@@ -2330,7 +2330,7 @@ function openNewBrief(accountId = '') {
           <div class="field"><label>CTA</label><input name="cta" placeholder="关注，领取部署清单"></div>
           <div class="field"><label>截止时间</label><input name="deadline" type="datetime-local"></div>
           <div class="field full"><label>发布渠道</label><div class="flex"><label class="check-row"><input type="checkbox" name="channels" value="wechat_channels" checked> 视频号</label><label class="check-row"><input type="checkbox" name="channels" value="wechat_article"> 公众号</label></div></div>
-          <div class="field full"><label>主账号</label><select name="account_id">${(state.settings?.wechat_accounts || []).map(a => `<option value="${esc(a.id)}" ${(state.newBriefAccountId ? a.id === state.newBriefAccountId : (a.channel === 'wechat_channels' && a.is_default)) ? 'selected' : ''}>${a.channel === 'wechat_channels' ? '视频号' : '公众号'} · ${esc(a.name)}</option>`).join('')}</select><div class="tiny mt-8">一条内容只归一个主账号，避免发错空间。</div></div>
+          <div class="field full"><label>主账号</label><select name="account_id">${(state.settings?.wechat_accounts || []).map(a => `<option value="${esc(a.id)}" ${(state.newBriefAccountId ? a.id === state.newBriefAccountId : (a.channel === 'wechat_channels' && a.is_default)) ? 'selected' : ''}>${a.platform === 'xiaohongshu' ? '小红书' : a.platform === 'douyin' ? '抖音' : a.platform === 'wechat_channels' ? '视频号' : '公众号'} · ${esc(a.name)}</option>`).join('')}</select><div class="tiny mt-8">一条内容只归一个主账号，避免发错空间。</div></div>
         </div>
       </form>`,
     foot: `<button class="btn" data-action="close-modal">取消</button><button class="btn btn-primary" type="submit" form="new-brief-form" id="create-brief-btn">创建并生成角度</button>`,
@@ -2565,7 +2565,7 @@ function openBriefAccountModal(briefId) {
   openModal({
     title: '更换归属账号',
     subtitle: '内容会移动到目标账号空间；已有的同类发布任务也会一起转移。',
-    body: `<form id="brief-account-form"><input type="hidden" name="brief_id" value="${esc(briefId)}"><div class="field"><label>目标账号</label><select name="account_id">${accounts.map(a => `<option value="${esc(a.id)}" ${brief.account_id === a.id ? 'selected' : ''}>${a.channel === 'wechat_channels' ? '视频号' : '公众号'} · ${esc(a.name)}</option>`).join('')}</select></div></form>`,
+    body: `<form id="brief-account-form"><input type="hidden" name="brief_id" value="${esc(briefId)}"><div class="field"><label>目标账号</label><select name="account_id">${accounts.map(a => `<option value="${esc(a.id)}" ${brief.account_id === a.id ? 'selected' : ''}>${a.platform === 'xiaohongshu' ? '小红书' : a.platform === 'douyin' ? '抖音' : a.platform === 'wechat_channels' ? '视频号' : '公众号'} · ${esc(a.name)}</option>`).join('')}</select></div></form>`,
     foot: `<button class="btn" data-action="close-modal">取消</button><button class="btn btn-primary" type="submit" form="brief-account-form">确认更换</button>`
   });
 }
