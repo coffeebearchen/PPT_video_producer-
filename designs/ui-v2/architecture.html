@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<style>
+  *{box-sizing:border-box} html,body{margin:0;background:#111;font-family:"Microsoft YaHei","Noto Sans SC",sans-serif;color:#171815}
+  .screen{position:relative;width:1440px;height:1100px;background:#F3EDE1;overflow:hidden}
+  .side{position:absolute;left:0;top:0;bottom:0;width:238px;background:linear-gradient(180deg,#121314,#0C0D0E);color:#F1EBDD;padding:26px 18px}
+  .brand{display:flex;gap:12px;align-items:center;font-weight:900}.mark{width:38px;height:38px;background:#D9FF57;color:#101112;display:grid;place-items:center;border-radius:8px}
+  .brand small{display:block;font-size:9px;letter-spacing:.18em;color:rgba(241,235,221,.5);margin-top:3px}
+  .label{font-size:10px;letter-spacing:.22em;color:rgba(241,235,221,.35);margin:32px 10px 8px}.nav a{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:8px;color:rgba(241,235,221,.75);font-size:13px;text-decoration:none;margin:2px 0}
+  .nav a.on{background:#D9FF57;color:#101112;font-weight:800}.nav a i{font-style:normal;width:16px;text-align:center;opacity:.6}.nav a.on i{opacity:1}
+  .main{position:absolute;left:238px;right:0;top:0;bottom:0;padding:0 44px 30px;overflow:hidden}
+  .top{height:64px;border-bottom:1px solid rgba(16,17,18,.12);display:flex;align-items:center;justify-content:space-between;font-size:12px;color:#777}.top b{font-weight:600;color:#333}
+  .pagehead{display:flex;justify-content:space-between;align-items:flex-end;margin:28px 0 20px}
+  .eyebrow{font-size:10px;letter-spacing:.2em;color:#8B806E;font-weight:800}.h1{font-family:"Noto Serif SC","Songti SC",serif;font-size:42px;line-height:1.1;margin:8px 0 6px}.sub{font-size:12px;color:#777;line-height:1.6;margin:0}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 13px;border:1px solid #D1C9B9;border-radius:7px;background:rgba(255,255,255,.4);font-size:12px;font-weight:700;color:#171815;text-decoration:none}.btn.primary{background:#171815;color:#F3EDE1;border-color:#171815}
+  .groupbar{display:flex;align-items:center;gap:10px;margin:6px 0 16px}.groupchip{display:flex;align-items:center;gap:8px;padding:8px 13px;border:1px solid #D1C9B9;border-radius:999px;background:rgba(255,255,255,.55);font-size:12px;font-weight:800}.dot{width:10px;height:10px;border-radius:50%;background:#C73520}.chip{font-size:10px;padding:3px 7px;border:1px solid #D1C9B9;border-radius:999px;color:#777}
+  .hero{border:1px solid #D1C9B9;border-left:7px solid #C73520;border-radius:12px;background:linear-gradient(110deg,rgba(255,255,255,.72),rgba(255,255,255,.3));padding:18px 22px;display:flex;align-items:center;gap:16px}
+  .hero .big{font-family:"Noto Serif SC",serif;font-size:25px;font-weight:900}.hero .small{font-size:11px;color:#777;margin-top:4px}
+  .channels{display:flex;gap:8px;margin-left:auto}.ch{padding:7px 10px;border:1px solid #D1C9B9;border-radius:8px;background:rgba(255,255,255,.45);font-size:11px;display:flex;align-items:center;gap:6px}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0}
+  .stat{border:1px solid #D1C9B9;border-radius:10px;background:rgba(255,255,255,.55);padding:14px 16px}.stat label{font-size:10px;color:#8B806E;letter-spacing:.08em}.stat strong{display:block;font-size:28px;line-height:1.2;margin-top:4px}.stat span{font-size:10px;color:#8B806E}
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px}.card{border:1px solid #D1C9B9;border-radius:12px;background:rgba(255,255,255,.45);overflow:hidden}.cardhead{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid #D1C9B9}.cardhead h3{font-size:14px;margin:0}.cardhead p{font-size:10px;color:#8B806E;margin:4px 0 0}.cardbody{padding:8px 18px 14px}
+  table{width:100%;border-collapse:collapse;font-size:11px}th{text-align:left;color:#8B806E;font-size:9px;letter-spacing:.08em;padding:8px 6px;border-bottom:1px solid #D1C9B9}td{padding:11px 6px;border-bottom:1px solid rgba(16,17,18,.08);vertical-align:middle}tr:last-child td{border-bottom:0}
+  .cid{font-family:Consolas,monospace;font-size:10px;color:#777}.title{font-size:12px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}
+  .pills{display:flex;gap:4px;flex-wrap:wrap}.p{font-size:9px;padding:3px 6px;border-radius:4px;background:rgba(16,17,18,.06);color:#555;border:1px solid rgba(16,17,18,.08)}.p.xhs{background:#FFF0ED;color:#B33A2B;border-color:#E8B3A9}.p.sph{background:#EDF4FF;color:#2E5E9E;border-color:#B8CCE8}.p.mp{background:#EEF7EF;color:#2E6B3A;border-color:#B8D5BC}
+  .status{font-size:10px;font-weight:700}.ok{color:#2E6B3A}.warn{color:#A06A18}.muted{color:#8B806E}
+  .rail .row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid rgba(16,17,18,.08);font-size:11px}.rail .row:last-child{border:0}.rail small{color:#8B806E;font-size:10px}
+  .tag{font-size:9px;padding:3px 6px;border-radius:4px;border:1px solid #D1C9B9;color:#666}.tag.lime{background:#D9FF57;border-color:#B6D93E;color:#101112;font-weight:800}
+  .note{font-size:10px;line-height:1.6;color:#777;background:rgba(217,255,87,.16);border:1px solid #DDE5B8;border-radius:8px;padding:10px 12px;margin-top:10px}
+  /* screen 2 */
+  .detailhead{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin:26px 0 18px}.detailhead h1{font-family:"Noto Serif SC",serif;font-size:34px;margin:6px 0 8px}.meta{display:flex;gap:7px;flex-wrap:wrap;align-items:center;font-size:10px;color:#777}
+  .back{font-size:10px;color:#777;text-decoration:none}.tabs{display:flex;gap:6px;border-bottom:1px solid #D1C9B9;margin-bottom:14px}.tab{padding:9px 12px;font-size:11px;color:#777;border-bottom:2px solid transparent}.tab.on{color:#171815;font-weight:800;border-color:#C73520}
+  .detailgrid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px}.variant{border:1px solid #D1C9B9;border-radius:10px;background:rgba(255,255,255,.55);padding:14px 16px;margin-bottom:10px}.vhead{display:flex;justify-content:space-between;align-items:center;gap:10px}.vhead strong{font-size:13px}.vtitle{font-size:12px;font-weight:800;margin:9px 0 5px}.vbody{font-size:10.5px;color:#777;line-height:1.65}.vmeta{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}.vmeta span{font-size:9px;padding:3px 6px;border-radius:4px;background:rgba(16,17,18,.05);color:#666}.vmeta .x{background:#FFF0ED;color:#B33A2B}.timeline{padding-left:12px}.tl{position:relative;padding:0 0 16px 18px;border-left:1px solid #D1C9B9}.tl:before{content:'';position:absolute;left:-4px;top:2px;width:7px;height:7px;border-radius:50%;background:#C73520}.tl.done:before{background:#2E6B3A}.tl h4{margin:0;font-size:11px}.tl p{margin:4px 0 0;font-size:10px;color:#777;line-height:1.5}
+  .code{font-family:Consolas,monospace;font-size:10px;background:rgba(16,17,18,.05);padding:2px 4px;border-radius:3px;color:#555}
+  /* screen 3 */
+  .provider{border:1px solid #D1C9B9;border-radius:12px;background:rgba(255,255,255,.55);padding:18px}.provider .toprow{display:flex;align-items:center;gap:10px}.provider h2{font-size:16px;margin:0}.provider .desc{font-size:10.5px;color:#777;line-height:1.6;margin:8px 0 14px}
+  .formgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.f label{display:block;font-size:9px;color:#8B806E;letter-spacing:.08em;margin-bottom:5px}.f input,.f select{width:100%;padding:9px 10px;background:rgba(255,255,255,.55);border:1px solid #D1C9B9;border-radius:6px;font-size:11px;color:#171815}
+  .map{width:100%;border-collapse:collapse;font-size:10.5px;margin-top:8px}.map th{font-size:9px;color:#8B806E;letter-spacing:.08em;padding:7px 5px;border-bottom:1px solid #D1C9B9}.map td{padding:8px 5px;border-bottom:1px solid rgba(16,17,18,.08)}.maptag{font-size:9px;padding:2px 5px;border-radius:3px;background:#EDF4FF;color:#2E5E9E}
+  .checkline{display:flex;align-items:center;gap:8px;font-size:10px;color:#555;padding:5px 0}.check{width:14px;height:14px;border:1px solid #B9D28A;background:#EEF7D8;border-radius:3px;display:grid;place-items:center;font-size:10px;color:#2E6B3A}
+  .screenlabel{position:absolute;right:28px;bottom:18px;font-size:9px;letter-spacing:.16em;color:#A49A88}
+</style>
+</head>
+<body>
+
+<!-- SCREEN 1 -->
+<div class="screen">
+  <aside class="side">
+    <div class="brand"><div class="mark">FA</div><div>固定地址<small>CONTENT STUDIO</small></div></div>
+    <div class="label">工作台</div><div class="nav">
+      <a><i>□</i>总览</a><a><i>＋</i>创作台</a><a class="on"><i>◎</i>账号</a><a><i>▤</i>发布</a><a><i>▦</i>批量生产</a>
+    </div>
+    <div class="label">内容资产</div><div class="nav">
+      <a><i>▣</i>素材库</a><a><i>♫</i>音乐库</a><a><i>▤</i>知识库</a><a><i>⌘</i>结构库</a><a><i>▦</i>模板库</a>
+    </div>
+    <div class="label">系统</div><div class="nav"><a><i>⚙</i>设置</a></div>
+  </aside>
+  <main class="main">
+    <div class="top"><span><b>工作台</b> / 内容主线</span><span>本地运行 · v2.3</span></div>
+    <div class="pagehead">
+      <div><div class="eyebrow">CONTENT LINE / 内容主线</div><div class="h1">每条内容，有迹可循。</div><p class="sub">母稿只做一次，平台版本各自发布；每一条都有 content_id 和回执。</p></div>
+      <div style="display:flex;gap:8px"><a class="btn">导出数据</a><a class="btn primary">+ 新建内容</a></div>
+    </div>
+    <div class="groupbar"><div class="groupchip"><span class="dot"></span>固定地址</div><div class="chip">公众号</div><div class="chip">视频号</div><div class="chip">小红书 · 蚁小二</div></div>
+    <div class="hero"><div><div class="big">固定地址</div><div class="small">1 个账号组 · 2 个直连渠道 · 1 个蚁小二通道</div></div><div class="channels"><div class="ch"><span class="dot"></span>公众号主号</div><div class="ch" style="--dot:#2E6F9E"><span class="dot" style="background:#2E6F9E"></span>视频号主号</div><div class="ch"><span class="dot" style="background:#8E44AD"></span>副账号矩阵 · 蚁小二</div></div></div>
+    <div class="stats">
+      <div class="stat"><label>母稿</label><strong>48</strong><span>content_id 唯一</span></div>
+      <div class="stat"><label>平台变体</label><strong>126</strong><span>小红书 / 视频号 / 公众号</span></div>
+      <div class="stat"><label>待发布</label><strong>8</strong><span>含 3 个蚁小二任务</span></div>
+      <div class="stat"><label>已发布</label><strong>72</strong><span>可回写 platform_ref</span></div>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <div class="cardhead"><div><h3>内容主线</h3><p>母稿 → 变体 → 平台对象</p></div><span class="tag">48 条</span></div>
+        <div class="cardbody">
+          <table>
+            <tr><th>CONTENT ID</th><th>母稿</th><th>变体</th><th>状态</th><th>平台回执</th></tr>
+            <tr><td class="cid">C-1042</td><td><div class="title">RAG 不是知识库</div><div class="muted" style="font-size:9px;margin-top:3px">改 · 11/08 14:20</div></td><td><div class="pills"><span class="p mp">公众号</span><span class="p sph">视频号</span><span class="p xhs">小红书</span></div></td><td><span class="status ok">已发布</span><div class="muted" style="font-size:9px">3/3</div></td><td class="cid">xhs_8842<br>sph_1928<br>mp_msgid_7f2</td></tr>
+            <tr><td class="cid">C-1041</td><td><div class="title">上下文窗口不是记忆力</div><div class="muted" style="font-size:9px;margin-top:3px">改 · 11/08 12:05</div></td><td><div class="pills"><span class="p sph">视频号</span><span class="p xhs">小红书</span></div></td><td><span class="status warn">蚁小二处理中</span><div class="muted" style="font-size:9px">1/2</div></td><td class="cid">yx_task_7d1</td></tr>
+            <tr><td class="cid">C-1040</td><td><div class="title">提示词不是越长越好</div><div class="muted" style="font-size:9px;margin-top:3px">改 · 11/08 10:30</div></td><td><div class="pills"><span class="p mp">公众号</span></div></td><td><span class="status ok">已发布</span><div class="muted" style="font-size:9px">1/1</div></td><td class="cid">mp_msgid_6a1</td></tr>
+            <tr><td class="cid">C-1039</td><td><div class="title">AI Agent 不是聊天机器人</div><div class="muted" style="font-size:9px;margin-top:3px">改 · 11/07 18:40</div></td><td><div class="pills"><span class="p sph">视频号</span><span class="p xhs">小红书</span></div></td><td><span class="status warn">待人工确认</span><div class="muted" style="font-size:9px">0/2</div></td><td class="muted">未发布</td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="stack">
+        <div class="card rail"><div class="cardhead"><h3>账号组配置</h3></div><div class="cardbody">
+          <div class="row"><span>模板</span><span class="tag lime">Hybrid v2.2</span></div>
+          <div class="row"><span>灵魂档案</span><span>固定地址</span></div>
+          <div class="row"><span>知识库</span><span>固定地址 · 12 篇</span></div>
+          <div class="row"><span>结构偏好</span><span>对照 / 因果</span></div>
+          <div class="note">模板、知识库、灵魂档案按账号组生效；模型 Key 和发布适配器保持全局。</div>
+        </div></div>
+        <div class="card rail"><div class="cardhead"><h3>发布通道</h3></div><div class="cardbody">
+          <div class="row"><span><span class="dot"></span> 公众号主号</span><span class="tag">直连</span></div>
+          <div class="row"><span><span class="dot" style="background:#2E6F9E"></span> 视频号主号</span><span class="tag">人工</span></div>
+          <div class="row"><span><span class="dot" style="background:#8E44AD"></span> 副账号矩阵</span><span class="tag lime">蚁小二</span></div>
+        </div></div>
+      </div>
+    </div>
+    <div class="screenlabel">UI 01 / CONTENT LINE</div>
+  </main>
+</div>
+
+<!-- SCREEN 2 -->
+<div class="screen">
+  <aside class="side">
+    <div class="brand"><div class="mark">FA</div><div>固定地址<small>CONTENT STUDIO</small></div></div>
+    <div class="label">工作台</div><div class="nav">
+      <a><i>□</i>总览</a><a><i>＋</i>创作台</a><a class="on"><i>◎</i>账号</a><a><i>▤</i>发布</a><a><i>▦</i>批量生产</a>
+    </div>
+    <div class="label">内容资产</div><div class="nav"><a><i>▣</i>素材库</a><a><i>♫</i>音乐库</a><a><i>▤</i>知识库</a><a><i>⌘</i>结构库</a><a><i>▦</i>模板库</a></div>
+    <div class="label">系统</div><div class="nav"><a><i>⚙</i>设置</a></div>
+  </aside>
+  <main class="main">
+    <div class="top"><span><b>内容主线</b> / C-1042</span><span>固定地址 · 公众号 + 视频号 + 小红书</span></div>
+    <div class="detailhead">
+      <div><a class="back">← 返回内容主线</a><h1>RAG 不是知识库</h1><div class="meta"><span class="cid">C-1042</span><span class="tag lime">母稿</span><span>固定地址</span><span>Hybrid v2.2</span><span>AI 标识：已声明</span></div></div>
+      <div style="display:flex;gap:8px"><a class="btn">重新生成变体</a><a class="btn primary">发布全部</a></div>
+    </div>
+    <div class="tabs"><div class="tab on">全部变体 3</div><div class="tab">小红书</div><div class="tab">视频号</div><div class="tab">公众号</div></div>
+    <div class="detailgrid">
+      <div>
+        <div class="variant"><div class="vhead"><strong>小红书 · 图文</strong><span class="status ok">已发布</span></div><div class="vtitle">你花 3 万搭的知识库，员工还在群里问同一件事</div><div class="vbody">不是知识库没用，是你把“存货”当成了“检索”。先看员工到底在问什么，再决定要不要重建。</div><div class="vmeta"><span class="x">小红书</span><span>cover 3:4</span><span>AI 标识 · 已声明</span><span>platform_ref: xhs_8842</span><span>蚁小二</span></div></div>
+        <div class="variant"><div class="vhead"><strong>视频号 · 竖屏视频</strong><span class="status ok">已发布</span></div><div class="vtitle">为什么 AI 刚聊完就忘？不是它笨</div><div class="vbody">9:16 · 24s · 字幕版 · 封面已生成</div><div class="vmeta"><span>视频号</span><span>platform_ref: sph_1928</span><span>直连 / 人工</span></div></div>
+        <div class="variant"><div class="vhead"><strong>公众号 · 文章</strong><span class="status ok">已发布</span></div><div class="vtitle">RAG 不是知识库：先把检索和生成分开看</div><div class="vbody">长文版 · 2400 字 · 3 张配图 · 排版 wechat_article_v1</div><div class="vmeta"><span>公众号</span><span>platform_ref: mp_msgid_7f2</span><span>直连 API</span></div></div>
+      </div>
+      <div class="card rail"><div class="cardhead"><h3>发布时间线</h3></div><div class="cardbody timeline">
+        <div class="tl done"><h4>母稿生成</h4><p>11/08 14:20 · 固定地址<br><span class="code">C-1042</span></p></div>
+        <div class="tl done"><h4>变体拆分</h4><p>小红书 / 视频号 / 公众号<br>模板版本 Hybrid v2.2</p></div>
+        <div class="tl done"><h4>审核通过</h4><p>人工确认 · 3 个变体</p></div>
+        <div class="tl done"><h4>蚁小二任务</h4><p><span class="code">yx_task_7d1</span><br>小红书 · 已回执</p></div>
+        <div class="tl"><h4>效果回流</h4><p>待拉取阅读 / 互动 / 转化</p></div>
+        <div class="note">每个变体独立审批、独立回执；母稿只做一次。</div>
+      </div></div>
+    </div>
+    <div class="screenlabel">UI 02 / CONTENT DETAIL</div>
+  </main>
+</div>
+
+<!-- SCREEN 3 -->
+<div class="screen">
+  <aside class="side">
+    <div class="brand"><div class="mark">FA</div><div>固定地址<small>CONTENT STUDIO</small></div></div>
+    <div class="label">工作台</div><div class="nav"><a><i>□</i>总览</a><a><i>＋</i>创作台</a><a class="on"><i>◎</i>账号</a><a><i>▤</i>发布</a><a><i>▦</i>批量生产</a></div>
+    <div class="label">内容资产</div><div class="nav"><a><i>▣</i>素材库</a><a><i>♫</i>音乐库</a><a><i>▤</i>知识库</a><a><i>⌘</i>结构库</a><a><i>▦</i>模板库</a></div>
+    <div class="label">系统</div><div class="nav"><a><i>⚙</i>设置</a></div>
+  </aside>
+  <main class="main">
+    <div class="top"><span><b>账号</b> / 固定地址 / 发布通道</span><span>本地运行 · v2.3</span></div>
+    <div class="pagehead"><div><div class="eyebrow">PUBLISH PROVIDER / 发布通道</div><div class="h1">主号直连，副号走蚁小二。</div><p class="sub">一个 provider 层，不把平台差异写进内容模型。</p></div><a class="btn">查看 API 文档 ↗</a></div>
+    <div class="grid">
+      <div>
+        <div class="provider">
+          <div class="toprow"><span class="dot" style="background:#8E44AD"></span><h2>蚁小二 · 副账号矩阵</h2><span class="tag lime" style="margin-left:auto">已连接</span></div>
+          <p class="desc">负责小红书 / 抖音 / 视频号副号的任务创建与回执回写。主号仍走直连或人工发布。</p>
+          <div class="formgrid">
+            <div class="f"><label>API KEY</label><input value="••••••••••••••••••••" type="password"></div>
+            <div class="f"><label>BASE URL</label><input value="https://open-api.yixiaoer.cn"></div>
+            <div class="f"><label>发布方式</label><select><option>cloud · 云端发布</option><option>local · 本机客户端</option></select></div>
+            <div class="f"><label>AI 标识</label><select><option>强制声明</option><option>按平台默认</option></select></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:12px"><a class="btn primary">测试连接</a><a class="btn">读取账号</a><a class="btn">校验 Schema</a><a class="btn">Dry-run</a></div>
+          <div class="checkline"><span class="check">✓</span>账号授权有效 <span class="muted" style="margin-left:auto">上次检查 2 分钟前</span></div>
+          <div class="checkline"><span class="check">✓</span>API Key 已保存 <span class="muted" style="margin-left:auto">不回显</span></div>
+          <div class="checkline"><span class="check">!</span>公众号订阅号权限需以微信后台为准 <span class="muted" style="margin-left:auto">未验证</span></div>
+        </div>
+        <div class="card" style="margin-top:14px"><div class="cardhead"><div><h3>账号映射</h3><p>渠道 → 蚁小二账号 ID</p></div><span class="tag">3 个</span></div><div class="cardbody">
+          <table class="map"><tr><th>本系统渠道</th><th>平台</th><th>蚁小二账号</th><th>状态</th></tr>
+            <tr><td>小红书副号 A</td><td><span class="maptag">小红书</span></td><td class="cid">xhs_acct_001</td><td class="status ok">已授权</td></tr>
+            <tr><td>抖音副号 B</td><td><span class="maptag" style="background:#EEF7EF;color:#2E6B3A">抖音</span></td><td class="cid">dy_acct_002</td><td class="status ok">已授权</td></tr>
+            <tr><td>视频号副号 C</td><td><span class="maptag" style="background:#EDF4FF;color:#2E5E9E">视频号</span></td><td class="cid">sph_acct_003</td><td class="status warn">待验证</td></tr>
+          </table>
+        </div></div>
+      </div>
+      <div class="stack">
+        <div class="card rail"><div class="cardhead"><h3>发布策略</h3></div><div class="cardbody">
+          <div class="row"><span>主号公众号</span><span class="tag">直连 API</span></div>
+          <div class="row"><span>主号视频号</span><span class="tag">人工发布包</span></div>
+          <div class="row"><span>副账号</span><span class="tag lime">蚁小二</span></div>
+          <div class="row"><span>自动通过</span><span class="muted">关闭</span></div>
+          <div class="row"><span>失败重试</span><span class="muted">3 次</span></div>
+          <div class="note">正常任务全自动；账号过期、字段缺失、平台审核失败时进入人工处理队列。</div>
+        </div></div>
+        <div class="card rail"><div class="cardhead"><h3>回执字段</h3></div><div class="cardbody">
+          <div class="row"><span>provider_task_id</span><span class="cid">yx_...</span></div>
+          <div class="row"><span>platform_ref</span><span class="cid">xhs_...</span></div>
+          <div class="row"><span>content_id</span><span class="cid">C-1042</span></div>
+          <div class="note">每个变体独立回写，不把平台差异混进母稿。</div>
+        </div></div>
+      </div>
+    </div>
+    <div class="screenlabel">UI 03 / PUBLISH PROVIDER</div>
+  </main>
+</div>
+</body>
+</html>

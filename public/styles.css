@@ -1136,3 +1136,70 @@ input::placeholder, textarea::placeholder { color: #B2A897; }
 .main::-webkit-scrollbar-thumb { background: #b9b2a4; border: 2px solid #e9e2d5; }
 .main::-webkit-scrollbar-thumb:hover { background: #9c9485; }
 
+
+/* Multi WeChat accounts: prominent name + color to avoid publishing to the wrong account. */
+.wx-account-list { display:flex; flex-direction:column; gap:10px; }
+.wx-account { display:flex; align-items:center; gap:14px; padding:12px 14px; border:1px solid var(--line); border-radius:10px; background:rgba(255,255,255,.35); }
+.wx-dot { width:16px; height:16px; border-radius:50%; flex:0 0 auto; box-shadow:0 0 0 3px rgba(0,0,0,.08); }
+.wx-main { min-width:0; flex:1 1 auto; }
+.wx-title { display:flex; align-items:center; gap:8px; font-size:14px; }
+.wx-sub { margin-top:3px; color:var(--muted); font-size:11px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.wx-actions { display:flex; gap:6px; flex:0 0 auto; flex-wrap:wrap; justify-content:flex-end; }
+.wx-badge { display:inline-flex; align-items:center; gap:5px; padding:3px 8px; border-radius:20px; background:color-mix(in srgb, var(--wx) 18%, transparent); color:var(--wx); font-weight:800; font-size:11px; border:1px solid color-mix(in srgb, var(--wx) 45%, transparent); }
+.wx-pick-list { display:flex; flex-direction:column; gap:8px; }
+.wx-pick { display:flex; align-items:center; gap:12px; width:100%; text-align:left; padding:12px 14px; border:1px solid var(--line); border-radius:10px; background:rgba(255,255,255,.4); cursor:pointer; }
+.wx-pick:hover { border-color: var(--ink); }
+.wx-pick-main { display:flex; flex-direction:column; }
+.wx-pick-main strong { font-size:14px; }
+.wx-pick-main small { color:var(--muted); font-size:11px; }
+.danger { color:#B3261E; border-color: rgba(179,38,30,.35); }
+
+/* WeChat account workspace */
+.wx-switcher { display:flex; gap:10px; flex-wrap:wrap; margin:0 0 16px; }
+.wx-switch { display:flex; align-items:center; gap:9px; padding:9px 13px; border:1px solid var(--line); border-radius:999px; background:rgba(255,255,255,.55); cursor:pointer; color:var(--ink); }
+.wx-switch.active { border-color:var(--ink); background:var(--ink); color:var(--paper); }
+.wx-switch small { opacity:.55; font-size:10px; }
+.wx-hero { position:relative; display:flex; align-items:center; gap:18px; padding:22px 24px; border:1px solid var(--line); border-left:8px solid var(--wx); border-radius:14px; background:linear-gradient(110deg, rgba(255,255,255,.7), rgba(255,255,255,.3)); overflow:hidden; }
+.wx-hero-mark { width:54px; height:54px; border-radius:14px; background:var(--wx); opacity:.16; flex:0 0 auto; }
+.wx-hero-main { flex:1 1 auto; min-width:0; }
+.wx-hero-kicker { color:var(--wx); font-size:11px; letter-spacing:.16em; font-weight:900; }
+.wx-hero h2 { margin:4px 0 4px; font-size:28px; font-family:var(--serif); }
+.wx-hero-sub { color:var(--muted); font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.wx-hero-actions { display:flex; gap:7px; flex:0 0 auto; }
+.wx-content-list { display:flex; flex-direction:column; gap:0; }
+.wx-content-row { display:flex; align-items:center; gap:12px; padding:12px 0; border-top:1px solid var(--line); }
+.wx-content-row:first-child { border-top:0; }
+.wx-content-cover { width:44px; height:78px; flex:0 0 44px; object-fit:cover; border-radius:4px; background:#111; }
+.wx-content-main { flex:1 1 auto; min-width:0; }
+.wx-content-title { font-size:13px; font-weight:750; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.wx-content-meta { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:5px; color:var(--muted); font-size:11px; }
+.wx-content-actions { display:flex; gap:5px; flex:0 0 auto; }
+@media (max-width: 980px) { .wx-hero { flex-wrap:wrap; } .wx-hero-actions { width:100%; } }
+
+.wx-brief-list { display:flex; flex-direction:column; }
+.wx-brief-row { display:flex; align-items:center; gap:10px; padding:11px 0; border-top:1px solid var(--line); color:var(--ink); text-decoration:none; }
+.wx-brief-row:first-child { border-top:0; }
+.wx-brief-row:hover { background:rgba(0,0,0,.025); }
+.wx-brief-main { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; }
+.wx-brief-main strong { font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.wx-brief-main small { color:var(--muted); font-size:11px; margin-top:3px; }
+.wx-brief-go { color:var(--muted); font-size:11px; }
+
+.wx-channel-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; margin:14px 0; }
+.wx-channel-card { border:1px solid var(--line); border-top:5px solid var(--wx); border-radius:12px; padding:14px 16px; background:rgba(255,255,255,.4); }
+.wx-channel-top { display:flex; align-items:center; gap:8px; font-size:12px; }
+.wx-channel-name { margin-top:8px; font-size:18px; font-weight:800; }
+.wx-channel-sub { margin-top:4px; color:var(--muted); font-size:11px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.wx-channel-actions { display:flex; gap:6px; margin-top:10px; }
+
+.wx-group-list { display:flex; flex-direction:column; gap:8px; }
+.wx-group-row { display:flex; align-items:center; gap:10px; padding:10px 12px; border:1px solid var(--line); border-left:4px solid var(--wx); border-radius:8px; background:rgba(255,255,255,.35); }
+.wx-group-main { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; }
+.wx-group-main strong { font-size:13px; }
+.wx-group-main small { color:var(--muted); font-size:11px; margin-top:2px; }
+
+.wx-group-block { border:1px solid var(--line); border-left:5px solid var(--wx); border-radius:12px; overflow:hidden; background:rgba(255,255,255,.3); }
+.wx-group-head { display:flex; align-items:center; gap:10px; padding:12px 14px; background:rgba(0,0,0,.025); }
+.wx-group-channels { padding:0 14px 8px 26px; border-top:1px solid var(--line); }
+.wx-group-channels .wx-account { border:0; border-top:1px dashed var(--line); border-radius:0; background:transparent; padding:10px 0; }
+.wx-group-channels .wx-account:first-child { border-top:0; }

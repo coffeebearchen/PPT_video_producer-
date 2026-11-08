@@ -158,9 +158,11 @@ async function refreshWechatStatus() {
     const s = await api('/api/settings');
     state.settings = s;
     const el = $('#wechat-status');
-    const configured = Boolean(s.wechat_appid && s.wechat_secret_set);
+    const groups = s.account_groups || [];
+    const configured = (s.wechat_accounts || []).filter(a => a.secret_set).length;
+    const def = groups.find(g => g.is_default) || groups[0];
     el.className = 'top-status' + (configured ? ' ok' : '');
-    el.innerHTML = `<i></i> ${configured ? '公众号已配置' : '公众号未配置'}`;
+    el.innerHTML = `<i></i> ${groups.length ? `${groups.length} 个账号组${def ? ' · ' + esc(def.name) : ''}` : '账号未配置'}`;
   } catch {}
 }
 
@@ -188,6 +190,7 @@ function parseRoute() {
   if (parts[0] === 'review' && parts[1]) return { name: 'review-detail', id: parts[1] };
   if (parts[0] === 'review') return { name: 'review' };
   if (parts[0] === 'publish') return { name: 'publish' };
+  if (parts[0] === 'wechat') return { name: 'wechat', id: parts[1] || '' };
   if (parts[0] === 'batch') return { name: 'batch' };
   if (parts[0] === 'knowledge') return { name: 'knowledge' };
   if (parts[0] === 'analogies') return { name: 'analogies' };
@@ -212,6 +215,7 @@ async function route() {
     if (state.route.name === 'review') return await renderReviewList();
     if (state.route.name === 'review-detail') return await renderReviewDetail(state.route.id);
     if (state.route.name === 'publish') return await renderPublish();
+    if (state.route.name === 'wechat') return await renderAccountGroupWorkspace(state.route.id);
     if (state.route.name === 'batch') return await renderBatch();
     if (state.route.name === 'knowledge') return await renderKnowledge();
     if (state.route.name === 'analogies') return await renderAnalogies();
@@ -637,7 +641,7 @@ async function renderBrief(id) {
         <a class="back" href="#/briefs"><svg><use href="#i-arrow"></use></svg> 返回选题</a>
         <h1 class="detail-title">${esc(brief.title)}</h1>
         <p class="detail-sub">${esc(brief.topic)}</p>
-        <div class="flex mt-12">${statusChip(brief.status)}<span class="tiny">更新于 ${fmtDate(brief.updated_at)}</span></div>
+        <div class="flex mt-12">${statusChip(brief.status)}${(() => { const g = (state.settings?.account_groups || []).find(x => x.id === brief.group_id); const a = (state.settings?.wechat_accounts || []).find(x => x.id === brief.account_id); return g ? `<span class="wx-badge" style="--wx:${esc(g.color || '#C73520')}">● ${esc(g.name)}${a ? ' · ' + esc(a.name) : ''}</span><button class="btn btn-sm" data-action="change-brief-account" data-id="${esc(brief.id)}">更换</button>` : '<span class="tag">未分配账号组</span><button class="btn btn-sm" data-action="change-brief-account" data-id="${esc(brief.id)}">分配</button>'; })()}<span class="tiny">更新于 ${fmtDate(brief.updated_at)}</span></div>
       </div>
       <div class="head-actions">
         ${!angles.length ? `<button class="btn btn-primary" data-action="generate-angles" data-id="${esc(brief.id)}"><svg><use href="#i-spark"></use></svg>生成 ${brief.quantity || 3} 个角度</button>` : ''}
@@ -1224,6 +1228,12 @@ async function renderReviewDetail(id) {
 // ---------- publish ----------
 async function renderPublish() {
   setNav('publish'); setCrumb('工作台 / 发布');
+  const s = state.settings || await api('/api/settings');
+  state.settings = s;
+  const acctMap = Object.fromEntries((s.wechat_accounts || []).map(a => [a.id, a]));
+  const accountBadge = (p) => p.channel === 'wechat_article' && p.account_id && acctMap[p.account_id]
+    ? `<span class="wx-badge" style="--wx:${esc(acctMap[p.account_id].color || '#C73520')}">● ${esc(acctMap[p.account_id].name)}</span>`
+    : '';
   const [library, queue] = await Promise.all([api('/api/library'), api('/api/publish/queue')]);
   const approved = library.filter(r => r.status === 'approved');
   const existingIds = new Set(queue.map(q => q.render_id));
@@ -1252,7 +1262,7 @@ async function renderPublish() {
           ${pendingQueue.length ? `<div class="pub-list">${pendingQueue.map(p => `
             <div class="pub-row">
               ${coverImg(p.cover_path, p.title, 'pub-cover')}
-              <div class="pub-main"><div class="pub-title">${esc(p.title)}</div><div class="pub-meta"><span class="channel-badge ${p.channel}">${p.channel === 'wechat_channels' ? '视频号' : (p.channel === 'xiaohongshu' ? '小红书' : '公众号')}</span>${statusChip(p.status)}<span>${fmtDate(p.scheduled_at || p.created_at)}</span></div></div>
+              <div class="pub-main"><div class="pub-title">${esc(p.title)}</div><div class="pub-meta"><span class="channel-badge ${p.channel}">${p.channel === 'wechat_channels' ? '视频号' : (p.channel === 'xiaohongshu' ? '小红书' : '公众号')}</span>${accountBadge(p)}${statusChip(p.status)}<span>${fmtDate(p.scheduled_at || p.created_at)}</span></div></div>
               <div class="pub-actions">
                 ${p.channel === 'wechat_article'
                   ? (['draft_created', 'publishing'].includes(p.status)
@@ -1272,11 +1282,182 @@ async function renderPublish() {
         ${doneQueue.length ? `<div class="pub-list">${doneQueue.map(p => `
           <div class="pub-row">
             ${coverImg(p.cover_path, p.title, 'pub-cover')}
-            <div class="pub-main"><div class="pub-title">${esc(p.title)}</div><div class="pub-meta"><span class="channel-badge ${p.channel}">${p.channel === 'wechat_channels' ? '视频号' : (p.channel === 'xiaohongshu' ? '小红书' : '公众号')}</span><span>${fmtDate(p.updated_at)}</span>${p.url ? `<a href="${esc(p.url)}" target="_blank" rel="noreferrer">打开链接</a>` : ''}</div></div>
+            <div class="pub-main"><div class="pub-title">${esc(p.title)}</div><div class="pub-meta"><span class="channel-badge ${p.channel}">${p.channel === 'wechat_channels' ? '视频号' : (p.channel === 'xiaohongshu' ? '小红书' : '公众号')}</span>${accountBadge(p)}<span>${fmtDate(p.updated_at)}</span>${p.url ? `<a href="${esc(p.url)}" target="_blank" rel="noreferrer">打开链接</a>` : ''}</div></div>
             <div class="pub-actions">${statusChip('published')}</div>
           </div>`).join('')}</div>` : '<p class="tiny mb-0">还没有已发布内容。</p>'}
       </div>
     </div>`;
+}
+
+// ---------- WeChat account workspace ----------
+async function renderWechatWorkspace(accountId = '') {
+  setNav('wechat'); setCrumb('工作台 / 账号');
+  const settings = state.settings || await api('/api/settings');
+  state.settings = settings;
+  const accounts = settings.wechat_accounts || [];
+  const current = accounts.find(a => a.id === accountId)
+    || accounts.find(a => a.channel === 'wechat_article' && a.is_default)
+    || accounts.find(a => a.channel === 'wechat_article')
+    || accounts[0];
+  if (!current) {
+    $('#view').innerHTML = `<div class="page-head"><div><p class="eyebrow">ACCOUNT / 账号</p><h1 class="page-title">先添加一个渠道账号。</h1><p class="page-sub">公众号和视频号都可以有自己的独立内容空间。</p></div><div class="head-actions"><a class="btn btn-primary" href="#/settings">去设置添加</a></div></div>`;
+    return;
+  }
+  const isVideo = current.channel === 'wechat_channels';
+  const typeLabel = isVideo ? '视频号' : '公众号';
+  const queue = await api('/api/publish/queue');
+  const mine = queue.filter(p => p.channel === current.channel && p.account_id === current.id);
+  const allBriefs = await api('/api/briefs');
+  const myBriefs = allBriefs.filter(b => b.account_id === current.id);
+  const drafts = mine.filter(p => ['scheduled', 'dry_run', 'draft_created'].includes(p.status) || (isVideo && p.status === 'ready_for_manual'));
+  const publishing = mine.filter(p => p.status === 'publishing');
+  const published = mine.filter(p => p.status === 'published');
+  const label = (p) => p.status === 'ready_for_manual' ? '发布包' : p.status === 'draft_created' ? '草稿已建' : p.status === 'dry_run' ? 'Dry-run' : p.status === 'scheduled' ? '待创建' : p.status === 'publishing' ? '发布中' : '已发布';
+  const row = (p, actions = '') => `
+    <div class="wx-content-row">
+      ${coverImg(p.cover_path, p.title, 'wx-content-cover')}
+      <div class="wx-content-main">
+        <div class="wx-content-title">${esc(p.title)}</div>
+        <div class="wx-content-meta"><span class="wx-badge" style="--wx:${esc(current.color || '#C73520')}">● ${esc(current.name)}</span><span>${label(p)}</span><span>${fmtDate(p.updated_at || p.created_at)}</span></div>
+      </div>
+      <div class="wx-content-actions">${actions}</div>
+    </div>`;
+  $('#view').innerHTML = `
+    <div class="page-head">
+      <div><p class="eyebrow">ACCOUNT / 账号</p><h1 class="page-title">一个账号，一个内容空间。</h1><p class="page-sub">选题、草稿、发布、已发布都按账号隔离；公众号和视频号各自独立。</p></div>
+      <div class="head-actions"><button class="btn" data-action="add-wechat-account">+ 新增账号</button><a class="btn" href="#/settings">账号设置</a></div>
+    </div>
+
+    <div class="wx-switcher">
+      ${accounts.map(a => `<button class="wx-switch ${a.id === current.id ? 'active' : ''}" type="button" data-action="switch-wechat-account" data-id="${esc(a.id)}"><span class="wx-dot" style="background:${esc(a.color || '#C73520')}"></span><strong>${esc(a.name)}</strong><small>${a.channel === 'wechat_channels' ? '视频号' : '公众号'}</small>${a.is_default ? '<small>默认</small>' : ''}</button>`).join('')}
+    </div>
+
+    <div class="wx-hero" style="--wx:${esc(current.color || '#C73520')}">
+      <div class="wx-hero-mark"></div>
+      <div class="wx-hero-main">
+        <div class="wx-hero-kicker">当前${typeLabel}</div>
+        <h2>${esc(current.name)}</h2>
+        <div class="wx-hero-sub">${isVideo ? '视频号 · 人工发布空间' : `${esc(current.appid)} · ${current.secret_set ? 'Secret 已保存' : '未配置 Secret'}${current.dry_run ? ' · Dry-run' : ''}`}</div>
+      </div>
+      <div class="wx-hero-actions">
+        ${isVideo ? `<a class="btn btn-sm" href="#/publish">发布包</a>` : `<button class="btn btn-sm" data-action="test-wechat" data-id="${esc(current.id)}">测试连接</button>`}
+        <button class="btn btn-sm" data-action="edit-wechat-account" data-id="${esc(current.id)}">编辑账号</button>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-label">账号选题</div><div class="stat-value">${myBriefs.length}</div><div class="stat-foot">只属于这个${typeLabel}</div></div>
+      <div class="stat"><div class="stat-label">草稿箱</div><div class="stat-value">${drafts.length}</div><div class="stat-foot">待创建 / 已建草稿</div></div>
+      <div class="stat"><div class="stat-label">发布中</div><div class="stat-value">${publishing.length}</div><div class="stat-foot">已提交或等待回执</div></div>
+      <div class="stat ok"><div class="stat-label">已发布</div><div class="stat-value">${published.length}</div><div class="stat-foot">这个账号的发布记录</div></div>
+    </div>
+
+    <div class="card mt-16">
+      <div class="card-head"><div><h2 class="section-title">这个账号的选题 <span class="muted tiny">${myBriefs.length}</span></h2><p class="section-sub">选题、文案、成片都从这里进入，不会串到别的账号。</p></div><button class="btn btn-sm" data-action="new-brief-account" data-id="${esc(current.id)}">+ 新建选题</button></div>
+      <div class="card-body">
+        ${myBriefs.length ? `<div class="wx-brief-list">${myBriefs.map(b => `
+          <a class="wx-brief-row" href="#/brief/${esc(b.id)}">
+            <span class="wx-dot" style="background:${esc(current.color || '#C73520')}"></span>
+            <span class="wx-brief-main"><strong>${esc(b.title)}</strong><small>${statusLabel(b.status)} · ${fmtDate(b.updated_at)}</small></span>
+            <span class="wx-brief-go">打开 →</span>
+          </a>`).join('')}</div>` : '<p class="tiny mb-0">这个账号还没有选题。点右上角新建，系统会自动绑定当前账号。</p>'}
+      </div>
+    </div>
+
+    <div class="grid-2 mt-16">
+      <div class="card">
+        <div class="card-head"><div><h2 class="section-title">${isVideo ? '发布包' : '草稿箱'} <span class="muted tiny">${drafts.length}</span></h2><p class="section-sub">${isVideo ? '视频号没有官方发布 API，先生成发布包，再手动上传。' : '还没发出去的内容。创建草稿后仍留在这里。'}</p></div></div>
+        <div class="card-body">
+          ${drafts.length ? `<div class="wx-content-list">${drafts.map(p => row(p, isVideo
+            ? `<a class="btn btn-sm" href="/kits/${esc(p.render_id)}-wechat_channels/video.mp4" target="_blank" rel="noreferrer">发布包</a><button class="btn btn-sm btn-primary" data-action="mark-published" data-id="${esc(p.id)}">标记已发布</button>`
+            : (p.status === 'draft_created' ? `<a class="btn btn-sm" href="https://mp.weixin.qq.com/" target="_blank" rel="noreferrer">后台</a><button class="btn btn-sm btn-primary" data-action="mark-published" data-id="${esc(p.id)}">标记已发布</button>` : `<button class="btn btn-sm btn-primary" data-action="publish-wechat" data-id="${esc(p.id)}">${p.status === 'dry_run' ? '重新 Dry-run' : '创建草稿'}</button>`))).join('')}</div>` : `<p class="tiny mb-0">这个账号还没有${isVideo ? '发布包' : '草稿'}。</p>`}
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><h2 class="section-title">已发布 <span class="muted tiny">${published.length}</span></h2><p class="section-sub">这个账号发出去的内容。</p></div></div>
+        <div class="card-body">
+          ${published.length ? `<div class="wx-content-list">${published.map(p => row(p, `${p.url ? `<a class="btn btn-sm" href="${esc(p.url)}" target="_blank" rel="noreferrer">打开链接</a>` : ''}`)).join('')}</div>` : '<p class="tiny mb-0">还没有发布记录。</p>'}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function renderAccountGroupWorkspace(groupId = '') {
+  setNav('wechat'); setCrumb('工作台 / 账号');
+  const settings = state.settings || await api('/api/settings');
+  state.settings = settings;
+  const groups = settings.account_groups || [];
+  const accounts = settings.wechat_accounts || [];
+  const current = groups.find(g => g.id === groupId)
+    || groups.find(g => g.is_default)
+    || groups[0];
+  if (!current) {
+    $('#view').innerHTML = `<div class="page-head"><div><p class="eyebrow">ACCOUNT / 账号</p><h1 class="page-title">先添加一个账号组。</h1><p class="page-sub">一个账号组 = 一个品牌，下面挂公众号和视频号。</p></div><div class="head-actions"><a class="btn btn-primary" href="#/settings">去设置添加</a></div></div>`;
+    return;
+  }
+  const channels = current.channels?.length ? current.channels : accounts.filter(a => a.group_id === current.id);
+  const channelIds = new Set(channels.map(c => c.id));
+  const allBriefs = await api('/api/briefs');
+  const myBriefs = allBriefs.filter(b => b.group_id === current.id || channelIds.has(b.account_id));
+  const queue = await api('/api/publish/queue');
+  const mine = queue.filter(p => channelIds.has(p.account_id));
+  const pubChannel = (p) => channels.find(c => c.id === p.account_id) || accounts.find(c => c.id === p.account_id) || {};
+  const articleDrafts = mine.filter(p => p.channel === 'wechat_article' && ['scheduled', 'dry_run', 'draft_created'].includes(p.status));
+  const videoDrafts = mine.filter(p => p.channel === 'wechat_channels' && p.status === 'ready_for_manual');
+  const published = mine.filter(p => p.status === 'published');
+  const pubRow = (p, actions = '') => {
+    const ch = pubChannel(p);
+    const type = p.channel === 'wechat_channels' ? '视频号' : '公众号';
+    return `<div class="wx-content-row">
+      ${coverImg(p.cover_path, p.title, 'wx-content-cover')}
+      <div class="wx-content-main">
+        <div class="wx-content-title">${esc(p.title)}</div>
+        <div class="wx-content-meta"><span class="wx-badge" style="--wx:${esc(ch.color || current.color || '#C73520')}">● ${esc(ch.name || type)}</span><span>${type}</span><span>${p.status === 'draft_created' ? '草稿已建' : p.status === 'dry_run' ? 'Dry-run' : p.status === 'ready_for_manual' ? '发布包' : p.status === 'publishing' ? '发布中' : p.status === 'scheduled' ? '待创建' : '已发布'}</span><span>${fmtDate(p.updated_at || p.created_at)}</span></div>
+      </div><div class="wx-content-actions">${actions}</div>
+    </div>`;
+  };
+  $('#view').innerHTML = `
+    <div class="page-head">
+      <div><p class="eyebrow">ACCOUNT / 账号组</p><h1 class="page-title">一个品牌，一个内容空间。</h1><p class="page-sub">一个账号组下挂公众号和视频号；选题共用，发布渠道分开。</p></div>
+      <div class="head-actions"><button class="btn" data-action="add-channel" data-group="${esc(current.id)}">+ 添加渠道</button><a class="btn" href="#/settings">账号设置</a></div>
+    </div>
+    <div class="wx-switcher">
+      ${groups.map(g => `<button class="wx-switch ${g.id === current.id ? 'active' : ''}" type="button" data-action="switch-account-group" data-id="${esc(g.id)}"><span class="wx-dot" style="background:${esc(g.color || '#C73520')}"></span><strong>${esc(g.name)}</strong>${g.is_default ? '<small>默认</small>' : ''}<small>${(g.channels || []).length} 渠道</small></button>`).join('')}
+    </div>
+    <div class="wx-hero" style="--wx:${esc(current.color || '#C73520')}">
+      <div class="wx-hero-mark"></div>
+      <div class="wx-hero-main">
+        <div class="wx-hero-kicker">当前账号组</div>
+        <h2>${esc(current.name)}</h2>
+        <div class="wx-hero-sub">${esc(current.description || '公众号 + 视频号')} · ${channels.length} 个渠道</div>
+      </div>
+      <div class="wx-hero-actions"><button class="btn btn-sm" data-action="edit-account-group" data-id="${esc(current.id)}">编辑账号组</button></div>
+    </div>
+    <div class="wx-channel-grid">
+      ${channels.map(c => `<div class="wx-channel-card" style="--wx:${esc(c.color || current.color || '#C73520')}">
+        <div class="wx-channel-top"><span class="wx-dot" style="background:${esc(c.color || current.color || '#C73520')}"></span><strong>${c.channel === 'wechat_channels' ? '视频号' : '公众号'}</strong>${c.is_default ? '<span class="tag">默认</span>' : ''}</div>
+        <div class="wx-channel-name">${esc(c.name)}</div>
+        <div class="wx-channel-sub">${c.channel === 'wechat_channels' ? '人工发布空间' : `${esc(c.appid || '')} · ${c.secret_set ? 'Secret 已保存' : '未配置 Secret'}`}</div>
+        <div class="wx-channel-actions"><button class="btn btn-sm" data-action="edit-wechat-account" data-id="${esc(c.id)}">编辑</button>${c.channel === 'wechat_article' ? `<button class="btn btn-sm" data-action="test-wechat" data-id="${esc(c.id)}">测试</button>` : ''}</div>
+      </div>`).join('') || '<div class="empty"><h3>这个账号组还没有渠道</h3><p>添加公众号或视频号。</p></div>'}
+    </div>
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-label">账号组选题</div><div class="stat-value">${myBriefs.length}</div><div class="stat-foot">这个品牌的全部内容</div></div>
+      <div class="stat"><div class="stat-label">公众号草稿</div><div class="stat-value">${articleDrafts.length}</div><div class="stat-foot">待创建 / 已建草稿</div></div>
+      <div class="stat"><div class="stat-label">视频号发布包</div><div class="stat-value">${videoDrafts.length}</div><div class="stat-foot">待人工上传</div></div>
+      <div class="stat ok"><div class="stat-label">已发布</div><div class="stat-value">${published.length}</div><div class="stat-foot">两个渠道合计</div></div>
+    </div>
+    <div class="card mt-16">
+      <div class="card-head"><div><h2 class="section-title">这个账号组的选题 <span class="muted tiny">${myBriefs.length}</span></h2><p class="section-sub">选题共用；公众号和视频号从这里分别生成发布任务。</p></div><button class="btn btn-sm" data-action="new-brief-group" data-group="${esc(current.id)}">+ 新建选题</button></div>
+      <div class="card-body">${myBriefs.length ? `<div class="wx-brief-list">${myBriefs.map(b => `<a class="wx-brief-row" href="#/brief/${esc(b.id)}"><span class="wx-dot" style="background:${esc(current.color || '#C73520')}"></span><span class="wx-brief-main"><strong>${esc(b.title)}</strong><small>${statusLabel(b.status)} · ${fmtDate(b.updated_at)}</small></span><span class="wx-brief-go">打开 →</span></a>`).join('')}</div>` : '<p class="tiny mb-0">还没有选题。新建会自动归到这个账号组。</p>'}</div>
+    </div>
+    <div class="grid-2 mt-16">
+      <div class="card"><div class="card-head"><div><h2 class="section-title">公众号草稿 <span class="muted tiny">${articleDrafts.length}</span></h2><p class="section-sub">公众号渠道的草稿任务。</p></div></div><div class="card-body">${articleDrafts.length ? `<div class="wx-content-list">${articleDrafts.map(p => pubRow(p, `<button class="btn btn-sm btn-primary" data-action="publish-wechat" data-id="${esc(p.id)}">${p.status === 'dry_run' ? '重新 Dry-run' : '创建草稿'}</button>`)).join('')}</div>` : '<p class="tiny mb-0">暂无公众号草稿。</p>'}</div></div>
+      <div class="card"><div class="card-head"><div><h2 class="section-title">视频号发布包 <span class="muted tiny">${videoDrafts.length}</span></h2><p class="section-sub">视频号渠道的发布包。</p></div></div><div class="card-body">${videoDrafts.length ? `<div class="wx-content-list">${videoDrafts.map(p => pubRow(p, `<a class="btn btn-sm" href="/kits/${esc(p.render_id)}-wechat_channels/video.mp4" target="_blank" rel="noreferrer">发布包</a><button class="btn btn-sm btn-primary" data-action="mark-published" data-id="${esc(p.id)}">标记已发布</button>`)).join('')}</div>` : '<p class="tiny mb-0">暂无视频号发布包。</p>'}</div></div>
+    </div>
+    <div class="card mt-16"><div class="card-head"><div><h2 class="section-title">已发布 <span class="muted tiny">${published.length}</span></h2><p class="section-sub">这个账号组两个渠道的发布记录。</p></div></div><div class="card-body">${published.length ? `<div class="wx-content-list">${published.map(p => pubRow(p, p.url ? `<a class="btn btn-sm" href="${esc(p.url)}" target="_blank" rel="noreferrer">打开链接</a>` : '')).join('')}</div>` : '<p class="tiny mb-0">还没有发布记录。</p>'}</div></div>
+  `;
 }
 
 // ---------- knowledge ----------
@@ -1921,25 +2102,46 @@ async function renderSettings() {
     <div class="settings-grid">
       <div class="stack">
         <div class="card">
-          <div class="card-head"><div><h2 class="section-title">公众号</h2><p class="section-sub">认证的企业主体服务号。</p></div><div class="flex">${s.wechat_secret_set ? statusChip('ok') : statusChip('draft')}</div></div>
+          <div class="card-head"><div><h2 class="section-title">渠道账号（公众号 / 视频号）</h2><p class="section-sub">每个账号组是一个品牌，公众号和视频号挂在同一组下。</p></div><div class="flex"><button class="btn btn-sm" type="button" data-action="add-account-group">新增账号组</button><button class="btn btn-sm btn-primary" type="button" data-action="add-wechat-account">新增渠道</button></div></div>
           <div class="card-body">
+            <div class="wx-group-list">
+              ${(s.account_groups || []).map(g => `
+                <div class="wx-group-block" style="--wx:${esc(g.color || '#C73520')}">
+                  <div class="wx-group-head">
+                    <span class="wx-dot" style="background:${esc(g.color || '#C73520')}"></span>
+                    <div class="wx-group-main"><strong>${esc(g.name)}</strong><small>${esc(g.description || '公众号 + 视频号')}</small></div>
+                    ${g.is_default ? '<span class="tag lime">默认账号组</span>' : `<button class="btn btn-sm" type="button" data-action="set-default-group" data-id="${esc(g.id)}">设为默认</button>`}
+                    <button class="btn btn-sm" type="button" data-action="add-channel" data-group="${esc(g.id)}">+ 渠道</button>
+                    <button class="btn btn-sm" type="button" data-action="edit-account-group" data-id="${esc(g.id)}">编辑</button>
+                  </div>
+                  <div class="wx-group-channels">
+                    ${(g.channels || []).map(a => `
+                      <div class="wx-account">
+                        <span class="wx-dot" style="background:${esc(a.color || g.color || '#C73520')}"></span>
+                        <div class="wx-main">
+                          <div class="wx-title"><strong>${esc(a.name || '未命名')}</strong><span class="tag">${a.channel === 'wechat_channels' ? '视频号' : '公众号'}</span>${a.is_default ? '<span class="tag lime">默认</span>' : ''}</div>
+                          <div class="wx-sub">${a.channel === 'wechat_channels' ? '人工发布空间' : esc(a.appid || '') + ' · ' + (a.secret_set ? 'Secret 已保存' : '未填 Secret')}${a.dry_run ? ' · Dry-run' : ''}</div>
+                        </div>
+                        <div class="wx-actions">
+                          <button class="btn btn-sm" type="button" data-action="edit-wechat-account" data-id="${esc(a.id)}">编辑</button>
+                          ${a.is_default ? '' : `<button class="btn btn-sm" type="button" data-action="set-default-account" data-id="${esc(a.id)}">设为默认</button>`}
+                          ${a.channel === 'wechat_article' ? `<button class="btn btn-sm" type="button" data-action="test-wechat" data-id="${esc(a.id)}">测试</button>` : ''}
+                          <button class="btn btn-sm danger" type="button" data-action="delete-wechat-account" data-id="${esc(a.id)}">删除</button>
+                        </div>
+                      </div>`).join('') || '<p class="tiny mb-0">这个账号组还没有渠道。</p>'}
+                  </div>
+                </div>`).join('') || '<p class="tiny mb-0">还没有账号组。</p>'}
+            </div>
+            <div class="divider"></div>
+            <h3 class="section-title">AI 写作（可选）</h3>
+            <p class="tiny mt-12">不配置也能用：系统会用本地脚手架生成可编辑文案。配置后，角度卡和三页文案会调用 OpenAI 兼容接口。远程模型需要 API Key；本机 localhost 的模型可以留空。</p>
             <form id="settings-form">
-              <div class="form-grid">
-                <div class="field"><label>AppID</label><input name="wechat_appid" value="${esc(s.wechat_appid)}" placeholder="wx..."></div>
-                <div class="field"><label>AppSecret</label><input name="wechat_secret" type="password" value="" placeholder="${s.wechat_secret_set ? '已保存，留空不修改' : '只保存在本地数据库'}"></div>
-                <div class="field"><label>作者</label><input name="wechat_author" value="${esc(s.wechat_author)}"></div>
-                <div class="field"><label>Dry-run</label><label class="switch"><input type="checkbox" name="wechat_dry_run" ${s.wechat_dry_run ? 'checked' : ''}><span class="tiny">发布动作只模拟，不调用微信（连接测试仍会调用）</span></label></div>
-                <div class="field full"><label>创建草稿后</label><label class="switch"><input type="checkbox" name="wechat_auto_submit" ${s.wechat_auto_submit ? 'checked' : ''}><span class="tiny">自动调用 freepublish/submit 提交发布（不勾选则只停在草稿箱）</span></label></div>
-              </div>
-              <div class="divider"></div>
-              <h3 class="section-title">AI 写作（可选）</h3>
-              <p class="tiny mt-12">不配置也能用：系统会用本地脚手架生成可编辑文案。配置后，角度卡和三页文案会调用 OpenAI 兼容接口。远程模型需要 API Key；本机 localhost 的模型可以留空。</p>
               <div class="form-grid mt-12">
                 <div class="field"><label>Base URL</label><input name="llm_base_url" value="${esc(s.llm_base_url)}" placeholder="https://api.deepseek.com"></div>
                 <div class="field"><label>Model</label><input name="llm_model" value="${esc(s.llm_model)}" placeholder="deepseek-chat"></div>
                 <div class="field full"><label>API Key</label><input name="llm_api_key" type="password" value="" placeholder="${s.llm_api_key_set ? '已保存，留空不修改' : 'sk-...'}"></div>
               </div>
-              <div class="flex mt-16"><button class="btn btn-primary" type="submit">保存设置</button><button class="btn" type="button" data-action="test-wechat">测试公众号连接</button><button class="btn" type="button" data-action="test-llm">测试模型连接</button><button class="btn" type="button" data-action="check-ip">查看出口 IP</button><span class="tiny" id="settings-status"></span><span class="tiny" id="llm-status"></span><span class="tiny mono" id="egress-ip"></span></div>
+              <div class="flex mt-16"><button class="btn btn-primary" type="submit">保存设置</button><button class="btn" type="button" data-action="test-llm">测试模型连接</button><button class="btn" type="button" data-action="check-ip">查看出口 IP</button><span class="tiny" id="llm-status"></span><span class="tiny mono" id="egress-ip"></span></div>
             </form>
           </div>
         </div>
@@ -1961,10 +2163,11 @@ async function renderSettings() {
           <div class="card-head"><div><h2 class="section-title">当前模板</h2></div></div>
           <div class="card-body">
             <dl class="kv-grid">
-              <dt>模板</dt><dd>three_page_postal_v1</dd>
+              <dt>模板</dt><dd>Hybrid PageFrame · v2.2</dd>
               <dt>尺寸</dt><dd>1080 × 1920</dd>
-              <dt>时长</dt><dd>18 / 21 秒 / 30fps</dd>
-              <dt>声音</dt><dd>程序合成 BGM，无解说</dd>
+              <dt>页数</dt><dd>4 / 5 / 6 页</dd>
+              <dt>时长</dt><dd>20 / 24 / 28 秒 / 30fps</dd>
+              <dt>视觉</dt><dd>旧背景 + 旧元素 + v2 文字排版</dd>
               <dt>渲染</dt><dd>HTML/CSS → Chrome → ffmpeg</dd>
             </dl>
           </div>
@@ -1990,10 +2193,105 @@ async function renderSettings() {
     </div>`;
 }
 
+function openWechatAccountModal(id = '', groupId = '') {
+  const a = (state.settings?.wechat_accounts || []).find(x => x.id === id) || {};
+  const group = groupId || a.group_id || (state.settings?.account_groups || [])[0]?.id || '';
+  openModal({
+    title: a.id ? '编辑渠道' : '新增渠道',
+    subtitle: '渠道挂在账号组下面。一个账号组可以有公众号和视频号。',
+    body: `
+      <form id="wechat-account-form">
+        <input type="hidden" name="id" value="${esc(a.id || '')}">
+        <input type="hidden" name="group_id" value="${esc(group)}">
+        <div class="form-grid">
+          <div class="field"><label>所属账号组</label><input value="${esc((state.settings?.account_groups || []).find(g => g.id === group)?.name || '默认账号组')}" disabled></div>
+          <div class="field"><label>渠道类型</label><select name="channel"><option value="wechat_article" ${(a.channel || 'wechat_article') === 'wechat_article' ? 'selected' : ''}>公众号</option><option value="wechat_channels" ${a.channel === 'wechat_channels' ? 'selected' : ''}>视频号</option></select></div>
+          <div class="field"><label>渠道名称（醒目）</label><input name="name" value="${esc(a.name || '')}" placeholder="例如：固定地址 · 主号" required></div>
+          <div class="field"><label>标识颜色</label><input name="color" type="color" value="${esc(a.color || '#C73520')}"></div>
+          <div class="field full"><label>AppID <span class="tiny">（公众号必填，视频号可空）</span></label><input name="appid" value="${esc(a.appid || '')}" placeholder="wx..."></div>
+          <div class="field full"><label>AppSecret</label><input name="secret" type="password" value="" placeholder="${a.secret_set ? '已保存，留空不修改' : '只保存在本地数据库'}"></div>
+          <div class="field"><label>作者</label><input name="author" value="${esc(a.author || '')}" placeholder="固定地址"></div>
+          <div class="field"><label>简介</label><input name="description" value="${esc(a.description || '')}" placeholder="这个渠道的主题范围"></div>
+          <div class="field"><label>默认渠道</label><label class="switch"><input type="checkbox" name="is_default" ${a.is_default ? 'checked' : ''}><span class="tiny">同类型任务默认选中</span></label></div>
+          <div class="field"><label>Dry-run</label><label class="switch"><input type="checkbox" name="dry_run" ${a.dry_run !== false ? 'checked' : ''}><span class="tiny">只模拟发布，不调用微信</span></label></div>
+          <div class="field"><label>自动提交</label><label class="switch"><input type="checkbox" name="auto_submit" ${a.auto_submit ? 'checked' : ''}><span class="tiny">创建草稿后自动提交发布</span></label></div>
+        </div>
+      </form>`,
+    foot: `<button class="btn" data-action="close-modal">取消</button><button class="btn btn-primary" type="submit" form="wechat-account-form">保存</button>`,
+    onMount: () => {
+      const form = $('#wechat-account-form');
+      const channelSelect = form?.querySelector('[name="channel"]');
+      const syncCredentialFields = () => {
+        const isVideo = channelSelect?.value === 'wechat_channels';
+        const appidField = form?.querySelector('[name="appid"]')?.closest('.field');
+        const secretField = form?.querySelector('[name="secret"]')?.closest('.field');
+        if (appidField) appidField.style.display = isVideo ? 'none' : '';
+        if (secretField) secretField.style.display = isVideo ? 'none' : '';
+      };
+      channelSelect?.addEventListener('change', syncCredentialFields);
+      syncCredentialFields();
+      form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(form);
+        const id = fd.get('id');
+        const body = {
+          name: fd.get('name'), appid: fd.get('appid'), author: fd.get('author'),
+          color: fd.get('color'), channel: fd.get('channel'), description: fd.get('description'),
+          group_id: fd.get('group_id'),
+          is_default: form.querySelector('[name="is_default"]').checked,
+          dry_run: form.querySelector('[name="dry_run"]').checked,
+          auto_submit: form.querySelector('[name="auto_submit"]').checked
+        };
+        if (fd.get('secret')) body.secret = fd.get('secret');
+        try {
+          if (id) await put(`/api/wechat-accounts/${encodeURIComponent(id)}`, body);
+          else await post('/api/wechat-accounts', body);
+          toast('渠道已保存');
+          closeModal();
+          await refreshWechatStatus();
+          route();
+        } catch (err) {
+          toast(err.message, 'error');
+        }
+      });
+    }
+  });
+}
+
+function openAccountGroupModal(id = '') {
+  const g = (state.settings?.account_groups || []).find(x => x.id === id) || {};
+  openModal({
+    title: g.id ? '编辑账号组' : '新增账号组',
+    subtitle: '一个账号组代表一个品牌，下面挂公众号和视频号。',
+    body: `<form id="account-group-form"><input type="hidden" name="id" value="${esc(g.id || '')}"><div class="form-grid">
+      <div class="field"><label>账号组名称</label><input name="name" value="${esc(g.name || '')}" placeholder="例如：固定地址" required></div>
+      <div class="field"><label>标识颜色</label><input name="color" type="color" value="${esc(g.color || '#C73520')}"></div>
+      <div class="field full"><label>简介</label><input name="description" value="${esc(g.description || '')}" placeholder="这个品牌的选题范围"></div>
+      <div class="field"><label>默认账号组</label><label class="switch"><input type="checkbox" name="is_default" ${g.is_default ? 'checked' : ''}><span class="tiny">进入账号页默认打开</span></label></div>
+    </div></form>`,
+    foot: `<button class="btn" data-action="close-modal">取消</button><button class="btn btn-primary" type="submit" form="account-group-form">保存</button>`,
+    onMount: () => {
+      const form = $('#account-group-form');
+      form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(form);
+        const gid = fd.get('id');
+        const body = { name: fd.get('name'), color: fd.get('color'), description: fd.get('description'), is_default: form.querySelector('[name="is_default"]').checked };
+        try {
+          if (gid) await put(`/api/account-groups/${encodeURIComponent(gid)}`, body);
+          else await post('/api/account-groups', body);
+          toast('账号组已保存'); closeModal(); await refreshWechatStatus(); route();
+        } catch (err) { toast(err.message, 'error'); }
+      });
+    }
+  });
+}
+
 // ---------- new brief modal ----------
-function openNewBrief() {
+function openNewBrief(accountId = '') {
   state.selectedStructure = null;
   state.structureOptions = [];
+  state.newBriefAccountId = accountId;
   openModal({
     title: '新建选题',
     subtitle: '先给任务书，系统再出角度卡。',
@@ -2013,6 +2311,7 @@ function openNewBrief() {
           <div class="field"><label>CTA</label><input name="cta" placeholder="关注，领取部署清单"></div>
           <div class="field"><label>截止时间</label><input name="deadline" type="datetime-local"></div>
           <div class="field full"><label>发布渠道</label><div class="flex"><label class="check-row"><input type="checkbox" name="channels" value="wechat_channels" checked> 视频号</label><label class="check-row"><input type="checkbox" name="channels" value="wechat_article"> 公众号</label></div></div>
+          <div class="field full"><label>主账号</label><select name="account_id">${(state.settings?.wechat_accounts || []).map(a => `<option value="${esc(a.id)}" ${(state.newBriefAccountId ? a.id === state.newBriefAccountId : (a.channel === 'wechat_channels' && a.is_default)) ? 'selected' : ''}>${a.channel === 'wechat_channels' ? '视频号' : '公众号'} · ${esc(a.name)}</option>`).join('')}</select><div class="tiny mt-8">一条内容只归一个主账号，避免发错空间。</div></div>
         </div>
       </form>`,
     foot: `<button class="btn" data-action="close-modal">取消</button><button class="btn btn-primary" type="submit" form="new-brief-form" id="create-brief-btn">创建并生成角度</button>`,
@@ -2115,7 +2414,8 @@ function openNewBrief() {
           tone: fd.get('tone'),
           cta: fd.get('cta'),
           deadline: fd.get('deadline'),
-          channels: channels.length ? channels : ['wechat_channels']
+          channels: channels.length ? channels : ['wechat_channels'],
+          account_id: fd.get('account_id') || ''
         };
         try {
           const brief = await post('/api/briefs', body);
@@ -2202,9 +2502,16 @@ async function submitReview(id, decision) {
   } catch (e) { toast(e.message, 'error'); }
 }
 
-async function createKit(renderId, channel) {
+async function createKit(renderId, channel, accountId = '') {
   try {
-    const res = await post(`/api/renders/${renderId}/publish-kit`, { channel });
+    if ((channel === 'wechat_article' || channel === 'wechat_channels') && !accountId) {
+      const s = state.settings || await api('/api/settings');
+      state.settings = s;
+      const accounts = (s.wechat_accounts || []).filter(a => a.channel === channel);
+      if (accounts.length > 1) { openWechatAccountPicker(renderId, channel); return; }
+      accountId = accounts[0]?.id || '';
+    }
+    const res = await post(`/api/renders/${renderId}/publish-kit`, { channel, account_id: accountId });
     toast(channel === 'wechat_channels' ? '视频号发布包已生成' : '公众号任务已创建');
     if (channel === 'wechat_channels') {
       openModal({
@@ -2217,6 +2524,31 @@ async function createKit(renderId, channel) {
       navigate('/publish');
     }
   } catch (e) { toast(e.message, 'error'); }
+}
+
+function openWechatAccountPicker(renderId, channel = 'wechat_article') {
+  const accounts = (state.settings?.wechat_accounts || []).filter(a => a.channel === channel);
+  openModal({
+    title: channel === 'wechat_channels' ? '选择发布视频号' : '选择发布公众号',
+    subtitle: '颜色和名字用于防止发错。确认后再生成发布任务。',
+    body: `<div class="wx-pick-list">${accounts.map(a => `
+      <button class="wx-pick" type="button" data-action="pick-account" data-render="${esc(renderId)}" data-channel="${esc(channel)}" data-id="${esc(a.id)}">
+        <span class="wx-dot" style="background:${esc(a.color || '#C73520')}"></span>
+        <span class="wx-pick-main"><strong>${esc(a.name)}</strong><small>${esc(a.appid || (a.channel === 'wechat_channels' ? '视频号' : ''))}${a.is_default ? ' · 默认' : ''}</small></span>
+      </button>`).join('')}</div>`,
+    foot: `<button class="btn" data-action="close-modal">取消</button>`
+  });
+}
+
+function openBriefAccountModal(briefId) {
+  const brief = state.brief?.brief || {};
+  const accounts = state.settings?.wechat_accounts || [];
+  openModal({
+    title: '更换归属账号',
+    subtitle: '内容会移动到目标账号空间；已有的同类发布任务也会一起转移。',
+    body: `<form id="brief-account-form"><input type="hidden" name="brief_id" value="${esc(briefId)}"><div class="field"><label>目标账号</label><select name="account_id">${accounts.map(a => `<option value="${esc(a.id)}" ${brief.account_id === a.id ? 'selected' : ''}>${a.channel === 'wechat_channels' ? '视频号' : '公众号'} · ${esc(a.name)}</option>`).join('')}</select></div></form>`,
+    foot: `<button class="btn" data-action="close-modal">取消</button><button class="btn btn-primary" type="submit" form="brief-account-form">确认更换</button>`
+  });
 }
 
 function openMarkPublished(pubId) {
@@ -2274,6 +2606,7 @@ document.addEventListener('click', async (e) => {
   if (el) {
     const action = el.dataset.action;
     if (action === 'new-brief') { e.preventDefault(); navigate('/create'); return; }
+    if (action === 'new-brief-account') { e.preventDefault(); openNewBrief(el.dataset.id || ''); return; }
     if (action === 'filter-structure') {
       e.preventDefault();
       state.structureFilter = el.dataset.type || 'all';
@@ -2578,16 +2911,56 @@ document.addEventListener('click', async (e) => {
     if (action === 'review-approve') { e.preventDefault(); submitReview(el.dataset.id, 'approved'); return; }
     if (action === 'review-return') { e.preventDefault(); submitReview(el.dataset.id, 'changes_requested'); return; }
     if (action === 'create-kit') { e.preventDefault(); createKit(el.dataset.render, el.dataset.channel); return; }
+    if (action === 'pick-account') { e.preventDefault(); closeModal(); createKit(el.dataset.render, el.dataset.channel || 'wechat_article', el.dataset.id); return; }
+    if (action === 'switch-wechat-account') { e.preventDefault(); navigate('/wechat/' + encodeURIComponent(el.dataset.id)); return; }
     if (action === 'mark-published') { e.preventDefault(); openMarkPublished(el.dataset.id); return; }
     if (action === 'publish-wechat') { e.preventDefault(); publishWechat(el.dataset.id); return; }
+    if (action === 'add-wechat-account') { e.preventDefault(); openWechatAccountModal('', el.dataset.group || ''); return; }
+    if (action === 'add-account-group') { e.preventDefault(); openAccountGroupModal(''); return; }
+    if (action === 'edit-account-group') { e.preventDefault(); openAccountGroupModal(el.dataset.id); return; }
+    if (action === 'switch-account-group') { e.preventDefault(); navigate('/wechat/' + encodeURIComponent(el.dataset.id)); return; }
+    if (action === 'set-default-group') {
+      e.preventDefault();
+      try { await post(`/api/account-groups/${encodeURIComponent(el.dataset.id)}/default`, {}); toast('已设为默认账号组'); await refreshWechatStatus(); route(); }
+      catch (err) { toast(err.message, 'error'); }
+      return;
+    }
+    if (action === 'add-channel') { e.preventDefault(); openWechatAccountModal('', el.dataset.group || ''); return; }
+    if (action === 'new-brief-group') {
+      e.preventDefault();
+      const g = (state.settings?.account_groups || []).find(x => x.id === el.dataset.group);
+      const channel = (g?.channels || []).find(c => c.channel === 'wechat_article') || (g?.channels || [])[0];
+      if (!channel) { toast('先给这个账号组添加公众号或视频号渠道', 'error'); return; }
+      openNewBrief(channel.id);
+      return;
+    }
+    if (action === 'change-brief-account') { e.preventDefault(); openBriefAccountModal(el.dataset.id); return; }
+    if (action === 'edit-wechat-account') { e.preventDefault(); openWechatAccountModal(el.dataset.id); return; }
+    if (action === 'set-default-account') {
+      e.preventDefault();
+      try {
+        await post(`/api/wechat-accounts/${encodeURIComponent(el.dataset.id)}/default`, {});
+        toast('已设为默认公众号'); await refreshWechatStatus(); route();
+      } catch (err) { toast(err.message, 'error'); }
+      return;
+    }
+    if (action === 'delete-wechat-account') {
+      e.preventDefault();
+      if (!confirm('删除这个公众号账号？删除后相关发布任务的账号标记会保留为历史记录，但不会再调用。')) return;
+      try {
+        await api(`/api/wechat-accounts/${encodeURIComponent(el.dataset.id)}`, { method: 'DELETE' });
+        toast('已删除'); await refreshWechatStatus(); route();
+      } catch (err) { toast(err.message, 'error'); }
+      return;
+    }
     if (action === 'test-wechat') {
       e.preventDefault();
       const status = $('#settings-status');
       if (status) status.textContent = '测试中…';
       try {
-        const r = await post('/api/settings/test-wechat', {});
-        if (status) status.textContent = '连接成功 · token尾号 ' + r.token_tail;
-        toast('公众号连接成功');
+        const r = await post('/api/settings/test-wechat', { account_id: el.dataset.id || '' });
+        if (status) status.textContent = `连接成功 · ${r.account?.name || ''} · token尾号 ${r.token_tail}`;
+        toast(`公众号「${r.account?.name || ''}」连接成功`);
       } catch (err) {
         if (status) status.textContent = '失败：' + err.message;
         toast(err.message, 'error');
@@ -2881,18 +3254,23 @@ document.addEventListener('submit', async (e) => {
     }
     return;
   }
+  if (form.id === 'brief-account-form') {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const id = fd.get('brief_id');
+    try {
+      await put(`/api/briefs/${encodeURIComponent(id)}/account`, { account_id: fd.get('account_id') });
+      toast('归属账号已更换'); closeModal(); route();
+    } catch (err) { toast(err.message, 'error'); }
+    return;
+  }
   if (form.id === 'settings-form') {
     e.preventDefault();
     const fd = new FormData(form);
     const body = {
-      wechat_appid: fd.get('wechat_appid'),
-      wechat_author: fd.get('wechat_author'),
-      wechat_dry_run: form.querySelector('[name="wechat_dry_run"]').checked ? 'true' : 'false',
-      wechat_auto_submit: form.querySelector('[name="wechat_auto_submit"]').checked ? 'true' : 'false',
       llm_base_url: fd.get('llm_base_url'),
       llm_model: fd.get('llm_model')
     };
-    if (fd.get('wechat_secret')) body.wechat_secret = fd.get('wechat_secret');
     if (fd.get('llm_api_key')) body.llm_api_key = fd.get('llm_api_key');
     try {
       const s = await put('/api/settings', body);

@@ -5,7 +5,9 @@ import crypto from 'node:crypto';
 import { spawn, spawnSync } from 'node:child_process';
 import {
   db, ROOT, DATA_DIR, MEDIA_DIR, KITS_DIR,
-  newId, jsonParse, jsonString, getSettings, setSettings, event
+  newId, jsonParse, jsonString, getSettings, setSettings, event,
+  listWechatAccounts, getWechatAccount, getDefaultWechatAccount, saveWechatAccount, deleteWechatAccount,
+  listAccountGroups, getAccountGroup, getDefaultAccountGroup, saveAccountGroup, deleteAccountGroup, listChannelsByGroup
 } from './lib/db.mjs';
 import { generateAngles, generateSpec, llmConfigured, testLLM, draftBriefFromDirection, draftAnalogyFromNote, draftSoulFromDirection, diagnoseStructures, checkDirection, checkStructure, draftQuoteCandidates, draftElementSvg } from './lib/generator.mjs';
 import { publishWechat, testWechat } from './lib/wechat.mjs';
@@ -854,14 +856,22 @@ async function route(req, res) {
         6: ['hook', 'context', 'objection', 'contrast', 'evidence', 'quote']
       };
       const pagePlan = Array.isArray(body.page_plan) && body.page_plan.length ? body.page_plan.slice(0, pageCount) : defaultPlans[pageCount];
-      db.prepare(`INSERT INTO briefs (id,title,topic,audience,quantity,analogy_domains,must_include,must_avoid,channels,tone,cta,deadline,structure_id,structure_name,structure_type,structure_snapshot,page_count,page_plan,theme,template_id,status,created_at,updated_at)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(
+      let accountId = String(body.account_id || '');
+      const primaryChannel = channels.includes('wechat_channels') ? 'wechat_channels' : (channels[0] || 'wechat_channels');
+      let groupId = String(body.group_id || '');
+      if (accountId && getWechatAccount(accountId) && !groupId) groupId = getWechatAccount(accountId).group_id || '';
+      if (!groupId || !getAccountGroup(groupId)) groupId = (getDefaultAccountGroup() || {}).id || '';
+      if (!accountId || !getWechatAccount(accountId) || getWechatAccount(accountId).group_id !== groupId) {
+        accountId = (getDefaultWechatAccount(primaryChannel) || {}).id || '';
+      }
+      db.prepare(`INSERT INTO briefs (id,title,topic,audience,quantity,analogy_domains,must_include,must_avoid,channels,tone,cta,deadline,structure_id,structure_name,structure_type,structure_snapshot,page_count,page_plan,theme,template_id,account_id,group_id,status,created_at,updated_at)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(
         id, String(body.title).trim(), String(body.topic).trim(), String(body.audience || ''), Math.max(1, Math.min(6, Number(body.quantity) || 3)),
         jsonString(domains), String(body.must_include || ''), String(body.must_avoid || ''), jsonString(channels),
         String(body.tone || ''), String(body.cta || ''), String(body.deadline || ''),
         structureId, String(body.structure_name || ''), String(body.structure_type || ''),
         body.structure_snapshot ? jsonString(body.structure_snapshot) : '',
-        pageCount, jsonString(pagePlan), theme, String(body.template_id || '').slice(0, 80), 'draft', t, t
+        pageCount, jsonString(pagePlan), theme, String(body.template_id || '').slice(0, 80), accountId, groupId, 'draft', t, t
       );
       touchStructure(structureId);
       event('brief', id, 'created', body.title);
@@ -1306,6 +1316,12 @@ async function route(req, res) {
       const renderId = p.split('/')[3];
       const body = await readBody(req);
       const channel = ['wechat_article', 'wechat_channels', 'xiaohongshu'].includes(body.channel) ? body.channel : 'wechat_channels';
+      let accountId = '';
+      let accountMeta = null;
+      if (channel === 'wechat_article' || channel === 'wechat_channels') {
+        accountId = body.account_id || (getDefaultWechatAccount(channel) || {}).id || '';
+        accountMeta = accountId ? getWechatAccount(accountId) : null;
+      }
       const bundle = renderBundle(renderId);
       if (!bundle) return fail(res, 404, '成片不存在');
       if (bundle.render.status !== 'approved') return fail(res, 400, '先审批通过，再生成发布包');
@@ -1337,25 +1353,27 @@ async function route(req, res) {
         files,
         music: spec.music || 'pulse',
         sha256: bundle.render.sha256,
+        account: accountMeta ? { id: accountMeta.id, name: accountMeta.name, color: accountMeta.color } : null,
         generated_at: now()
       };
       fs.writeFileSync(path.join(dir, 'metadata.json'), JSON.stringify(meta, null, 2));
-      const channelName = channel === 'wechat_channels' ? '视频号（人工最后发布）' : (channel === 'xiaohongshu' ? '小红书（人工最后发布）' : '公众号（图文草稿）');
+      const channelName = channel === 'wechat_channels' ? '视频号（人工最后发布）' : (channel === 'xiaohongshu' ? '小红书（人工最后发布）' : `公众号（图文草稿）${accountMeta ? ' · ' + accountMeta.name : ''}`);
       fs.writeFileSync(path.join(dir, 'README.txt'), [
         `发布渠道：${channelName}`,
+        accountMeta ? `${channel === 'wechat_channels' ? '视频号' : '公众号'}账号：${accountMeta.name}${accountMeta.appid ? `（${accountMeta.appid}）` : ''}` : '',
         '1. 打开平台后台上传 video.mp4，封面用 cover.png。',
         '2. 标题、描述、话题标签见 metadata.json。',
         channel === 'xiaohongshu' ? '3. 小红书标题带搜索词，正文用 3:4 封面；视频仍用 9:16。' : '3. 发布完成后回到平台，点击“标记已发布”并粘贴链接。',
         `SHA256: ${bundle.render.sha256}`
-      ].join('\r\n'));
+      ].filter(Boolean).join('\r\n'));
       let pub = db.prepare('SELECT * FROM publications WHERE render_id=? AND channel=? ORDER BY created_at DESC LIMIT 1').get(renderId, channel);
       const status = channel === 'wechat_channels' || channel === 'xiaohongshu' ? 'ready_for_manual' : 'scheduled';
       if (!pub) {
-        pub = { id: newId('pub'), render_id: renderId, channel, status, scheduled_at: body.scheduled_at || '', external_id: '', url: '', receipt_json: '{}', created_at: now(), updated_at: now() };
-        db.prepare('INSERT INTO publications (id,render_id,channel,status,scheduled_at,external_id,url,receipt_json,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)')
-          .run(pub.id, pub.render_id, pub.channel, pub.status, pub.scheduled_at, '', '', '{}', pub.created_at, pub.updated_at);
+        pub = { id: newId('pub'), render_id: renderId, channel, status, scheduled_at: body.scheduled_at || '', external_id: '', url: '', receipt_json: '{}', account_id: accountId, created_at: now(), updated_at: now() };
+        db.prepare('INSERT INTO publications (id,render_id,channel,status,scheduled_at,external_id,url,receipt_json,account_id,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)')
+          .run(pub.id, pub.render_id, pub.channel, pub.status, pub.scheduled_at, '', '', '{}', pub.account_id, pub.created_at, pub.updated_at);
       } else {
-        db.prepare('UPDATE publications SET status=?, scheduled_at=?, updated_at=? WHERE id=?').run(status, body.scheduled_at || pub.scheduled_at || '', now(), pub.id);
+        db.prepare('UPDATE publications SET status=?, scheduled_at=?, account_id=?, updated_at=? WHERE id=?').run(status, body.scheduled_at || pub.scheduled_at || '', accountId || pub.account_id || '', now(), pub.id);
       }
       event('publish', renderId, 'kit_created', channel);
       return send(res, 201, { publication: db.prepare('SELECT * FROM publications WHERE id=?').get(pub.id), files: { dir: relData(dir), ...meta.files } });
@@ -1374,7 +1392,7 @@ async function route(req, res) {
       const pub = db.prepare('SELECT * FROM publications WHERE id=?').get(id);
       if (!pub) return fail(res, 404, '发布任务不存在');
       try {
-        const result = await publishWechat(pub, { dryRun: body.dryRun });
+        const result = await publishWechat(pub, { dryRun: body.dryRun, accountId: body.account_id || pub.account_id || '' });
         return send(res, 200, result);
       } catch (e) {
         return fail(res, 500, e.message);
@@ -1465,12 +1483,20 @@ async function route(req, res) {
     }
     if (method === 'GET' && p === '/api/settings') {
       const s = getSettings();
+      const accounts = listWechatAccounts().map(a => ({ ...a, secret_set: Boolean(a.secret), secret: undefined }));
+      const accountGroups = listAccountGroups().map(g => ({
+        ...g,
+        channels: listChannelsByGroup(g.id).map(a => ({ ...a, secret_set: Boolean(a.secret), secret: undefined }))
+      }));
       return send(res, 200, {
         wechat_appid: s.wechat_appid || '',
         wechat_author: s.wechat_author || '',
         wechat_dry_run: (s.wechat_dry_run || 'true') === 'true',
         wechat_auto_submit: (s.wechat_auto_submit || 'false') === 'true',
         wechat_secret_set: Boolean(s.wechat_secret),
+        wechat_accounts: accounts,
+        account_groups: accountGroups,
+        wechat_default_account_id: (getDefaultWechatAccount() || {}).id || '',
         llm_base_url: s.llm_base_url || '',
         llm_model: s.llm_model || 'deepseek-chat',
         llm_api_key_set: Boolean(s.llm_api_key),
@@ -1512,9 +1538,155 @@ async function route(req, res) {
         return fail(res, 500, e.message);
       }
     }
+    const accountSanitize = (a) => a ? { ...a, secret_set: Boolean(a.secret), secret: undefined } : null;
+    if (method === 'GET' && p === '/api/account-groups') {
+      return send(res, 200, {
+        groups: listAccountGroups().map(g => ({ ...g, channels: listChannelsByGroup(g.id).map(accountSanitize) })),
+        default_id: (getDefaultAccountGroup() || {}).id || ''
+      });
+    }
+    if (method === 'POST' && p === '/api/account-groups') {
+      const body = await readBody(req);
+      if (!body.name) return fail(res, 400, '账号组名称必填');
+      const group = saveAccountGroup({ name: String(body.name), color: body.color || '#C73520', description: body.description || '', is_default: body.is_default });
+      if (body.is_default || listAccountGroups().length === 1) {
+        db.prepare('UPDATE account_groups SET is_default=0').run();
+        db.prepare('UPDATE account_groups SET is_default=1 WHERE id=?').run(group.id);
+      }
+      event('settings', group.id, 'account_group_saved', group.name);
+      return send(res, 201, { group });
+    }
+    if (method === 'PUT' && /^\/api\/account-groups\/[^/]+$/.test(p)) {
+      const id = p.split('/').pop();
+      const body = await readBody(req);
+      if (!getAccountGroup(id)) return fail(res, 404, '账号组不存在');
+      if (!body.name) return fail(res, 400, '账号组名称必填');
+      const group = saveAccountGroup({ id, name: String(body.name), color: body.color || '#C73520', description: body.description || '', is_default: body.is_default });
+      if (body.is_default) {
+        db.prepare('UPDATE account_groups SET is_default=0').run();
+        db.prepare('UPDATE account_groups SET is_default=1 WHERE id=?').run(id);
+      }
+      event('settings', id, 'account_group_updated', group.name);
+      return send(res, 200, { group });
+    }
+    if (method === 'POST' && /^\/api\/account-groups\/[^/]+\/default$/.test(p)) {
+      const id = p.split('/')[3];
+      if (!getAccountGroup(id)) return fail(res, 404, '账号组不存在');
+      db.prepare('UPDATE account_groups SET is_default=0').run();
+      db.prepare('UPDATE account_groups SET is_default=1 WHERE id=?').run(id);
+      event('settings', id, 'account_group_default', '');
+      return send(res, 200, { default_id: id });
+    }
+    if (method === 'DELETE' && /^\/api\/account-groups\/[^/]+$/.test(p)) {
+      const id = p.split('/').pop();
+      const group = getAccountGroup(id);
+      if (!group) return fail(res, 404, '账号组不存在');
+      if (group.is_default) return fail(res, 400, '默认账号组不能删除');
+      const channels = listChannelsByGroup(id).length;
+      const briefs = db.prepare('SELECT COUNT(*) AS n FROM briefs WHERE group_id=?').get(id).n;
+      if (channels || briefs) return fail(res, 400, `账号组下还有 ${channels} 个渠道、${briefs} 条选题，请先清理`);
+      deleteAccountGroup(id);
+      event('settings', id, 'account_group_deleted', group.name);
+      return send(res, 200, { ok: true });
+    }
+    if (method === 'GET' && p === '/api/wechat-accounts') {
+      return send(res, 200, { accounts: listWechatAccounts().map(accountSanitize), default_id: (getDefaultWechatAccount() || {}).id || '' });
+    }
+    if (method === 'POST' && p === '/api/wechat-accounts') {
+      const body = await readBody(req);
+      const channel = body.channel === 'wechat_channels' ? 'wechat_channels' : 'wechat_article';
+      if (!body.name) return fail(res, 400, '账号名称必填');
+      if (channel === 'wechat_article' && !body.appid) return fail(res, 400, '公众号 AppID 必填');
+      const existing = body.appid && listWechatAccounts().find(a => a.id !== body.id && a.appid === body.appid);
+      if (existing) return fail(res, 409, '该 AppID 已存在');
+      const acc = saveWechatAccount({
+        id: body.id || '',
+        group_id: body.group_id || (getDefaultAccountGroup() || {}).id || '',
+        name: String(body.name),
+        appid: String(body.appid || ''),
+        secret: body.secret ? String(body.secret) : '',
+        author: body.author || '',
+        color: body.color || (channel === 'wechat_channels' ? '#2E6F9E' : '#C73520'),
+        channel,
+        description: body.description || '',
+        is_default: body.is_default,
+        dry_run: body.dry_run !== false,
+        auto_submit: body.auto_submit === true
+      });
+      if (body.is_default || listWechatAccounts(channel).length === 1) {
+        db.prepare('UPDATE wechat_accounts SET is_default=0 WHERE channel=?').run(channel);
+        db.prepare('UPDATE wechat_accounts SET is_default=1 WHERE id=?').run(acc.id);
+      }
+      event('settings', acc.id, 'wechat_account_saved', acc.name);
+      return send(res, 201, { account: accountSanitize(getWechatAccount(acc.id)) });
+    }
+    if (method === 'PUT' && /^\/api\/wechat-accounts\/[^/]+$/.test(p)) {
+      const id = p.split('/').pop();
+      const body = await readBody(req);
+      const prior = getWechatAccount(id);
+      if (!prior) return fail(res, 404, '账号不存在');
+      const channel = body.channel === 'wechat_channels' ? 'wechat_channels' : (prior.channel || 'wechat_article');
+      if (!body.name) return fail(res, 400, '账号名称必填');
+      if (channel === 'wechat_article' && !body.appid) return fail(res, 400, '公众号 AppID 必填');
+      const acc = saveWechatAccount({
+        id,
+        group_id: body.group_id || prior.group_id || (getDefaultAccountGroup() || {}).id || '',
+        name: String(body.name),
+        appid: String(body.appid || ''),
+        secret: body.secret ? String(body.secret) : '',
+        author: body.author || '',
+        color: body.color || (channel === 'wechat_channels' ? '#2E6F9E' : '#C73520'),
+        channel,
+        description: body.description || '',
+        is_default: body.is_default,
+        dry_run: body.dry_run !== false,
+        auto_submit: body.auto_submit === true
+      });
+      if (body.is_default) {
+        db.prepare('UPDATE wechat_accounts SET is_default=0 WHERE channel=?').run(channel);
+        db.prepare('UPDATE wechat_accounts SET is_default=1 WHERE id=?').run(id);
+      }
+      event('settings', id, 'wechat_account_updated', acc.name);
+      return send(res, 200, { account: accountSanitize(getWechatAccount(id)) });
+    }
+    if (method === 'POST' && /^\/api\/wechat-accounts\/[^/]+\/default$/.test(p)) {
+      const id = p.split('/')[3];
+      const acc = getWechatAccount(id);
+      if (!acc) return fail(res, 404, '账号不存在');
+      db.prepare('UPDATE wechat_accounts SET is_default=0 WHERE channel=?').run(acc.channel || 'wechat_article');
+      db.prepare('UPDATE wechat_accounts SET is_default=1 WHERE id=?').run(id);
+      event('settings', id, 'wechat_account_default', '');
+      return send(res, 200, { default_id: id });
+    }
+    if (method === 'DELETE' && /^\/api\/wechat-accounts\/[^/]+$/.test(p)) {
+      const id = p.split('/').pop();
+      const acc = getWechatAccount(id);
+      if (!acc) return fail(res, 404, '账号不存在');
+      if (acc.is_default) return fail(res, 400, '默认账号不能删除，先把另一个账号设为默认');
+      const briefCount = db.prepare('SELECT COUNT(*) AS n FROM briefs WHERE account_id=?').get(id).n;
+      const pubCount = db.prepare('SELECT COUNT(*) AS n FROM publications WHERE account_id=?').get(id).n;
+      if (briefCount || pubCount) return fail(res, 400, `这个账号下还有 ${briefCount} 条选题、${pubCount} 条发布记录，请先转移内容`);
+      deleteWechatAccount(id);
+      event('settings', id, 'wechat_account_deleted', acc.name);
+      return send(res, 200, { ok: true });
+    }
+    if (method === 'PUT' && /^\/api\/briefs\/[^/]+\/account$/.test(p)) {
+      const briefId = p.split('/')[3];
+      const body = await readBody(req);
+      const account = getWechatAccount(String(body.account_id || ''));
+      if (!account) return fail(res, 404, '账号不存在');
+      const brief = db.prepare('SELECT * FROM briefs WHERE id=?').get(briefId);
+      if (!brief) return fail(res, 404, '选题不存在');
+      db.prepare('UPDATE briefs SET account_id=?, group_id=?, updated_at=? WHERE id=?').run(account.id, account.group_id || '', now(), briefId);
+      db.prepare(`UPDATE publications SET account_id=?, updated_at=? WHERE account_id<>? AND channel=? AND render_id IN
+        (SELECT id FROM renders WHERE brief_id=?)`).run(account.id, now(), account.id, account.channel, briefId);
+      event('brief', briefId, 'account_changed', account.name);
+      return send(res, 200, { ok: true, account_id: account.id });
+    }
     if (method === 'POST' && p === '/api/settings/test-wechat') {
       try {
-        const result = await testWechat();
+        const body = await readBody(req).catch(() => ({}));
+        const result = await testWechat(body.account_id || '');
         return send(res, 200, result);
       } catch (e) {
         return fail(res, 500, e.message);
@@ -1590,4 +1762,8 @@ server.listen(PORT, HOST, () => {
   console.log(`[studio] http://${HOST}:${PORT}`);
   console.log(`[studio] data: ${DATA_DIR}`);
 });
+
+
+
+
 
