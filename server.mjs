@@ -14,6 +14,8 @@ import { publishWechat, testWechat } from './lib/wechat.mjs';
 import { TEMPLATE_THEMES, listTemplates, getTemplate, applyTemplatePreset } from './lib/templates.mjs';
 import { ELEMENTS, ELEMENT_SPEC, listElements, getElement, selectElements, validateGeneratedSvg } from './lib/elements.mjs';
 import { runPreflight } from './lib/preflight.mjs';
+import { buildVariantPayload } from './lib/publishers/mapping.mjs';
+import { yixiaoerConfigured } from './lib/publishers/yixiaoer.mjs';
 import { checkSpecCoverage, checkSpecRelevance } from './lib/spec-check.mjs';
 import { listMusic, addUploadedMusic, deleteUploadedMusic, updateUploadedMusic, recommendMusic, resolveMusicFile } from './lib/music-library.mjs';
 import {
@@ -1483,6 +1485,28 @@ async function route(req, res) {
     if (method === 'DELETE' && /^\/api\/music\/[^/]+$/.test(p)) {
       const id = p.split('/').pop();
       return send(res, 200, { ok: deleteUploadedMusic(id) });
+    }
+    if (method === 'GET' && p === '/api/publish/providers') {
+      const s = getSettings();
+      return send(res, 200, {
+        yixiaoer: {
+          configured: yixiaoerConfigured(),
+          base_url: s.yixiaoer_base_url || 'https://open-api.yixiaoer.cn',
+          publish_channel: s.yixiaoer_publish_channel || 'cloud'
+        }
+      });
+    }
+    if (method === 'POST' && p === '/api/publish/preflight') {
+      const body = await readBody(req);
+      const r = buildVariantPayload(String(body.platform || ''), String(body.publish_type || ''), body.variant || {});
+      return send(res, 200, {
+        ok: r.ok,
+        errors: r.errors,
+        profile: r.profile || '',
+        payload: r.payload,
+        provider: 'yixiaoer',
+        dry_run: true
+      });
     }
     if (method === 'GET' && p === '/api/settings') {
       const s = getSettings();
