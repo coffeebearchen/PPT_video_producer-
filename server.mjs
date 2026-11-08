@@ -15,6 +15,7 @@ import { TEMPLATE_THEMES, listTemplates, getTemplate, applyTemplatePreset } from
 import { ELEMENTS, ELEMENT_SPEC, listElements, getElement, selectElements, validateGeneratedSvg } from './lib/elements.mjs';
 import { runPreflight } from './lib/preflight.mjs';
 import { buildVariantPayload } from './lib/publishers/mapping.mjs';
+import { SCHEMAS } from './lib/publishers/schemas.mjs';
 import { yixiaoerConfigured } from './lib/publishers/yixiaoer.mjs';
 import { checkSpecCoverage, checkSpecRelevance } from './lib/spec-check.mjs';
 import { listMusic, addUploadedMusic, deleteUploadedMusic, updateUploadedMusic, recommendMusic, resolveMusicFile } from './lib/music-library.mjs';
@@ -1485,6 +1486,13 @@ async function route(req, res) {
     if (method === 'DELETE' && /^\/api\/music\/[^/]+$/.test(p)) {
       const id = p.split('/').pop();
       return send(res, 200, { ok: deleteUploadedMusic(id) });
+    }
+    if (method === 'GET' && /^\/api\/publish\/schema\/[^/]+\/[^/]+$/.test(p)) {
+      const parts = p.split('/');
+      const key = `${parts[4]}:${parts[5]}`;
+      const schema = SCHEMAS[key];
+      if (!schema) return fail(res, 404, '没有这个平台 schema');
+      return send(res, 200, { key, schema, source: 'apifox-snapshot-2026-11-08', verified: false });
     }
     if (method === 'GET' && p === '/api/publish/providers') {
       const s = getSettings();

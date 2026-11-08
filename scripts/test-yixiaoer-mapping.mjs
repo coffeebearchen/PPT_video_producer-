@@ -10,7 +10,9 @@ const cases = [
   ['wechat_article', 'article', { ...base, cover }, true],
   ['douyin', 'video', { ...base, cover, video: media }, true],
   ['xiaohongshu', 'imageText', { ...base, images: [] }, false],
-  ['wechat_article', 'article', { ...base }, false]
+  ['wechat_article', 'article', { ...base }, false],
+  ['xiaohongshu', 'imageText', { ...base, body: '长'.repeat(1001), images: [media] }, false],
+  ['wechat_article', 'article', { ...base, title: '长'.repeat(65), cover }, false]
 ];
 
 let failed = 0;
