@@ -1397,6 +1397,7 @@ async function renderAccountGroupWorkspace(groupId = '') {
     return;
   }
   const channels = current.channels?.length ? current.channels : accounts.filter(a => a.group_id === current.id);
+  const typeName = (c) => c.platform === 'xiaohongshu' ? '小红书' : c.platform === 'douyin' ? '抖音' : c.platform === 'wechat_channels' ? '视频号' : '公众号';
   const channelIds = new Set(channels.map(c => c.id));
   const allBriefs = await api('/api/briefs');
   const myBriefs = allBriefs.filter(b => b.group_id === current.id || channelIds.has(b.account_id));
@@ -1436,10 +1437,10 @@ async function renderAccountGroupWorkspace(groupId = '') {
     </div>
     <div class="wx-channel-grid">
       ${channels.map(c => `<div class="wx-channel-card" style="--wx:${esc(c.color || current.color || '#C73520')}">
-        <div class="wx-channel-top"><span class="wx-dot" style="background:${esc(c.color || current.color || '#C73520')}"></span><strong>${c.channel === 'wechat_channels' ? '视频号' : '公众号'}</strong>${c.is_default ? '<span class="tag">默认</span>' : ''}</div>
+        <div class="wx-channel-top"><span class="wx-dot" style="background:${esc(c.color || current.color || '#C73520')}"></span><strong>${typeName(c)}</strong>${c.is_default ? '<span class="tag">默认</span>' : ''}</div>
         <div class="wx-channel-name">${esc(c.name)}</div>
-        <div class="wx-channel-sub">${c.channel === 'wechat_channels' ? '人工发布空间' : `${esc(c.appid || '')} · ${c.secret_set ? 'Secret 已保存' : '未配置 Secret'}`}</div>
-        <div class="wx-channel-actions"><button class="btn btn-sm" data-action="edit-wechat-account" data-id="${esc(c.id)}">编辑</button>${c.channel === 'wechat_article' ? `<button class="btn btn-sm" data-action="test-wechat" data-id="${esc(c.id)}">测试</button>` : ''}</div>
+        <div class="wx-channel-sub">${c.platform === 'wechat_article' ? `${esc(c.appid || '')} · ${c.secret_set ? 'Secret 已保存' : '未配置 Secret'}` : (c.provider === 'yixiaoer' ? '蚁小二 · ' + (c.provider_account_id || '未映射') : '人工发布')}</div>
+        <div class="wx-channel-actions"><button class="btn btn-sm" data-action="edit-wechat-account" data-id="${esc(c.id)}">编辑</button>${c.platform === 'wechat_article' ? `<button class="btn btn-sm" data-action="test-wechat" data-id="${esc(c.id)}">测试</button>` : ''}</div>
       </div>`).join('') || '<div class="empty"><h3>这个账号组还没有渠道</h3><p>添加公众号或视频号。</p></div>'}
     </div>
     <div class="stats-grid">
@@ -2147,6 +2148,21 @@ async function renderSettings() {
         </div>
 
         <div class="card">
+          <div class="card-head"><div><h2 class="section-title">蚁小二发布方式</h2><p class="section-sub">只给标记为“蚁小二”的渠道使用。主号仍走直连或人工。</p></div><span class="tag ${s.yixiaoer_api_key_set || s.yixiaoer_authorization_set ? 'lime' : ''}">${s.yixiaoer_api_key_set || s.yixiaoer_authorization_set ? '已配置' : '未配置'}</span></div>
+          <div class="card-body">
+            <form id="provider-form">
+              <div class="form-grid">
+                <div class="field"><label>BASE URL</label><input name="yixiaoer_base_url" value="${esc(s.yixiaoer_base_url || 'https://open-api.yixiaoer.cn')}"></div>
+                <div class="field"><label>发布方式</label><select name="yixiaoer_publish_channel"><option value="cloud" ${(s.yixiaoer_publish_channel || 'cloud') === 'cloud' ? 'selected' : ''}>cloud · 云端</option><option value="local" ${s.yixiaoer_publish_channel === 'local' ? 'selected' : ''}>local · 本机</option></select></div>
+                <div class="field full"><label>API KEY</label><input name="yixiaoer_api_key" type="password" value="" placeholder="${s.yixiaoer_api_key_set ? '已保存，留空不修改' : '只保存在本地数据库'}"></div>
+                <div class="field full"><label>AUTHORIZATION</label><input name="yixiaoer_authorization" type="password" value="" placeholder="${s.yixiaoer_authorization_set ? '已保存，留空不修改' : '如果使用 authorization token 就填这里'}"></div>
+              </div>
+              <div class="flex mt-16"><button class="btn btn-primary" type="submit">保存发布方式</button><span class="tiny" id="provider-status">${s.yixiaoer_api_key_set || s.yixiaoer_authorization_set ? '凭证已保存在本地' : '还没有蚁小二凭证'}</span></div>
+            </form>
+          </div>
+        </div>
+
+        <div class="card">
           <div class="card-head"><div><h2 class="section-title">公众号排版</h2><p class="section-sub">当前版本已冻结，不再随视频/音乐改版。</p></div><span class="tag lime">${esc(s.article_style_version || 'wechat_article_v1')} · 已冻结</span></div>
           <div class="card-body"><p class="tiny mb-0">冻结内容：系列标签 / Lead / Highlight / 小节编号 / 引用 / CTA / 主条+次条呼应。后续只改视频动效与音乐，不改这套文章排版。</p></div>
         </div>
@@ -2205,9 +2221,11 @@ function openWechatAccountModal(id = '', groupId = '') {
         <input type="hidden" name="group_id" value="${esc(group)}">
         <div class="form-grid">
           <div class="field"><label>所属账号组</label><input value="${esc((state.settings?.account_groups || []).find(g => g.id === group)?.name || '默认账号组')}" disabled></div>
-          <div class="field"><label>渠道类型</label><select name="channel"><option value="wechat_article" ${(a.channel || 'wechat_article') === 'wechat_article' ? 'selected' : ''}>公众号</option><option value="wechat_channels" ${a.channel === 'wechat_channels' ? 'selected' : ''}>视频号</option></select></div>
-          <div class="field"><label>渠道名称（醒目）</label><input name="name" value="${esc(a.name || '')}" placeholder="例如：固定地址 · 主号" required></div>
+          <div class="field"><label>平台</label><select name="platform"><option value="wechat_article" ${(a.platform || a.channel || 'wechat_article') === 'wechat_article' ? 'selected' : ''}>公众号</option><option value="wechat_channels" ${(a.platform || a.channel) === 'wechat_channels' ? 'selected' : ''}>视频号</option><option value="xiaohongshu" ${(a.platform || a.channel) === 'xiaohongshu' ? 'selected' : ''}>小红书</option><option value="douyin" ${(a.platform || a.channel) === 'douyin' ? 'selected' : ''}>抖音</option></select></div>
+          <div class="field"><label>发布方式</label><select name="provider"><option value="direct" ${(a.provider || 'direct') === 'direct' ? 'selected' : ''}>直连 API</option><option value="manual" ${a.provider === 'manual' ? 'selected' : ''}>人工发布</option><option value="yixiaoer" ${a.provider === 'yixiaoer' ? 'selected' : ''}>蚁小二</option></select></div>
+          <div class="field"><label>渠道名称（醒目）</label><input name="name" value="${esc(a.name || '')}" placeholder="例如：小红书副号 A" required></div>
           <div class="field"><label>标识颜色</label><input name="color" type="color" value="${esc(a.color || '#C73520')}"></div>
+          <div class="field full"><label>蚁小二账号 ID <span class="tiny">（provider=蚁小二时填）</span></label><input name="provider_account_id" value="${esc(a.provider_account_id || '')}" placeholder="xhs_acct_001"></div>
           <div class="field full"><label>AppID <span class="tiny">（公众号必填，视频号可空）</span></label><input name="appid" value="${esc(a.appid || '')}" placeholder="wx..."></div>
           <div class="field full"><label>AppSecret</label><input name="secret" type="password" value="" placeholder="${a.secret_set ? '已保存，留空不修改' : '只保存在本地数据库'}"></div>
           <div class="field"><label>作者</label><input name="author" value="${esc(a.author || '')}" placeholder="固定地址"></div>
@@ -2220,13 +2238,13 @@ function openWechatAccountModal(id = '', groupId = '') {
     foot: `<button class="btn" data-action="close-modal">取消</button><button class="btn btn-primary" type="submit" form="wechat-account-form">保存</button>`,
     onMount: () => {
       const form = $('#wechat-account-form');
-      const channelSelect = form?.querySelector('[name="channel"]');
+      const channelSelect = form?.querySelector('[name="platform"]');
       const syncCredentialFields = () => {
-        const isVideo = channelSelect?.value === 'wechat_channels';
+        const isArticle = channelSelect?.value === 'wechat_article';
         const appidField = form?.querySelector('[name="appid"]')?.closest('.field');
         const secretField = form?.querySelector('[name="secret"]')?.closest('.field');
-        if (appidField) appidField.style.display = isVideo ? 'none' : '';
-        if (secretField) secretField.style.display = isVideo ? 'none' : '';
+        if (appidField) appidField.style.display = isArticle ? '' : 'none';
+        if (secretField) secretField.style.display = isArticle ? '' : 'none';
       };
       channelSelect?.addEventListener('change', syncCredentialFields);
       syncCredentialFields();
@@ -2236,8 +2254,9 @@ function openWechatAccountModal(id = '', groupId = '') {
         const id = fd.get('id');
         const body = {
           name: fd.get('name'), appid: fd.get('appid'), author: fd.get('author'),
-          color: fd.get('color'), channel: fd.get('channel'), description: fd.get('description'),
-          group_id: fd.get('group_id'),
+          color: fd.get('color'), channel: fd.get('platform'), platform: fd.get('platform'),
+          provider: fd.get('provider'), provider_account_id: fd.get('provider_account_id'),
+          description: fd.get('description'), group_id: fd.get('group_id'),
           is_default: form.querySelector('[name="is_default"]').checked,
           dry_run: form.querySelector('[name="dry_run"]').checked,
           auto_submit: form.querySelector('[name="auto_submit"]').checked
@@ -3261,6 +3280,23 @@ document.addEventListener('submit', async (e) => {
     try {
       await put(`/api/briefs/${encodeURIComponent(id)}/account`, { account_id: fd.get('account_id') });
       toast('归属账号已更换'); closeModal(); route();
+    } catch (err) { toast(err.message, 'error'); }
+    return;
+  }
+  if (form.id === 'provider-form') {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const body = {
+      yixiaoer_base_url: fd.get('yixiaoer_base_url'),
+      yixiaoer_publish_channel: fd.get('yixiaoer_publish_channel')
+    };
+    if (fd.get('yixiaoer_api_key')) body.yixiaoer_api_key = fd.get('yixiaoer_api_key');
+    if (fd.get('yixiaoer_authorization')) body.yixiaoer_authorization = fd.get('yixiaoer_authorization');
+    try {
+      const s = await put('/api/settings', body);
+      state.settings = s;
+      toast('蚁小二发布方式已保存');
+      route();
     } catch (err) { toast(err.message, 'error'); }
     return;
   }

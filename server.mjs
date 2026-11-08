@@ -1507,7 +1507,11 @@ async function route(req, res) {
         operator_name: s.operator_name || '主编',
         article_style_version: s.article_style_version || 'wechat_article_v1',
         article_style_frozen: (s.article_style_frozen || 'true') === 'true',
-        motion_preset: s.motion_preset || 'flow'
+        motion_preset: s.motion_preset || 'flow',
+        yixiaoer_base_url: s.yixiaoer_base_url || 'https://open-api.yixiaoer.cn',
+        yixiaoer_api_key_set: Boolean(s.yixiaoer_api_key),
+        yixiaoer_authorization_set: Boolean(s.yixiaoer_authorization),
+        yixiaoer_publish_channel: s.yixiaoer_publish_channel || 'cloud'
       });
     }
     if (method === 'PUT' && p === '/api/settings') {
@@ -1518,6 +1522,9 @@ async function route(req, res) {
       }
       if (body.wechat_secret) map.wechat_secret = String(body.wechat_secret);
       if (body.llm_api_key) map.llm_api_key = String(body.llm_api_key);
+      for (const k of ['yixiaoer_base_url','yixiaoer_publish_channel']) if (body[k] !== undefined) map[k] = String(body[k]);
+      if (body.yixiaoer_api_key) map.yixiaoer_api_key = String(body.yixiaoer_api_key);
+      if (body.yixiaoer_authorization) map.yixiaoer_authorization = String(body.yixiaoer_authorization);
       setSettings(map);
       event('settings', 'global', 'updated', Object.keys(map).join(','));
       const s = getSettings();
@@ -1597,9 +1604,10 @@ async function route(req, res) {
     }
     if (method === 'POST' && p === '/api/wechat-accounts') {
       const body = await readBody(req);
-      const channel = body.channel === 'wechat_channels' ? 'wechat_channels' : 'wechat_article';
+      const channel = ['wechat_article','wechat_channels','xiaohongshu','douyin'].includes(body.channel) ? body.channel : 'wechat_article';
+      const platform = ['wechat_article','wechat_channels','xiaohongshu','douyin'].includes(body.platform) ? body.platform : channel;
       if (!body.name) return fail(res, 400, '账号名称必填');
-      if (channel === 'wechat_article' && !body.appid) return fail(res, 400, '公众号 AppID 必填');
+      if (platform === 'wechat_article' && !body.appid) return fail(res, 400, '公众号 AppID 必填');
       const existing = body.appid && listWechatAccounts().find(a => a.id !== body.id && a.appid === body.appid);
       if (existing) return fail(res, 409, '该 AppID 已存在');
       const acc = saveWechatAccount({
@@ -1609,8 +1617,11 @@ async function route(req, res) {
         appid: String(body.appid || ''),
         secret: body.secret ? String(body.secret) : '',
         author: body.author || '',
-        color: body.color || (channel === 'wechat_channels' ? '#2E6F9E' : '#C73520'),
+        color: body.color || (platform === 'wechat_channels' ? '#2E6F9E' : '#C73520'),
         channel,
+        platform,
+        provider: body.provider || (platform === 'wechat_article' ? 'direct' : (platform === 'wechat_channels' ? 'manual' : 'yixiaoer')),
+        provider_account_id: body.provider_account_id || '',
         description: body.description || '',
         is_default: body.is_default,
         dry_run: body.dry_run !== false,
@@ -1628,9 +1639,10 @@ async function route(req, res) {
       const body = await readBody(req);
       const prior = getWechatAccount(id);
       if (!prior) return fail(res, 404, '账号不存在');
-      const channel = body.channel === 'wechat_channels' ? 'wechat_channels' : (prior.channel || 'wechat_article');
+      const channel = ['wechat_article','wechat_channels','xiaohongshu','douyin'].includes(body.channel) ? body.channel : (prior.channel || 'wechat_article');
+      const platform = ['wechat_article','wechat_channels','xiaohongshu','douyin'].includes(body.platform) ? body.platform : (prior.platform || channel);
       if (!body.name) return fail(res, 400, '账号名称必填');
-      if (channel === 'wechat_article' && !body.appid) return fail(res, 400, '公众号 AppID 必填');
+      if (platform === 'wechat_article' && !body.appid) return fail(res, 400, '公众号 AppID 必填');
       const acc = saveWechatAccount({
         id,
         group_id: body.group_id || prior.group_id || (getDefaultAccountGroup() || {}).id || '',
@@ -1638,8 +1650,11 @@ async function route(req, res) {
         appid: String(body.appid || ''),
         secret: body.secret ? String(body.secret) : '',
         author: body.author || '',
-        color: body.color || (channel === 'wechat_channels' ? '#2E6F9E' : '#C73520'),
+        color: body.color || (platform === 'wechat_channels' ? '#2E6F9E' : '#C73520'),
         channel,
+        platform,
+        provider: body.provider || (platform === 'wechat_article' ? 'direct' : (platform === 'wechat_channels' ? 'manual' : 'yixiaoer')),
+        provider_account_id: body.provider_account_id || '',
         description: body.description || '',
         is_default: body.is_default,
         dry_run: body.dry_run !== false,
@@ -1765,6 +1780,8 @@ server.listen(PORT, HOST, () => {
   console.log(`[studio] http://${HOST}:${PORT}`);
   console.log(`[studio] data: ${DATA_DIR}`);
 });
+
+
 
 
 
