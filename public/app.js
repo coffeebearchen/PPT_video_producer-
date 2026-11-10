@@ -179,7 +179,7 @@ function coverImg(path, title = '', cls = '') {
 function parseRoute() {
   const hash = location.hash.replace(/^#/, '') || '/';
   const parts = hash.split('/').filter(Boolean);
-  if (!parts.length) return { name: 'dashboard' };
+  if (!parts.length) return { name: 'workbench' };
   if (parts[0] === 'workbench') return { name: 'workbench' };
   if ((parts[0] === 'brief' || parts[0] === 'briefs') && parts[1]) return { name: 'brief', id: parts[1] };
   if (parts[0] === 'briefs' || parts[0] === 'brief') return { name: 'briefs' };
