@@ -2272,12 +2272,18 @@ async function renderSettings() {
         <div class="card">
           <div class="card-head"><div><h2 class="section-title">视频引擎 / TTS</h2><p class="section-sub">自动生成模式使用 VibeMotion + 语音。</p></div><span class="tag lime">奶油纸 · 已锁定</span></div>
           <div class="card-body">
-            <div class="form-grid">
-              <div class="field"><label>默认视觉风格</label><select><option>奶油纸（锁定）</option><option>黑板报（后续）</option></select></div>
-              <div class="field"><label>渲染服务地址</label><input value="http://127.0.0.1:5001"></div>
-              <div class="field"><label>默认生成模式</label><select><option>自动：直接出片</option><option>人工：先确认分镜</option></select></div>
-              <div class="field"><label>TTS / 声音克隆</label><select><option>暂未接入（当前为字幕版）</option><option>火山引擎 · 声音克隆</option><option>MiniMax</option><option>讯飞</option><option>硅基流动</option></select></div>
-            </div>
+            <form id="engine-settings-form">
+              <div class="form-grid">
+                <div class="field"><label>渲染服务地址</label><input name="render_service_url" value="${esc(s.render_service_url || 'http://127.0.0.1:5001')}"></div>
+                <div class="field"><label>默认生成模式</label><select name="engine_default_mode"><option value="auto" ${(s.engine_default_mode || 'auto') === 'auto' ? 'selected' : ''}>自动：直接出片</option><option value="manual" ${s.engine_default_mode === 'manual' ? 'selected' : ''}>人工：先确认分镜</option></select></div>
+                <div class="field"><label>TTS 供应商</label><select name="tts_provider"><option value="none" ${(s.tts_provider || 'none') === 'none' ? 'selected' : ''}>暂未接入（字幕版）</option><option value="openai_compat" ${s.tts_provider === 'openai_compat' ? 'selected' : ''}>OpenAI 兼容</option><option value="volcano" ${s.tts_provider === 'volcano' ? 'selected' : ''}>火山引擎 · 声音克隆</option><option value="minimax" ${s.tts_provider === 'minimax' ? 'selected' : ''}>MiniMax</option><option value="iflytek" ${s.tts_provider === 'iflytek' ? 'selected' : ''}>讯飞</option><option value="siliconflow" ${s.tts_provider === 'siliconflow' ? 'selected' : ''}>硅基流动</option></select></div>
+                <div class="field"><label>TTS Base URL</label><input name="tts_base_url" value="${esc(s.tts_base_url || '')}" placeholder="OpenAI 兼容时填"></div>
+                <div class="field"><label>TTS Model</label><input name="tts_model" value="${esc(s.tts_model || '')}" placeholder="tts-1"></div>
+                <div class="field"><label>声音 / 音色 ID</label><input name="tts_voice" value="${esc(s.tts_voice || '')}" placeholder="alloy / 你的克隆音色"></div>
+                <div class="field"><label>TTS API Key</label><input name="tts_api_key" type="password" value="" placeholder="${s.tts_api_key_set ? '已保存，留空不修改' : '只保存在本地数据库'}"></div>
+              </div>
+              <div class="flex mt-16"><button class="btn btn-primary" type="submit">保存视频引擎设置</button></div>
+            </form>
             <div class="note-box mt-12">声音克隆服务与 API 待配置；未配置时自动生成仍可用，只有字幕、无口播。</div>
           </div>
         </div>
@@ -3423,6 +3429,22 @@ document.addEventListener('submit', async (e) => {
       toast('蚁小二发布方式已保存');
       route();
     } catch (err) { toast(err.message, 'error'); }
+    return;
+  }
+  if (form.id === 'engine-settings-form') {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const body = {
+      render_service_url: fd.get('render_service_url'),
+      engine_default_mode: fd.get('engine_default_mode'),
+      tts_provider: fd.get('tts_provider'),
+      tts_base_url: fd.get('tts_base_url'),
+      tts_model: fd.get('tts_model'),
+      tts_voice: fd.get('tts_voice')
+    };
+    if (fd.get('tts_api_key')) body.tts_api_key = fd.get('tts_api_key');
+    try { await put('/api/settings', body); toast('视频引擎设置已保存'); route(); }
+    catch (err) { toast(err.message, 'error'); }
     return;
   }
   if (form.id === 'settings-form') {

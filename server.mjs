@@ -11,7 +11,8 @@ import {
 } from './lib/db.mjs';
 import { generateAngles, generateSpec, llmConfigured, testLLM, draftBriefFromDirection, draftAnalogyFromNote, draftSoulFromDirection, diagnoseStructures, checkDirection, checkStructure, draftQuoteCandidates, draftElementSvg } from './lib/generator.mjs';
 import { publishWechat, testWechat } from './lib/wechat.mjs';
-import { renderVibeMotion, buildTimeline } from './lib/vibemotion.mjs';
+import { renderVibeMotion, buildTimeline, ENGINE_DIR } from './lib/vibemotion.mjs';
+import { synthesizeSpeech, ttsConfigured } from './lib/tts.mjs';
 import { checkCompliance } from './lib/compliance.mjs';
 import { TEMPLATE_THEMES, listTemplates, getTemplate, applyTemplatePreset } from './lib/templates.mjs';
 import { ELEMENTS, ELEMENT_SPEC, listElements, getElement, selectElements, validateGeneratedSvg } from './lib/elements.mjs';
@@ -266,19 +267,31 @@ async function processVideoTask(id) {
     return;
   }
   const isManual = task.mode === 'manual';
+  let voicePath = task.voice_path || '';
+  if (!voicePath && ttsConfigured()) {
+    try {
+      const voiceFile = path.join(ENGINE_DIR, 'public', 'audio', `${id}.mp3`);
+      await synthesizeSpeech(task.script || task.title, voiceFile);
+      voicePath = `audio/${id}.mp3`;
+      updateVideoTask(id, { voice_path: voicePath });
+    } catch (e) {
+      console.error('[tts] skipped:', e.message);
+    }
+  }
+  const taskWithVoice = { ...task, voice_path: voicePath };
   let timeline = null;
   if (task.timeline_json) {
     try { timeline = JSON.parse(task.timeline_json); } catch {}
   }
   if (isManual && !timeline) {
-    timeline = buildTimeline(task);
+    timeline = buildTimeline(taskWithVoice);
     updateVideoTask(id, { status: 'pending_confirm', progress: 25, timeline_json: JSON.stringify(timeline), error: '' });
     return;
   }
   const outRel = path.join('video-tasks', id);
   const outDir = path.join(MEDIA_DIR, outRel);
   try {
-    const res = await renderVibeMotion({ ...task, id }, outDir, (p, stage) => {
+    const res = await renderVibeMotion(taskWithVoice, outDir, (p, stage) => {
       updateVideoTask(id, { progress: p, error: '' });
     }, timeline);
     updateVideoTask(id, {
@@ -1593,6 +1606,15 @@ async function route(req, res) {
         article_style_version: s.article_style_version || 'wechat_article_v1',
         article_style_frozen: (s.article_style_frozen || 'true') === 'true',
         motion_preset: s.motion_preset || 'flow',
+        engine_default_mode: s.engine_default_mode || 'auto',
+        engine_default: s.engine_default || 'vibemotion',
+        render_service_url: s.render_service_url || 'http://127.0.0.1:5001',
+        tts_provider: s.tts_provider || 'none',
+        tts_base_url: s.tts_base_url || '',
+        tts_model: s.tts_model || '',
+        tts_voice: s.tts_voice || '',
+        tts_speed: Number(s.tts_speed) || 1,
+        tts_api_key_set: Boolean(s.tts_api_key),
         yixiaoer_base_url: s.yixiaoer_base_url || 'https://open-api.yixiaoer.cn',
         yixiaoer_api_key_set: Boolean(s.yixiaoer_api_key),
         yixiaoer_authorization_set: Boolean(s.yixiaoer_authorization),
@@ -1602,9 +1624,11 @@ async function route(req, res) {
     if (method === 'PUT' && p === '/api/settings') {
       const body = await readBody(req);
       const map = {};
-      for (const k of ['wechat_appid', 'wechat_author', 'wechat_dry_run', 'wechat_auto_submit', 'llm_base_url', 'llm_model', 'brand_name', 'operator_name']) {
+      for (const k of ['wechat_appid', 'wechat_author', 'wechat_dry_run', 'wechat_auto_submit', 'llm_base_url', 'llm_model', 'brand_name', 'operator_name', 'engine_default', 'engine_default_mode', 'render_service_url', 'tts_provider', 'tts_base_url', 'tts_model', 'tts_voice']) {
         if (body[k] !== undefined) map[k] = String(body[k]);
       }
+      if (body.tts_speed !== undefined) map.tts_speed = String(body.tts_speed);
+      if (body.tts_api_key) map.tts_api_key = String(body.tts_api_key);
       if (body.wechat_secret) map.wechat_secret = String(body.wechat_secret);
       if (body.llm_api_key) map.llm_api_key = String(body.llm_api_key);
       for (const k of ['yixiaoer_base_url','yixiaoer_publish_channel']) if (body[k] !== undefined) map[k] = String(body[k]);
