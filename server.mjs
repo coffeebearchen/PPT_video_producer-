@@ -300,7 +300,9 @@ async function processVideoTask(id) {
   const outDir = path.join(MEDIA_DIR, outRel);
   try {
     const tpl = TEMPLATES.find(t => t.templateId === task.template);
-    const style = tpl ? (PALETTES[tpl.palette] || PALETTES['cream-paper']) : PALETTES['cream-paper'];
+    const st = getSettings();
+    const baseStyle = tpl ? (PALETTES[tpl.palette] || PALETTES['cream-paper']) : PALETTES['cream-paper'];
+    const style = { ...baseStyle, fonts: { heading: st.font_heading || 'ZCOOL KuaiLe', body: st.font_body || 'LXGW WenKai' } };
     const res = await renderVibeMotion(taskWithVoice, outDir, (p, stage) => {
       updateVideoTask(id, { progress: p, error: '' });
     }, timeline, style);
@@ -1625,6 +1627,8 @@ async function route(req, res) {
         tts_voice: s.tts_voice || '',
         tts_speed: Number(s.tts_speed) || 1,
         tts_api_key_set: Boolean(s.tts_api_key),
+        font_heading: s.font_heading || 'ZCOOL KuaiLe',
+        font_body: s.font_body || 'LXGW WenKai',
         yixiaoer_base_url: s.yixiaoer_base_url || 'https://open-api.yixiaoer.cn',
         yixiaoer_api_key_set: Boolean(s.yixiaoer_api_key),
         yixiaoer_authorization_set: Boolean(s.yixiaoer_authorization),
@@ -1634,7 +1638,7 @@ async function route(req, res) {
     if (method === 'PUT' && p === '/api/settings') {
       const body = await readBody(req);
       const map = {};
-      for (const k of ['wechat_appid', 'wechat_author', 'wechat_dry_run', 'wechat_auto_submit', 'llm_base_url', 'llm_model', 'brand_name', 'operator_name', 'engine_default', 'engine_default_mode', 'render_service_url', 'tts_provider', 'tts_base_url', 'tts_model', 'tts_voice']) {
+      for (const k of ['wechat_appid', 'wechat_author', 'wechat_dry_run', 'wechat_auto_submit', 'llm_base_url', 'llm_model', 'brand_name', 'operator_name', 'engine_default', 'engine_default_mode', 'render_service_url', 'tts_provider', 'tts_base_url', 'tts_model', 'tts_voice', 'font_heading', 'font_body']) {
         if (body[k] !== undefined) map[k] = String(body[k]);
       }
       if (body.tts_speed !== undefined) map.tts_speed = String(body.tts_speed);
@@ -1890,6 +1894,40 @@ async function route(req, res) {
     }
 
     if (method === 'GET' && p === '/api/element-catalog') return send(res, 200, { elements: ELEMENT_CATALOG, palettes: PALETTES, fonts: FONT_PAIRS, templates: TEMPLATES });
+    if (method === 'GET' && p === '/api/fonts') {
+      const fontsFile = path.join(ENGINE_DIR, 'fonts.json');
+      let fonts = ['LXGW WenKai', 'ZCOOL KuaiLe'];
+      try { fonts = Object.keys(JSON.parse(fs.readFileSync(fontsFile, 'utf8'))); } catch {}
+      return send(res, 200, { fonts });
+    }
+    if (method === 'GET' && p === '/api/media-assets') {
+      const rows = db.prepare('SELECT * FROM media_assets ORDER BY created_at DESC').all();
+      return send(res, 200, { assets: rows });
+    }
+    if (method === 'POST' && p === '/api/media-assets') {
+      const body = await readBody(req);
+      if (!body.data) return fail(res, 400, '缺少图片数据');
+      const id = newId('asset');
+      const ext = (body.mime || '').includes('png') ? 'png' : (body.mime || '').includes('gif') ? 'gif' : 'jpg';
+      const dir = path.join(MEDIA_DIR, 'media-assets');
+      fs.mkdirSync(dir, { recursive: true });
+      const file = `${id}.${ext}`;
+      const full = path.join(dir, file);
+      fs.writeFileSync(full, Buffer.from(String(body.data).replace(/^data:[^;]+;base64,/, ''), 'base64'));
+      const t = now();
+      db.prepare('INSERT INTO media_assets (id,name,category,mime,path,created_at) VALUES (?,?,?,?,?,?)')
+        .run(id, String(body.name || id), 'image', String(body.mime || 'image/jpeg'), 'media-assets/' + file, t);
+      return send(res, 201, db.prepare('SELECT * FROM media_assets WHERE id=?').get(id));
+    }
+    if (method === 'POST' && /^\/api\/media-assets\/[^/]+\/delete$/.test(p)) {
+      const id = p.split('/')[3];
+      const row = db.prepare('SELECT * FROM media_assets WHERE id=?').get(id);
+      if (!row) return fail(res, 404, '素材不存在');
+      const full = path.join(MEDIA_DIR, row.path);
+      if (fs.existsSync(full)) { try { fs.unlinkSync(full); } catch {} }
+      db.prepare('DELETE FROM media_assets WHERE id=?').run(id);
+      return send(res, 200, { ok: true });
+    }
 
     return fail(res, 404, 'API 不存在');
   }

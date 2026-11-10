@@ -3,6 +3,7 @@ import styleCfg from '../../style.settings.json';
 
 const C = (styleCfg as {colors?: Record<string, string>}).colors ?? {};
 const pick = (k: string, d: string) => C[k] ?? d;
+const F = (styleCfg as {fonts?: {heading?: string; body?: string}}).fonts ?? {};
 
 // ── 手绘讲解风 Token（颜色由 style.settings.json 控制，可用 style-editor.html 可视化调）──
 export const BG = pick('bg', '#282828');
@@ -23,7 +24,8 @@ export const DEFAULT_PALETTE: ThemePalette = {
 };
 
 // 手写风：霞鹜文楷（柔和楷体手写）+ 站酷快乐体兜底
-export const FONT = '"LXGW WenKai", "ZCOOL KuaiLe", "Microsoft YaHei", "微软雅黑", sans-serif';
+export const FONT = `"${F.body || 'LXGW WenKai'}", "LXGW WenKai", "Microsoft YaHei", "微软雅黑", sans-serif`;
+export const FONT_HEADING = `"${F.heading || 'ZCOOL KuaiLe'}", "ZCOOL KuaiLe", "Microsoft YaHei", "微软雅黑", sans-serif`;
 
 export const SURFACE = {
   card: 'rgba(255,252,245,0.72)',

@@ -184,6 +184,7 @@ function parseRoute() {
   if (parts[0] === 'briefs' || parts[0] === 'brief') return { name: 'briefs' };
   if (parts[0] === 'create') return { name: 'create' };
   if (parts[0] === 'library') return { name: 'library' };
+  if (parts[0] === 'assets') return { name: 'assets' };
   if (parts[0] === 'music') return { name: 'music' };
   if (parts[0] === 'templates') return { name: 'templates' };
   if (parts[0] === 'elements') return { name: 'elements' };
@@ -210,6 +211,7 @@ async function route() {
     if (state.route.name === 'briefs') return await renderBriefs();
     if (state.route.name === 'brief') return await renderBrief(state.route.id);
     if (state.route.name === 'library') return await renderLibrary();
+    if (state.route.name === 'assets') return await renderAssets();
     if (state.route.name === 'music') return await renderMusic();
     if (state.route.name === 'templates') return await renderTemplates();
     if (state.route.name === 'elements') return await renderElements();
@@ -1556,6 +1558,49 @@ function openAutogenNew() {
   });
 }
 
+async function renderAssets() {
+  setNav('assets'); setCrumb('工作台 / 图片素材');
+  const data = await api('/api/media-assets').catch(() => ({ assets: [] }));
+  const assets = data.assets || [];
+  const grid = assets.length ? assets.map(a => `
+    <div class="asset-card">
+      <div class="asset-thumb"><img src="/media/${esc(a.path)}" alt="${esc(a.name)}"></div>
+      <div class="asset-meta"><span>${esc(a.name)}</span><button class="btn btn-sm" data-action="delete-asset" data-id="${esc(a.id)}">删除</button></div>
+    </div>`).join('') : '<div class="empty"><h3>还没有图片素材</h3><p>点右上角上传，图片会存到素材库，供视频渲染抽取。</p></div>';
+  $('#view').innerHTML = `
+    <div class="page-head">
+      <div><p class="eyebrow">ASSETS / 图片素材</p><h1 class="page-title">上传图片，供视频渲染抽取。</h1><p class="page-sub">支持 jpg / png / gif，存到本地素材库，可在模板里按元素 id 引用。</p></div>
+      <div class="head-actions"><button class="btn btn-primary" data-action="open-asset-upload">+ 上传图片</button></div>
+    </div>
+    <div class="card mt-16"><div class="card-body"><div class="asset-grid">${grid}</div></div></div>
+  `;
+}
+
+function openAssetUpload() {
+  openModal({
+    title: '上传图片素材',
+    body: `<form id="asset-upload-form">
+      <div class="field"><label>名称</label><input name="name" placeholder="例如：封面配图"></div>
+      <div class="field"><label>图片文件</label><input name="file" type="file" accept="image/*" required></div>
+    </form>`,
+    foot: `<button class="btn" data-action="close-modal">取消</button><button class="btn btn-primary" type="submit" form="asset-upload-form">上传</button>`,
+    onMount: () => {
+      const form = $('#asset-upload-form');
+      form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(form);
+        const file = fd.get('file');
+        if (!file || !file.size) { toast('请选择图片', 'error'); return; }
+        const dataUrl = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); });
+        try {
+          await post('/api/media-assets', { name: fd.get('name') || file.name, mime: file.type, data: dataUrl });
+          toast('已上传'); closeModal(); renderAssets();
+        } catch (err) { toast(err.message, 'error'); }
+      });
+    }
+  });
+}
+
 async function renderKnowledge(q = '') {
   setNav('knowledge'); setCrumb('工作台 / 知识库');
   const data = await api('/api/knowledge');
@@ -2190,6 +2235,9 @@ async function renderSettings() {
   state.settings = s;
   const musicLib = await api('/api/music').catch(() => ({ tracks: [] }));
   state.musicLibrary = musicLib.tracks || [];
+  const fontData = await api('/api/fonts').catch(() => ({ fonts: [] }));
+  const fontList = fontData.fonts || [];
+  const fontOpts = (cur) => fontList.map(f => `<option value="${esc(f)}" ${f === cur ? 'selected' : ''}>${esc(f)}</option>`).join('') || `<option value="${esc(cur)}">${esc(cur)}</option>`;
   $('#view').innerHTML = `
     <div class="page-head">
       <div><p class="eyebrow">SETTINGS / 设置</p><h1 class="page-title">把发布出口固定下来。</h1><p class="page-sub">公众号 API 需要认证服务号 + 固定公网 IP 白名单；视频号目前没有官方内容发布 API，走人工最后确认。</p></div>
@@ -2274,6 +2322,8 @@ async function renderSettings() {
           <div class="card-body">
             <form id="engine-settings-form">
               <div class="form-grid">
+                <div class="field"><label>标题字体</label><select name="font_heading">${fontOpts(s.font_heading || 'ZCOOL KuaiLe')}</select></div>
+                <div class="field"><label>正文字体</label><select name="font_body">${fontOpts(s.font_body || 'LXGW WenKai')}</select></div>
                 <div class="field"><label>渲染服务地址</label><input name="render_service_url" value="${esc(s.render_service_url || 'http://127.0.0.1:5001')}"></div>
                 <div class="field"><label>默认生成模式</label><select name="engine_default_mode"><option value="auto" ${(s.engine_default_mode || 'auto') === 'auto' ? 'selected' : ''}>自动：直接出片</option><option value="manual" ${s.engine_default_mode === 'manual' ? 'selected' : ''}>人工：先确认分镜</option></select></div>
                 <div class="field"><label>TTS 供应商</label><select name="tts_provider"><option value="none" ${(s.tts_provider || 'none') === 'none' ? 'selected' : ''}>暂未接入（字幕版）</option><option value="mock" ${s.tts_provider === 'mock' ? 'selected' : ''}>测试语音（静音）</option><option value="openai_compat" ${s.tts_provider === 'openai_compat' ? 'selected' : ''}>OpenAI 兼容</option><option value="volcano" ${s.tts_provider === 'volcano' ? 'selected' : ''}>火山引擎 · 声音克隆</option><option value="minimax" ${s.tts_provider === 'minimax' ? 'selected' : ''}>MiniMax</option><option value="iflytek" ${s.tts_provider === 'iflytek' ? 'selected' : ''}>讯飞</option><option value="siliconflow" ${s.tts_provider === 'siliconflow' ? 'selected' : ''}>硅基流动</option></select></div>
@@ -2738,6 +2788,14 @@ document.addEventListener('click', async (e) => {
     const action = el.dataset.action;
     if (action === 'new-brief') { e.preventDefault(); navigate('/create'); return; }
     if (action === 'open-autogen') { e.preventDefault(); openAutogenNew(); return; }
+    if (action === 'open-asset-upload') { e.preventDefault(); openAssetUpload(); return; }
+    if (action === 'delete-asset') {
+      e.preventDefault();
+      if (!confirm('删除这张素材？')) return;
+      try { await post(`/api/media-assets/${encodeURIComponent(el.dataset.id)}/delete`, {}); toast('已删除'); renderAssets(); }
+      catch (err) { toast(err.message, 'error'); }
+      return;
+    }
     if (action === 'cancel-video-task') {
       e.preventDefault();
       try { await post(`/api/video-tasks/${encodeURIComponent(el.dataset.id)}/cancel`, {}); toast('已取消'); renderAutogen(); }
@@ -3440,7 +3498,9 @@ document.addEventListener('submit', async (e) => {
       tts_provider: fd.get('tts_provider'),
       tts_base_url: fd.get('tts_base_url'),
       tts_model: fd.get('tts_model'),
-      tts_voice: fd.get('tts_voice')
+      tts_voice: fd.get('tts_voice'),
+      font_heading: fd.get('font_heading'),
+      font_body: fd.get('font_body')
     };
     if (fd.get('tts_api_key')) body.tts_api_key = fd.get('tts_api_key');
     try { await put('/api/settings', body); toast('视频引擎设置已保存'); route(); }

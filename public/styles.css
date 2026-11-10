@@ -1214,3 +1214,9 @@ input::placeholder, textarea::placeholder { color: #B2A897; }
 .autogen-progress .progress { flex:1; }
 .autogen-actions { display:flex; gap:6px; flex:0 0 auto; }
 .status.red { color:#B3261E; }
+
+.asset-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:14px; }
+.asset-card { border:1px solid var(--line); border-radius:10px; overflow:hidden; background:#fff; }
+.asset-thumb { height:180px; display:flex; align-items:center; justify-content:center; background:#F7F4EC; }
+.asset-thumb img { max-width:100%; max-height:100%; object-fit:contain; }
+.asset-meta { display:flex; align-items:center; justify-content:space-between; padding:8px 10px; font-size:12px; }

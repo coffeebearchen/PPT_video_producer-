@@ -1,12 +1,10 @@
 import {registerRoot, delayRender, continueRender, staticFile} from 'remotion';
 import {RemotionRoot} from './Root';
+import fontManifest from '../fonts.json';
 
-// 运行时加载手写字体：霞鹜文楷（主）+ 站酷快乐体（兜底）
+// 运行时加载 fonts.json 中登记的所有字体
 const handle = delayRender('Loading fonts');
-const faces: {family: string; file: string}[] = [
-  {family: 'LXGW WenKai', file: 'fonts/LXGWWenKai-Regular.ttf'},
-  {family: 'ZCOOL KuaiLe', file: 'fonts/ZCOOLKuaiLe-Regular.ttf'},
-];
+const faces = Object.entries(fontManifest as Record<string, string>).map(([family, file]) => ({ family, file }));
 Promise.all(
   faces.map(async (f) => {
     try {

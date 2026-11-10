@@ -1,6 +1,6 @@
 import React from 'react';
 import {useVideoConfig} from 'remotion';
-import {FONT, glassCard, GOLD, INK, MUTED} from './tokens';
+import {FONT, FONT_HEADING, glassCard, GOLD, INK, MUTED} from './tokens';
 
 export const useU = () => {
   const {width} = useVideoConfig();
@@ -13,7 +13,7 @@ export const Kicker: React.FC<{children: React.ReactNode; color?: string}> = ({c
   return (
     <div
       style={{
-        fontFamily: FONT,
+        fontFamily: FONT_HEADING,
         fontSize: 36 * u,
         letterSpacing: 3,
         color,
@@ -32,7 +32,7 @@ export const SectionHeader: React.FC<{children: React.ReactNode; color?: string}
   return (
     <div
       style={{
-        fontFamily: FONT,
+        fontFamily: FONT_HEADING,
         fontSize: 72 * u,
         fontWeight: 400,
         color,
