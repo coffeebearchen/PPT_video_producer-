@@ -1779,21 +1779,39 @@ function openAssetUpload() {
   });
 }
 
-async function renderVoices() {
+async function renderVoices(opts = {}) {
   setNav('voices'); setCrumb('工作台 / 声音');
-  const data = await api('/api/voice-assets').catch(() => ({ assets: [] }));
+  const q = opts.q || state.voiceQ || '';
+  const group = opts.group ?? state.voiceGroup ?? '';
+  const archived = opts.archived ?? state.voiceArchived ?? false;
+  state.voiceQ = q; state.voiceGroup = group; state.voiceArchived = archived;
+  const query = new URLSearchParams();
+  if (q) query.set('q', q);
+  if (group) query.set('group', group);
+  if (archived) query.set('archived', '1');
+  const data = await api(`/api/voice-assets?${query.toString()}`).catch(() => ({ assets: [], groups: [] }));
   const assets = data.assets || [];
+  const groups = data.groups || [];
   const list = assets.length ? assets.map(a => `
     <div class="voice-row">
-      <div class="voice-main"><div class="voice-name">${esc(a.name)}</div><audio controls src="/media/${esc(a.path)}" style="height:32px;margin-top:4px"></audio></div>
-      <button class="btn btn-sm" data-action="delete-voice" data-id="${esc(a.id)}">删除</button>
-    </div>`).join('') : '<div class="empty"><h3>还没有声音样本</h3><p>上传你的声音 1 / 2 / 3 / 4 段，用于声音克隆。</p></div>';
+      <div class="voice-main"><div class="voice-name">${esc(a.name)}${a.group_name ? ` <span class="tag">${esc(a.group_name)}</span>` : ''}</div><audio controls src="/media/${esc(a.path)}" style="height:32px;margin-top:4px"></audio></div>
+      <div class="flex" style="gap:6px"><button class="btn btn-sm" data-action="archive-voice" data-id="${esc(a.id)}">${a.archived ? '恢复' : '归档'}</button><button class="btn btn-sm" data-action="delete-voice" data-id="${esc(a.id)}">删除</button></div>
+    </div>`).join('') : '<div class="empty"><h3>还没有声音样本</h3></div>';
   $('#view').innerHTML = `
     <div class="page-head">
-      <div><p class="eyebrow">VOICE / 声音</p><h1 class="page-title">上传你的声音样本。</h1><p class="page-sub">用于声音克隆：干净、无背景音乐，每段 10–30 秒，wav / mp3。</p></div>
+      <div><p class="eyebrow">VOICE / 声音</p><h1 class="page-title">声音样本：分组、归档。</h1><p class="page-sub">干净、无背景音乐，每段 10–30 秒，wav / mp3。</p></div>
       <div class="head-actions"><button class="btn btn-primary" data-action="open-voice-upload">+ 上传声音</button></div>
     </div>
-    <div class="card mt-16"><div class="card-body">${list}</div></div>
+    <div class="card mt-16"><div class="card-body">
+      <div class="flex mb-12" style="gap:8px;flex-wrap:wrap">
+        <input id="voice-search" placeholder="搜索名字 / 标签" value="${esc(q)}" style="max-width:220px">
+        <button class="btn btn-sm" data-action="voice-search">搜索</button>
+        <button class="btn btn-sm ${group === '' ? 'btn-primary' : ''}" data-action="voice-group" data-group="">全部</button>
+        ${groups.map(g => `<button class="btn btn-sm ${group === g ? 'btn-primary' : ''}" data-action="voice-group" data-group="${esc(g)}">${esc(g)}</button>`).join('')}
+        <button class="btn btn-sm ${archived ? 'btn-primary' : ''}" data-action="voice-archived-toggle">${archived ? '查看未归档' : '查看归档'}</button>
+      </div>
+      ${list}
+    </div></div>
     <div class="note-box mt-12">克隆服务在「设置 → 视频引擎 / TTS」里填 API Key 和音色 ID；填好后，出片就用你的声音。</div>
   `;
 }
@@ -1803,6 +1821,8 @@ function openVoiceUpload() {
     title: '上传声音样本',
     body: `<form id="voice-upload-form">
       <div class="field"><label>名称</label><input name="name" placeholder="例如：我的声音-1"></div>
+      <div class="field"><label>分组（可选）</label><input name="group_name" placeholder="例如：主声音"></div>
+      <div class="field"><label>标签（可选，逗号分隔）</label><input name="tags" placeholder="正常,严肃,温柔"></div>
       <div class="field"><label>音频文件（wav / mp3）</label><input name="file" type="file" accept="audio/*" required></div>
     </form>`,
     foot: `<button class="btn" data-action="close-modal">取消</button><button class="btn btn-primary" type="submit" form="voice-upload-form">上传</button>`,
@@ -1815,7 +1835,7 @@ function openVoiceUpload() {
         if (!file || !file.size) { toast('请选择音频', 'error'); return; }
         const dataUrl = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); });
         try {
-          await post('/api/voice-assets', { name: fd.get('name') || file.name, mime: file.type, data: dataUrl });
+          await post('/api/voice-assets', { name: fd.get('name') || file.name, mime: file.type, data: dataUrl, group_name: fd.get('group_name'), tags: fd.get('tags') });
           toast('已上传'); closeModal(); renderVoices();
         } catch (err) { toast(err.message, 'error'); }
       });
@@ -3070,6 +3090,24 @@ document.addEventListener('click', async (e) => {
       renderAssets({ archived: !state.assetArchived }); return;
     }
     if (action === 'open-voice-upload') { e.preventDefault(); openVoiceUpload(); return; }
+    if (action === 'archive-voice') {
+      e.preventDefault();
+      try { await post(`/api/voice-assets/${encodeURIComponent(el.dataset.id)}/archive`, {}); renderVoices(); }
+      catch (err) { toast(err.message, 'error'); }
+      return;
+    }
+    if (action === 'voice-search') {
+      e.preventDefault();
+      renderVoices({ q: document.querySelector('#voice-search')?.value || '' }); return;
+    }
+    if (action === 'voice-group') {
+      e.preventDefault();
+      renderVoices({ group: el.dataset.group || '' }); return;
+    }
+    if (action === 'voice-archived-toggle') {
+      e.preventDefault();
+      renderVoices({ archived: !state.voiceArchived }); return;
+    }
     if (action === 'delete-voice') {
       e.preventDefault();
       if (!confirm('删除这段声音？')) return;

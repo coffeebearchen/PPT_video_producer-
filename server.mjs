@@ -2004,8 +2004,17 @@ async function route(req, res) {
       return send(res, 200, { fonts });
     }
     if (method === 'GET' && p === '/api/voice-assets') {
-      const rows = db.prepare("SELECT * FROM media_assets WHERE category='voice' ORDER BY created_at DESC").all();
-      return send(res, 200, { assets: rows });
+      const u = new URL(req.url, 'http://x');
+      const q = u.searchParams.get('q') || '';
+      const group = u.searchParams.get('group') || '';
+      const archived = u.searchParams.get('archived') === '1';
+      let rows;
+      if (archived) rows = db.prepare("SELECT * FROM media_assets WHERE category='voice' AND archived=1 ORDER BY created_at DESC").all();
+      else if (group) rows = db.prepare("SELECT * FROM media_assets WHERE category='voice' AND archived=0 AND group_name=? ORDER BY created_at DESC").all(group);
+      else rows = db.prepare("SELECT * FROM media_assets WHERE category='voice' AND archived=0 ORDER BY created_at DESC").all();
+      if (q) rows = rows.filter(r => (r.name || '').includes(q) || (r.tags || '').includes(q));
+      const groups = db.prepare("SELECT DISTINCT group_name FROM media_assets WHERE category='voice' AND group_name != ''").all().map(r => r.group_name);
+      return send(res, 200, { assets: rows, groups });
     }
     if (method === 'POST' && p === '/api/voice-assets') {
       const body = await readBody(req);
@@ -2017,9 +2026,16 @@ async function route(req, res) {
       const file = `${id}.${ext}`;
       fs.writeFileSync(path.join(dir, file), Buffer.from(String(body.data).replace(/^data:[^;]+;base64,/, ''), 'base64'));
       const t = now();
-      db.prepare('INSERT INTO media_assets (id,name,category,mime,path,created_at) VALUES (?,?,?,?,?,?)')
-        .run(id, String(body.name || id), 'voice', String(body.mime || 'audio/mpeg'), 'voice-assets/' + file, t);
+      db.prepare('INSERT INTO media_assets (id,name,category,mime,path,group_name,tags,archived,created_at) VALUES (?,?,?,?,?,?,?,?,?)')
+        .run(id, String(body.name || id), 'voice', String(body.mime || 'audio/mpeg'), 'voice-assets/' + file, String(body.group_name || ''), String(body.tags || ''), 0, t);
       return send(res, 201, db.prepare('SELECT * FROM media_assets WHERE id=?').get(id));
+    }
+    if (method === 'POST' && /^\/api\/voice-assets\/[^/]+\/archive$/.test(p)) {
+      const id = p.split('/')[3];
+      const row = db.prepare("SELECT * FROM media_assets WHERE id=? AND category='voice'").get(id);
+      if (!row) return fail(res, 404, '声音不存在');
+      db.prepare('UPDATE media_assets SET archived=? WHERE id=?').run(row.archived ? 0 : 1, id);
+      return send(res, 200, db.prepare('SELECT * FROM media_assets WHERE id=?').get(id));
     }
     if (method === 'POST' && /^\/api\/voice-assets\/[^/]+\/delete$/.test(p)) {
       const id = p.split('/')[3];
