@@ -1989,6 +1989,9 @@ async function renderElements() {
   setNav('elements'); setCrumb('工作台 / 内容资产 / 元素库');
   const data = await api('/api/elements');
   const elements = data.elements || [];
+  const assets = await api('/api/element-assets').catch(() => ({ doodles: [], lotties: [] }));
+  const doodles = assets.doodles || [];
+  const lotties = assets.lotties || [];
   $('#view').innerHTML = `
     <div class="page-head">
       <div><p class="eyebrow">ELEMENTS / 元素库</p><h1 class="page-title">不按物体分，<br>按视觉语法分。</h1><p class="page-sub">所有元素是无色 SVG。颜色由主题决定，运动由系统预设；人只选主题。</p></div>
@@ -2000,6 +2003,12 @@ async function renderElements() {
       <div class="element-visual theme-preview-archive">${e.svg}</div>
       <div class="element-body"><div class="tag-row"><span class="tag">${esc(e.name)}</span><span class="tag">${esc(e.id)}</span></div><p class="tiny mt-8">${(e.tags || []).slice(0, 5).map(t => `#${esc(t)}`).join(' ')}</p><div class="tag-row mt-8">${(e.motion || []).map(m => `<span class="tag">${esc(m)}</span>`).join('')}</div></div>
     </div>`).join('')}</div>
+    <div class="card mt-16"><div class="card-head"><div><h2 class="section-title">手绘插画 / Lottie</h2><p class="section-sub">32 个 Open Doodles SVG + 9 个 Lottie，渲染时按文案关键词或随机抽取。</p></div></div><div class="card-body">
+      <p class="tiny mb-8">手绘插画（SVG）</p>
+      <div class="doodle-grid">${doodles.map(d => `<div class="doodle-card"><img src="/assets/${esc(d)}" alt="${esc(d)}"><span>${esc(d.replace(/^od_|\.svg$/g,''))}</span></div>`).join('')}</div>
+      <p class="tiny mt-16 mb-8">Lottie 动画（JSON）</p>
+      <div class="tag-row">${lotties.map(l => `<span class="tag">${esc(l.replace(/^lottie_|\.json$/g,''))}</span>`).join('')}</div>
+    </div></div>
     <div class="note-box mt-16"><b>规则</b><br>64×64 · 单色 currentColor · 无填充 · 无渐变 · 无文字 · 主题负责颜色 · 元素不得进入文字安全区。</div>`;
 }
 

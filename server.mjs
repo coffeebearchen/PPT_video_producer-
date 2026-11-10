@@ -1969,6 +1969,11 @@ async function route(req, res) {
     if (file && serveFile(req, res, file)) return;
     return fail(res, 404, 'media not found');
   }
+  if (p.startsWith('/assets/')) {
+    const file = safeJoin(path.join(ENGINE_DIR, 'public', 'assets'), p.slice('/assets/'.length));
+    if (file && serveFile(req, res, file)) return;
+    return fail(res, 404, 'asset not found');
+  }
   if (p.startsWith('/kits/')) {
     const file = safeJoin(KITS_DIR, p.slice('/kits/'.length));
     if (file && serveFile(req, res, file)) return;
