@@ -515,7 +515,7 @@ async function renderCreate() {
   $('#view').innerHTML = `
     <div class="page-head">
       <div><p class="eyebrow">CREATE / 创作台</p><h1 class="page-title">先选结构，<br>再写内容。</h1><p class="page-sub">同一个话题，用不同结构讲，会长成完全不同的视频。AI 给结构方案，你选一个解释世界的方式。</p></div>
-      <div class="head-actions"><span class="tag lime">决策 1 / 4 · 选结构</span></div>
+      <div class="head-actions"><a class="btn" href="#/autogen">用 AI 自动生成</a><span class="tag lime">决策 1 / 4 · 选结构</span></div>
     </div>
     <div class="create-grid">
       <div class="stack">
