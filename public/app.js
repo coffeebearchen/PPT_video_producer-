@@ -1640,21 +1640,40 @@ function openAutogenNew() {
   });
 }
 
-async function renderAssets() {
+async function renderAssets(opts = {}) {
   setNav('assets'); setCrumb('工作台 / 图片素材');
-  const data = await api('/api/media-assets').catch(() => ({ assets: [] }));
+  const q = opts.q || state.assetQ || '';
+  const group = opts.group ?? state.assetGroup ?? '';
+  const archived = opts.archived ?? state.assetArchived ?? false;
+  state.assetQ = q; state.assetGroup = group; state.assetArchived = archived;
+  const query = new URLSearchParams();
+  if (q) query.set('q', q);
+  if (group) query.set('group', group);
+  if (archived) query.set('archived', '1');
+  const data = await api(`/api/media-assets?${query.toString()}`).catch(() => ({ assets: [], groups: [] }));
   const assets = data.assets || [];
+  const groups = data.groups || [];
   const grid = assets.length ? assets.map(a => `
     <div class="asset-card">
       <div class="asset-thumb"><img src="/media/${esc(a.path)}" alt="${esc(a.name)}"></div>
-      <div class="asset-meta"><span>${esc(a.name)}</span><button class="btn btn-sm" data-action="delete-asset" data-id="${esc(a.id)}">删除</button></div>
-    </div>`).join('') : '<div class="empty"><h3>还没有图片素材</h3><p>点右上角上传，图片会存到素材库，供视频渲染抽取。</p></div>';
+      <div class="asset-meta"><span>${esc(a.name)}</span>${a.group_name ? `<span class="tag">${esc(a.group_name)}</span>` : ''}</div>
+      <div class="asset-actions"><button class="btn btn-sm" data-action="archive-asset" data-id="${esc(a.id)}">${a.archived ? '恢复' : '归档'}</button><button class="btn btn-sm" data-action="delete-asset" data-id="${esc(a.id)}">删除</button></div>
+    </div>`).join('') : '<div class="empty"><h3>没有图片</h3></div>';
   $('#view').innerHTML = `
     <div class="page-head">
-      <div><p class="eyebrow">ASSETS / 图片素材</p><h1 class="page-title">上传图片，供视频渲染抽取。</h1><p class="page-sub">支持 jpg / png / gif，存到本地素材库，可在模板里按元素 id 引用。</p></div>
+      <div><p class="eyebrow">ASSETS / 图片素材</p><h1 class="page-title">素材库：分组、标签、归档。</h1><p class="page-sub">常用靠前，旧的自动/手动归档，需要时能找回。</p></div>
       <div class="head-actions"><button class="btn btn-primary" data-action="open-asset-upload">+ 上传图片</button></div>
     </div>
-    <div class="card mt-16"><div class="card-body"><div class="asset-grid">${grid}</div></div></div>
+    <div class="card mt-16"><div class="card-body">
+      <div class="flex mb-12" style="gap:8px;flex-wrap:wrap">
+        <input id="asset-search" placeholder="搜索名字 / 标签" value="${esc(q)}" style="max-width:260px">
+        <button class="btn btn-sm" data-action="asset-search">搜索</button>
+        <button class="btn btn-sm ${group === '' ? 'btn-primary' : ''}" data-action="asset-group" data-group="">全部</button>
+        ${groups.map(g => `<button class="btn btn-sm ${group === g ? 'btn-primary' : ''}" data-action="asset-group" data-group="${esc(g)}">${esc(g)}</button>`).join('')}
+        <button class="btn btn-sm ${archived ? 'btn-primary' : ''}" data-action="asset-archived-toggle">${archived ? '查看未归档' : '查看归档'}</button>
+      </div>
+      <div class="asset-grid">${grid}</div>
+    </div></div>
   `;
 }
 
@@ -1663,6 +1682,8 @@ function openAssetUpload() {
     title: '上传图片素材',
     body: `<form id="asset-upload-form">
       <div class="field"><label>名称</label><input name="name" placeholder="例如：封面配图"></div>
+      <div class="field"><label>分组（可选）</label><input name="group_name" placeholder="例如：咖啡主题"></div>
+      <div class="field"><label>标签（可选，逗号分隔）</label><input name="tags" placeholder="咖啡,温馨,暖色"></div>
       <div class="field"><label>图片文件</label><input name="file" type="file" accept="image/*" required></div>
     </form>`,
     foot: `<button class="btn" data-action="close-modal">取消</button><button class="btn btn-primary" type="submit" form="asset-upload-form">上传</button>`,
@@ -1675,7 +1696,7 @@ function openAssetUpload() {
         if (!file || !file.size) { toast('请选择图片', 'error'); return; }
         const dataUrl = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); });
         try {
-          await post('/api/media-assets', { name: fd.get('name') || file.name, mime: file.type, data: dataUrl });
+          await post('/api/media-assets', { name: fd.get('name') || file.name, mime: file.type, data: dataUrl, group_name: fd.get('group_name'), tags: fd.get('tags') });
           toast('已上传'); closeModal(); renderAssets();
         } catch (err) { toast(err.message, 'error'); }
       });
@@ -2946,6 +2967,25 @@ document.addEventListener('click', async (e) => {
     }
     if (action === 'open-autogen') { e.preventDefault(); openAutogenNew(); return; }
     if (action === 'open-asset-upload') { e.preventDefault(); openAssetUpload(); return; }
+    if (action === 'archive-asset') {
+      e.preventDefault();
+      try { await post(`/api/media-assets/${encodeURIComponent(el.dataset.id)}/archive`, {}); renderAssets(); }
+      catch (err) { toast(err.message, 'error'); }
+      return;
+    }
+    if (action === 'asset-search') {
+      e.preventDefault();
+      const q = document.querySelector('#asset-search')?.value || '';
+      renderAssets({ q }); return;
+    }
+    if (action === 'asset-group') {
+      e.preventDefault();
+      renderAssets({ group: el.dataset.group || '' }); return;
+    }
+    if (action === 'asset-archived-toggle') {
+      e.preventDefault();
+      renderAssets({ archived: !state.assetArchived }); return;
+    }
     if (action === 'open-voice-upload') { e.preventDefault(); openVoiceUpload(); return; }
     if (action === 'delete-voice') {
       e.preventDefault();
