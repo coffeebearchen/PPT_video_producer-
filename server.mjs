@@ -13,6 +13,7 @@ import { generateAngles, generateSpec, llmConfigured, testLLM, draftBriefFromDir
 import { publishWechat, testWechat } from './lib/wechat.mjs';
 import { renderVibeMotion, buildTimeline, ENGINE_DIR } from './lib/vibemotion.mjs';
 import { synthesizeSpeech, ttsConfigured } from './lib/tts.mjs';
+import { ELEMENT_CATALOG, PALETTES, FONT_PAIRS, TEMPLATES } from './lib/element-catalog.mjs';
 import { checkCompliance } from './lib/compliance.mjs';
 import { TEMPLATE_THEMES, listTemplates, getTemplate, applyTemplatePreset } from './lib/templates.mjs';
 import { ELEMENTS, ELEMENT_SPEC, listElements, getElement, selectElements, validateGeneratedSvg } from './lib/elements.mjs';
@@ -1886,6 +1887,8 @@ async function route(req, res) {
       enqueueVideoTask(id);
       return send(res, 200, db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id));
     }
+
+    if (method === 'GET' && p === '/api/element-catalog') return send(res, 200, { elements: ELEMENT_CATALOG, palettes: PALETTES, fonts: FONT_PAIRS, templates: TEMPLATES });
 
     return fail(res, 404, 'API 不存在');
   }
