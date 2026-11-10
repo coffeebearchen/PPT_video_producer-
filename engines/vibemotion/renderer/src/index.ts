@@ -10,7 +10,7 @@ Promise.all(
     try {
       const face = new FontFace(f.family, `url("${staticFile(f.file)}")`);
       const loaded = await face.load();
-      document.fonts.add(loaded);
+      (document.fonts as unknown as { add: (f: FontFace) => void }).add(loaded);
     } catch (e) {
       // 字体缺失时继续，用系统字体兜底
     }

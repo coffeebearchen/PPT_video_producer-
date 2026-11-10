@@ -1020,7 +1020,7 @@ function nextStep(brief, angles, spec, render) {
 
 // ---------- library ----------
 async function renderLibrary() {
-  setNav('library'); setCrumb('工作台 / 素材库');
+  setNav('library'); setCrumb('工作台 / 成片库');
   const list = await api('/api/library');
   state.library = list;
   const filters = [['all', '全部'], ['rendered', '已渲染'], ['in_review', '待审'], ['approved', '已通过'], ['published', '已发布'], ['stale', '需重渲']];
@@ -1031,7 +1031,7 @@ async function renderLibrary() {
   });
   $('#view').innerHTML = `
     <div class="page-head">
-      <div><p class="eyebrow">LIBRARY / 素材库</p><h1 class="page-title">每条成片，都有版本和回执。</h1><p class="page-sub">不是网盘文件夹。每条视频绑定 Spec、来源、审批记录和发布任务。</p></div>
+      <div><p class="eyebrow">LIBRARY / 成片库</p><h1 class="page-title">每条成片，都有版本和回执。</h1><p class="page-sub">不是网盘文件夹。每条视频绑定 Spec、来源、审批记录和发布任务。</p></div>
       <div class="head-actions"><button class="btn btn-primary" data-action="new-brief">+ 新建选题</button></div>
     </div>
     <div class="filter-tabs">${filters.map(([k, l]) => `<button class="${state.libraryFilter === k ? 'active' : ''}" data-filter-library="${k}">${l}</button>`).join('')}</div>
