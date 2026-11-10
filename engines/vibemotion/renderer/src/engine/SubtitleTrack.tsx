@@ -38,17 +38,17 @@ export const SubtitleTrack: React.FC<{subtitles: Subtitle[]; palette: ThemePalet
         position: 'absolute',
         left: 0,
         right: 0,
-        bottom: 148,
+        bottom: 272,
         display: 'flex',
         justifyContent: 'center',
-        padding: '0 96px',
+        padding: '0 140px',
         opacity,
       }}
     >
       <div
         style={{
           fontFamily: FONT,
-          fontSize: 46,
+          fontSize: 36,
           fontWeight: 400,
           lineHeight: 1.45,
           color: '#FDFDFB',

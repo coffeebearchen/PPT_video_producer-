@@ -217,7 +217,7 @@ export const Video: React.FC = () => {
 
       <SubtitleTrack subtitles={DSL.subtitles} palette={palette} />
       {sceneIndex === DSL.scenes.length - 1 ? (
-        <div style={{position: 'absolute', right: 112, bottom: 206, color: palette.ink, fontSize: 26, fontFamily: 'LXGW WenKai', opacity: 0.72}}>有问题，评论区问</div>
+        <div style={{position: 'absolute', right: 112, bottom: 206, color: '#F1E5B1', fontSize: 26, fontFamily: 'LXGW WenKai', opacity: 0.72}}>有问题，评论区问</div>
       ) : null}
 
       {DSL.audioTracks.masterVoiceover ? (

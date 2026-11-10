@@ -10,6 +10,7 @@ export type SfxType =
   | 'camera_zoom';
 
 export type ComponentName =
+  | 'ChalkBoard'
   | 'ComparisonSplitCard'
   | 'ConcurrentDashboard'
   | 'DualRoleVideoSync'
