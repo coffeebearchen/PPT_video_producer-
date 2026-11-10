@@ -1498,18 +1498,19 @@ function autogenTaskRow(t) {
 const WB_TABS = [['todo', '待办'], ['doing', '生成中'], ['review', '待审批'], ['publish', '待发布'], ['done', '已完成'], ['error', '异常']];
 
 function wbRow(r) {
-  const kindLabel = r.kind === 'vtask' ? '自动视频' : r.kind === 'brief' ? '选题(模板)' : '发布';
+  const kindLabel = r.kind === 'vtask' ? '引擎2 · VibeMotion' : r.kind === 'brief' ? '引擎1 · 模板' : '发布';
   const styleLabel = r.style ? { industrial: '工业', clean: '简洁', dynamic: '动感' }[r.style] || r.style : '';
   const mediaUrl = (p) => p ? `/media/${esc(p)}` : '';
   const link = r.kind === 'vtask' ? `#/autogen` : r.kind === 'brief' ? `#/brief/${esc(r.id)}` : `#/publish`;
   return `<div class="autogen-row">
     <div class="autogen-main">
       <div class="autogen-title"><a href="${link}">${esc(r.title || '未命名')}</a></div>
-      <div class="autogen-meta"><span class="badge">${kindLabel}</span>${styleLabel ? `<span class="badge engine">${esc(styleLabel)}</span>` : ''}<span>${esc(r.brief_status || '')}</span></div>
+      <div class="autogen-meta"><span class="badge ${r.kind === 'vtask' ? 'engine' : ''}">${kindLabel}</span>${styleLabel ? `<span class="badge engine">${esc(styleLabel)}</span>` : ''}<span>${esc(r.brief_status || '')}</span></div>
     </div>
     <div class="autogen-actions">
       ${r.video_path ? `<a class="btn btn-sm" href="${mediaUrl(r.video_path)}" target="_blank" rel="noreferrer">播放</a>` : ''}
       ${r.kind === 'vtask' ? `<button class="btn btn-sm" data-action="edit-video-task" data-id="${esc(r.id)}">编辑</button>` : ''}
+      ${r.kind === 'vtask' && r.brief_status !== '待发布' ? `<button class="btn btn-sm btn-primary" data-action="publish-video-task" data-id="${esc(r.id)}">准备发布</button>` : ''}
       <a class="btn btn-sm" href="${link}">前往</a>
     </div>
   </div>`;
@@ -2993,6 +2994,12 @@ document.addEventListener('click', async (e) => {
     const action = el.dataset.action;
     if (action === 'new-brief') { e.preventDefault(); navigate('/create'); return; }
     if (action === 'edit-video-task') { e.preventDefault(); openEditVideoTask(el.dataset.id); return; }
+    if (action === 'publish-video-task') {
+      e.preventDefault();
+      try { await post(`/api/video-tasks/${encodeURIComponent(el.dataset.id)}/publish-ready`, {}); toast('已标记待发布'); renderWorkbench(); }
+      catch (err) { toast(err.message, 'error'); }
+      return;
+    }
     if (action === 'wb-tab') { e.preventDefault(); state.wbTab = el.dataset.tab; renderWorkbench(); return; }
     if (action === 'ai-draft-script') {
       e.preventDefault();

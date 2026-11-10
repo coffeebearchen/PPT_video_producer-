@@ -194,10 +194,10 @@ function unifiedQueue() {
   for (const t of vtasks) {
     let bucket = 'todo';
     if (t.status === 'running') bucket = 'doing';
-    else if (t.status === 'done') bucket = 'done';
+    else if (t.status === 'done') bucket = (t.publish_status === 'published') ? 'done' : (t.publish_status === 'ready' ? 'publish' : 'done');
     else if (['failed', 'blocked'].includes(t.status)) bucket = 'error';
     else if (t.status === 'canceled') bucket = 'done';
-    rows.push({ id: t.id, kind: 'vtask', title: t.title, engine: t.engine, style: t.style, bucket, created_at: t.created_at, video_path: t.video_path, cover_path: t.cover_path, brief_status: t.status });
+    rows.push({ id: t.id, kind: 'vtask', title: t.title, engine: t.engine, style: t.style, bucket, created_at: t.created_at, video_path: t.video_path, cover_path: t.cover_path, brief_status: t.publish_status === 'ready' ? '待发布' : t.status });
   }
   const briefs = db.prepare('SELECT * FROM briefs ORDER BY created_at DESC').all();
   for (const b of briefs) {
@@ -1931,6 +1931,14 @@ async function route(req, res) {
         status: 'queued', progress: 0, error: '', timeline_json: '', video_path: '', cover_path: ''
       });
       enqueueVideoTask(id);
+      return send(res, 200, db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id));
+    }
+    if (method === 'POST' && /^\/api\/video-tasks\/[^/]+\/publish-ready$/.test(p)) {
+      const id = p.split('/')[3];
+      const task = db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id);
+      if (!task) return fail(res, 404, '任务不存在');
+      if (task.status !== 'done') return fail(res, 400, '只有完成的视频才能准备发布');
+      updateVideoTask(id, { publish_status: 'ready' });
       return send(res, 200, db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id));
     }
     if (method === 'POST' && /^\/api\/video-tasks\/[^/]+\/confirm$/.test(p)) {
