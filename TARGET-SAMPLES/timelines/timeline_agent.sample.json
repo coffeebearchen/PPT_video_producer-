@@ -1,0 +1,689 @@
+{
+  "version": "1.0",
+  "projectMeta": {
+    "title": "Agent 为什么一干活就翻车？",
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "durationMs": 46000,
+    "themePalette": {
+      "bgCanvas": "#26251F",
+      "primaryHuman": "#F2C94C",
+      "secondaryAi": "#7FB0A0",
+      "accentWarning": "#E8A33C",
+      "dangerStrike": "#E0604E",
+      "highlightGold": "#F2C94C"
+    }
+  },
+  "audioTracks": {
+    "backgroundMusic": {
+      "src": "audio/bg_pad.wav",
+      "baseVolume": 0.08
+    },
+    "sfxEvents": [
+      {
+        "atMs": 0,
+        "sfxType": "whoosh",
+        "volume": 0.25
+      },
+      {
+        "atMs": 6000,
+        "sfxType": "whoosh",
+        "volume": 0.25
+      },
+      {
+        "atMs": 7500,
+        "sfxType": "pop",
+        "volume": 0.25
+      },
+      {
+        "atMs": 9500,
+        "sfxType": "pop",
+        "volume": 0.25
+      },
+      {
+        "atMs": 11800,
+        "sfxType": "pop",
+        "volume": 0.25
+      },
+      {
+        "atMs": 13500,
+        "sfxType": "whoosh",
+        "volume": 0.25
+      },
+      {
+        "atMs": 14500,
+        "sfxType": "tick",
+        "volume": 0.2
+      },
+      {
+        "atMs": 16000,
+        "sfxType": "tick",
+        "volume": 0.2
+      },
+      {
+        "atMs": 17800,
+        "sfxType": "tick",
+        "volume": 0.2
+      },
+      {
+        "atMs": 19400,
+        "sfxType": "chime_success",
+        "volume": 0.25
+      },
+      {
+        "atMs": 20500,
+        "sfxType": "whoosh",
+        "volume": 0.25
+      },
+      {
+        "atMs": 24000,
+        "sfxType": "tick",
+        "volume": 0.2
+      },
+      {
+        "atMs": 25500,
+        "sfxType": "strike_red",
+        "volume": 0.3
+      },
+      {
+        "atMs": 26500,
+        "sfxType": "whoosh",
+        "volume": 0.25
+      },
+      {
+        "atMs": 27500,
+        "sfxType": "tick",
+        "volume": 0.2
+      },
+      {
+        "atMs": 29500,
+        "sfxType": "tick",
+        "volume": 0.2
+      },
+      {
+        "atMs": 31200,
+        "sfxType": "chime_success",
+        "volume": 0.25
+      },
+      {
+        "atMs": 32500,
+        "sfxType": "whoosh",
+        "volume": 0.25
+      },
+      {
+        "atMs": 33500,
+        "sfxType": "strike_red",
+        "volume": 0.3
+      },
+      {
+        "atMs": 36000,
+        "sfxType": "whoosh",
+        "volume": 0.25
+      },
+      {
+        "atMs": 36800,
+        "sfxType": "tick",
+        "volume": 0.2
+      },
+      {
+        "atMs": 38200,
+        "sfxType": "tick",
+        "volume": 0.2
+      },
+      {
+        "atMs": 39600,
+        "sfxType": "tick",
+        "volume": 0.2
+      },
+      {
+        "atMs": 41000,
+        "sfxType": "tick",
+        "volume": 0.2
+      },
+      {
+        "atMs": 42000,
+        "sfxType": "whoosh",
+        "volume": 0.25
+      },
+      {
+        "atMs": 45000,
+        "sfxType": "chime_success",
+        "volume": 0.25
+      }
+    ]
+  },
+  "scenes": [
+    {
+      "sceneId": "scene_01",
+      "startMs": 0,
+      "endMs": 6000,
+      "transitionIn": "fade_blur",
+      "componentName": "ComparisonSplitCard",
+      "initialProps": {
+        "headline": "Agent 为什么一干活就翻车？",
+        "question": "?",
+        "left": {
+          "title": "演 示 里",
+          "sub": "一次成功，看起来什么都会",
+          "tone": "waiting"
+        },
+        "right": {
+          "title": "真 项 目 里",
+          "sub": "多跑两步，就开始出错",
+          "tone": "active"
+        }
+      },
+      "stateSteps": [
+        {
+          "stepId": "cam1",
+          "triggerMs": 3200,
+          "triggerWord": "翻车",
+          "propPatches": {},
+          "cameraKeyframe": {
+            "scale": 1.03,
+            "offsetX": 0,
+            "offsetY": -8,
+            "rotateY": 2,
+            "springPreset": "smooth_camera"
+          }
+        }
+      ]
+    },
+    {
+      "sceneId": "scene_02",
+      "startMs": 6000,
+      "endMs": 13500,
+      "transitionIn": "slide_up",
+      "componentName": "SpotlightPillars",
+      "initialProps": {
+        "sectionHeader": "真正的坑有三个",
+        "pillars": [
+          {
+            "indexLabel": "1",
+            "title": "编造接口",
+            "topFloatingBadge": {
+              "type": "waveform"
+            },
+            "bottomTakeawayText": "不存在的 API 也敢写"
+          },
+          {
+            "indexLabel": "2",
+            "title": "工具调错",
+            "topFloatingBadge": {
+              "type": "chat_wrench"
+            },
+            "bottomTakeawayText": "一次错，后面全错"
+          },
+          {
+            "indexLabel": "3",
+            "title": "长任务失忆",
+            "topFloatingBadge": {
+              "type": "text_badge",
+              "content": "10 步"
+            },
+            "bottomTakeawayText": "跑到一半忘了前面"
+          }
+        ],
+        "activePillarIndex": null
+      },
+      "stateSteps": [
+        {
+          "stepId": "p1",
+          "triggerMs": 7500,
+          "triggerWord": "编造",
+          "propPatches": {
+            "activePillarIndex": 0
+          },
+          "cameraKeyframe": {
+            "scale": 1.02,
+            "offsetX": -6,
+            "offsetY": 0,
+            "springPreset": "snappy"
+          }
+        },
+        {
+          "stepId": "p2",
+          "triggerMs": 9500,
+          "triggerWord": "工具",
+          "propPatches": {
+            "activePillarIndex": 1
+          },
+          "cameraKeyframe": {
+            "scale": 1.03,
+            "offsetX": 0,
+            "offsetY": 0,
+            "springPreset": "snappy"
+          }
+        },
+        {
+          "stepId": "p3",
+          "triggerMs": 11800,
+          "triggerWord": "失忆",
+          "propPatches": {
+            "activePillarIndex": 2
+          },
+          "cameraKeyframe": {
+            "scale": 1.02,
+            "offsetX": 6,
+            "offsetY": 0,
+            "springPreset": "snappy"
+          }
+        }
+      ]
+    },
+    {
+      "sceneId": "scene_03",
+      "startMs": 13500,
+      "endMs": 20500,
+      "transitionIn": "fade_blur",
+      "componentName": "FlowChart",
+      "initialProps": {
+        "title": "能用的 Agent 跑这四步",
+        "kicker": "动 态 流 程",
+        "nodes": [
+          {
+            "id": "plan",
+            "label": "计划",
+            "sub": "拆解任务"
+          },
+          {
+            "id": "act",
+            "label": "执行",
+            "sub": "调用工具"
+          },
+          {
+            "id": "check",
+            "label": "自检",
+            "sub": "验证结果"
+          },
+          {
+            "id": "rollback",
+            "label": "回滚",
+            "sub": "错了退回"
+          }
+        ],
+        "activeStep": 0,
+        "stepCaption": "先计划"
+      },
+      "stateSteps": [
+        {
+          "stepId": "f1",
+          "triggerMs": 14500,
+          "triggerWord": "计划",
+          "propPatches": {
+            "activeStep": 0.2,
+            "stepCaption": "第一步：拆解任务"
+          }
+        },
+        {
+          "stepId": "f2",
+          "triggerMs": 16000,
+          "triggerWord": "执行",
+          "propPatches": {
+            "activeStep": 1.2,
+            "stepCaption": "第二步：调用工具执行"
+          }
+        },
+        {
+          "stepId": "f3",
+          "triggerMs": 17800,
+          "triggerWord": "自检",
+          "propPatches": {
+            "activeStep": 2.2,
+            "stepCaption": "第三步：验证结果对不对"
+          }
+        },
+        {
+          "stepId": "f4",
+          "triggerMs": 19400,
+          "triggerWord": "回滚",
+          "propPatches": {
+            "activeStep": 3.2,
+            "stepCaption": "第四步：错了就退回上一步"
+          }
+        }
+      ]
+    },
+    {
+      "sceneId": "scene_04",
+      "startMs": 20500,
+      "endMs": 26500,
+      "transitionIn": "slide_up",
+      "componentName": "GanttParallelStream",
+      "initialProps": {
+        "mode": "serial_loop",
+        "sectionHeader": "传统做法：一步错，步步错",
+        "serialConfig": {
+          "nodes": [
+            "计划",
+            "执行",
+            "报错"
+          ],
+          "activeNodeIndex": 0,
+          "orbitBallProgress": 0,
+          "bottomCaption": "整条链路都得重来"
+        }
+      },
+      "stateSteps": [
+        {
+          "stepId": "s4a",
+          "triggerMs": 24000,
+          "triggerWord": "执行",
+          "propPatches": {
+            "serialConfig": {
+              "activeNodeIndex": 1,
+              "orbitBallProgress": 0.5
+            }
+          }
+        },
+        {
+          "stepId": "s4b",
+          "triggerMs": 25500,
+          "triggerWord": "报错",
+          "propPatches": {
+            "serialConfig": {
+              "activeNodeIndex": 2,
+              "orbitBallProgress": 1
+            }
+          },
+          "cameraKeyframe": {
+            "scale": 1.03,
+            "offsetX": 0,
+            "offsetY": -8,
+            "springPreset": "bouncy_emphasis"
+          }
+        }
+      ]
+    },
+    {
+      "sceneId": "scene_05",
+      "startMs": 26500,
+      "endMs": 32500,
+      "transitionIn": "fade_blur",
+      "componentName": "ConcurrentDashboard",
+      "initialProps": {
+        "caption": "好的 Agent 边执行边校验",
+        "orbState": {
+          "mode": "listening",
+          "label": "在跑",
+          "subBadge": null,
+          "colorHex": "#7FB0A0"
+        },
+        "tasks": [
+          {
+            "title": "生成方案",
+            "progress": 0,
+            "status": "pending"
+          },
+          {
+            "title": "校验接口",
+            "progress": 0,
+            "status": "pending"
+          }
+        ],
+        "contextBanner": {
+          "icon": "▸",
+          "text": "执行与校验同时进行",
+          "active": false
+        }
+      },
+      "stateSteps": [
+        {
+          "stepId": "s5a",
+          "triggerMs": 27500,
+          "triggerWord": "生成",
+          "propPatches": {
+            "tasks": [
+              {
+                "progress": 0.5,
+                "status": "running"
+              },
+              {}
+            ]
+          }
+        },
+        {
+          "stepId": "s5b",
+          "triggerMs": 29500,
+          "triggerWord": "校验",
+          "propPatches": {
+            "tasks": [
+              {},
+              {
+                "progress": 0.7,
+                "status": "running"
+              }
+            ],
+            "contextBanner": {
+              "active": true
+            }
+          }
+        },
+        {
+          "stepId": "s5c",
+          "triggerMs": 31200,
+          "triggerWord": "完成",
+          "propPatches": {
+            "orbState": {
+              "mode": "speaking_wave",
+              "label": "通过",
+              "subBadge": "结果可用",
+              "colorHex": "#F2C94C"
+            },
+            "tasks": [
+              {
+                "progress": 1,
+                "status": "completed"
+              },
+              {
+                "progress": 1,
+                "status": "completed"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "sceneId": "scene_06",
+      "startMs": 32500,
+      "endMs": 36000,
+      "transitionIn": "zoom_through",
+      "componentName": "MythBusterStrike",
+      "initialProps": {
+        "badgeLabel": "不是更聪明，是更会验证",
+        "beforeText": "更聪明的模型",
+        "afterText": "更会验证的工程",
+        "active": false
+      },
+      "stateSteps": [
+        {
+          "stepId": "s6a",
+          "triggerMs": 33500,
+          "triggerWord": "验证",
+          "propPatches": {
+            "active": true
+          },
+          "cameraKeyframe": {
+            "scale": 1.04,
+            "offsetX": 0,
+            "offsetY": 0,
+            "springPreset": "bouncy_emphasis"
+          }
+        }
+      ]
+    },
+    {
+      "sceneId": "scene_07",
+      "startMs": 36000,
+      "endMs": 42000,
+      "transitionIn": "fade_blur",
+      "componentName": "PipelineArchitecture",
+      "initialProps": {
+        "sectionHeader": "四层工程保障",
+        "stages": [
+          {
+            "code": "CTX",
+            "title": "上下文管理",
+            "sampleTextOrWave": "该记的记，该扔的扔",
+            "themeColor": "#F2C94C"
+          },
+          {
+            "code": "TOOL",
+            "title": "工具校验",
+            "sampleTextOrWave": "先确认接口真的存在",
+            "themeColor": "#E8A33C"
+          },
+          {
+            "code": "CHECK",
+            "title": "结果自检",
+            "sampleTextOrWave": "结果对不对，自己先验",
+            "themeColor": "#7FB0A0"
+          },
+          {
+            "code": "ROLL",
+            "title": "失败回滚",
+            "sampleTextOrWave": "错了立刻退回上一步",
+            "themeColor": "#E0604E"
+          }
+        ],
+        "focusedStageIndex": null,
+        "kicker": "工 程 保 障"
+      },
+      "stateSteps": [
+        {
+          "stepId": "s7a",
+          "triggerMs": 36800,
+          "triggerWord": "上下文",
+          "propPatches": {
+            "focusedStageIndex": 0
+          }
+        },
+        {
+          "stepId": "s7b",
+          "triggerMs": 38200,
+          "triggerWord": "工具",
+          "propPatches": {
+            "focusedStageIndex": 1
+          }
+        },
+        {
+          "stepId": "s7c",
+          "triggerMs": 39600,
+          "triggerWord": "自检",
+          "propPatches": {
+            "focusedStageIndex": 2
+          }
+        },
+        {
+          "stepId": "s7d",
+          "triggerMs": 41000,
+          "triggerWord": "回滚",
+          "propPatches": {
+            "focusedStageIndex": 3
+          },
+          "cameraKeyframe": {
+            "scale": 1.02,
+            "offsetX": 0,
+            "offsetY": -8,
+            "springPreset": "snappy"
+          }
+        }
+      ]
+    },
+    {
+      "sceneId": "scene_08",
+      "startMs": 42000,
+      "endMs": 46000,
+      "transitionIn": "fade_blur",
+      "componentName": "KineticTypography",
+      "initialProps": {
+        "lines": [
+          "Agent 的胜负，",
+          "不在模型，",
+          "在工程。"
+        ],
+        "highlightKeywords": [
+          "不在模型",
+          "在工程"
+        ]
+      },
+      "stateSteps": []
+    }
+  ],
+  "subtitles": [
+    {
+      "id": "s1",
+      "startMs": 0,
+      "endMs": 6000,
+      "text": "AI Agent 看起来很聪明，为什么一干活就翻车？",
+      "highlightKeywords": [
+        "翻车"
+      ]
+    },
+    {
+      "id": "s2",
+      "startMs": 6000,
+      "endMs": 13500,
+      "text": "真正的坑有三个",
+      "highlightKeywords": [
+        "三个"
+      ]
+    },
+    {
+      "id": "s3",
+      "startMs": 13500,
+      "endMs": 20500,
+      "text": "能用的 Agent，跑这四步",
+      "highlightKeywords": [
+        "四步"
+      ]
+    },
+    {
+      "id": "s4",
+      "startMs": 20500,
+      "endMs": 26500,
+      "text": "传统做法：一步错，步步错",
+      "highlightKeywords": [
+        "步步错"
+      ]
+    },
+    {
+      "id": "s5",
+      "startMs": 26500,
+      "endMs": 32500,
+      "text": "好的 Agent 边执行边校验",
+      "highlightKeywords": [
+        "边执行边校验"
+      ]
+    },
+    {
+      "id": "s6",
+      "startMs": 32500,
+      "endMs": 36000,
+      "text": "不是更聪明，而是更会验证",
+      "highlightKeywords": [
+        "更会验证"
+      ]
+    },
+    {
+      "id": "s7",
+      "startMs": 36000,
+      "endMs": 42000,
+      "text": "四层工程保障：上下文、工具、自检、回滚",
+      "highlightKeywords": [
+        "回滚"
+      ]
+    },
+    {
+      "id": "s8",
+      "startMs": 42000,
+      "endMs": 46000,
+      "text": "Agent 的胜负，不在模型，在工程",
+      "highlightKeywords": [
+        "在工程"
+      ]
+    }
+  ]
+}

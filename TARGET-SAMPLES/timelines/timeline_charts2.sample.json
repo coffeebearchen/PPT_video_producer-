@@ -1,0 +1,121 @@
+{
+  "version": "1.0",
+  "projectMeta": {
+    "title": "图表进阶演示",
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "durationMs": 30000,
+    "themePalette": {
+      "bgCanvas": "#282828",
+      "primaryHuman": "#E2BE5C",
+      "secondaryAi": "#8A918B",
+      "accentWarning": "#D9A24E",
+      "dangerStrike": "#EA3E4A",
+      "highlightGold": "#E2BE5C"
+    }
+  },
+  "audioTracks": {
+    "backgroundMusic": { "src": "audio/bg_pad.wav", "baseVolume": 0.08 },
+    "sfxEvents": [
+      { "atMs": 0, "sfxType": "whoosh", "volume": 0.22 },
+      { "atMs": 6000, "sfxType": "whoosh", "volume": 0.22 },
+      { "atMs": 12000, "sfxType": "whoosh", "volume": 0.22 },
+      { "atMs": 18000, "sfxType": "whoosh", "volume": 0.22 },
+      { "atMs": 24000, "sfxType": "whoosh", "volume": 0.22 }
+    ]
+  },
+  "scenes": [
+    {
+      "sceneId": "a1", "startMs": 0, "endMs": 6000, "transitionIn": "fade_blur",
+      "componentName": "Chart",
+      "initialProps": {
+        "title": "面积图：趋势一眼看出",
+        "kicker": "图 表 ⑤  ·  面 积",
+        "kind": "area",
+        "series": [{ "name": "增长", "values": [18, 26, 31, 42, 55, 61, 78, 88], "color": "gold" }],
+        "xLabels": ["1", "2", "3", "4", "5", "6", "7", "8"],
+        "yLabel": "指数",
+        "xLabel": "周",
+        "progress": 0,
+        "caption": "八周时间，指数翻了近五倍"
+      },
+      "stateSteps": [
+        { "stepId": "a1a", "triggerMs": 900, "propPatches": { "progress": 0.4 } },
+        { "stepId": "a1b", "triggerMs": 2800, "propPatches": { "progress": 0.75 } },
+        { "stepId": "a1c", "triggerMs": 4600, "propPatches": { "progress": 1 } }
+      ]
+    },
+    {
+      "sceneId": "a2", "startMs": 6000, "endMs": 12000, "transitionIn": "fade_blur",
+      "componentName": "Chart",
+      "initialProps": {
+        "title": "饼图：时间怎么分",
+        "kicker": "图 表 ⑥  ·  饼 图",
+        "kind": "pie",
+        "series": [{ "name": "占比", "values": [38, 26, 18, 12, 6], "color": "gold" }],
+        "progress": 0,
+        "caption": "脚本和画面吃掉了六成时间"
+      },
+      "stateSteps": [
+        { "stepId": "a2a", "triggerMs": 7200, "propPatches": { "progress": 0.35 } },
+        { "stepId": "a2b", "triggerMs": 9000, "propPatches": { "progress": 0.7 } },
+        { "stepId": "a2c", "triggerMs": 10800, "propPatches": { "progress": 1 } }
+      ]
+    },
+    {
+      "sceneId": "a3", "startMs": 12000, "endMs": 18000, "transitionIn": "fade_blur",
+      "componentName": "Chart",
+      "initialProps": {
+        "title": "环形图：完成度",
+        "kicker": "图 表 ⑦  ·  环 形",
+        "kind": "donut",
+        "series": [{ "name": "完成", "values": [62, 20, 12, 6], "color": "gold" }],
+        "progress": 0,
+        "centerLabel": "92%",
+        "caption": "四步流水线，完成度九成二"
+      },
+      "stateSteps": [
+        { "stepId": "a3a", "triggerMs": 13200, "propPatches": { "progress": 0.4 } },
+        { "stepId": "a3b", "triggerMs": 15000, "propPatches": { "progress": 0.75 } },
+        { "stepId": "a3c", "triggerMs": 16800, "propPatches": { "progress": 1 } }
+      ]
+    },
+    {
+      "sceneId": "a4", "startMs": 18000, "endMs": 24000, "transitionIn": "fade_blur",
+      "componentName": "Counter",
+      "initialProps": {
+        "title": "关键数字：会滚的数字",
+        "kicker": "图 表 ⑧  ·  数 字 滚 动",
+        "items": [
+          { "label": "效率提升", "value": 87, "suffix": "%", "color": "gold" },
+          { "label": "速度倍数", "value": 3.2, "suffix": "x", "color": "sage", "decimals": 1 },
+          { "label": "每周省下", "value": 40, "suffix": "h", "color": "coral" }
+        ],
+        "progress": 0,
+        "caption": "同一套流程，产出翻了三倍"
+      },
+      "stateSteps": [
+        { "stepId": "a4a", "triggerMs": 19000, "propPatches": { "progress": 0.45 } },
+        { "stepId": "a4b", "triggerMs": 20800, "propPatches": { "progress": 0.8 } },
+        { "stepId": "a4c", "triggerMs": 22600, "propPatches": { "progress": 1 } }
+      ]
+    },
+    {
+      "sceneId": "a5", "startMs": 24000, "endMs": 30000, "transitionIn": "fade_blur",
+      "componentName": "KineticTypography",
+      "initialProps": {
+        "lines": ["让数据", "自己", "讲故事。"],
+        "highlightKeywords": ["讲故事"]
+      },
+      "stateSteps": []
+    }
+  ],
+  "subtitles": [
+    { "id": "s1", "startMs": 0, "endMs": 6000, "text": "面积图：趋势一眼看出", "highlightKeywords": ["面积图"] },
+    { "id": "s2", "startMs": 6000, "endMs": 12000, "text": "饼图：时间怎么分", "highlightKeywords": ["饼图"] },
+    { "id": "s3", "startMs": 12000, "endMs": 18000, "text": "环形图：完成度", "highlightKeywords": ["环形图"] },
+    { "id": "s4", "startMs": 18000, "endMs": 24000, "text": "数字滚动：效率提升 87%", "highlightKeywords": ["87%"] },
+    { "id": "s5", "startMs": 24000, "endMs": 30000, "text": "让数据自己讲故事", "highlightKeywords": ["讲故事"] }
+  ]
+}

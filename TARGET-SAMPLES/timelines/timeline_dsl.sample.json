@@ -1,0 +1,214 @@
+{
+  "version": "1.0",
+  "projectMeta": {
+    "title": "AI 语音助手到底差在哪？",
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "durationMs": 42000,
+    "themePalette": {
+      "bgCanvas": "#0B1133",
+      "primaryHuman": "#4D7CFE",
+      "secondaryAi": "#00A86B",
+      "accentWarning": "#E69138",
+      "dangerStrike": "#F04B3E",
+      "highlightGold": "#F2C94C"
+    }
+  },
+  "audioTracks": {
+    "backgroundMusic": { "src": "audio/bg_pad.wav", "baseVolume": 0.08 },
+    "sfxEvents": [
+      { "atMs": 0, "sfxType": "whoosh", "volume": 0.25 },
+      { "atMs": 5500, "sfxType": "whoosh", "volume": 0.25 },
+      { "atMs": 11000, "sfxType": "whoosh", "volume": 0.25 },
+      { "atMs": 13500, "sfxType": "tick", "volume": 0.2 },
+      { "atMs": 15500, "sfxType": "tick", "volume": 0.2 },
+      { "atMs": 16800, "sfxType": "chime_success", "volume": 0.25 },
+      { "atMs": 17500, "sfxType": "whoosh", "volume": 0.25 },
+      { "atMs": 20500, "sfxType": "pop", "volume": 0.25 },
+      { "atMs": 22500, "sfxType": "pop", "volume": 0.25 },
+      { "atMs": 23500, "sfxType": "whoosh", "volume": 0.25 },
+      { "atMs": 26000, "sfxType": "pop", "volume": 0.2 },
+      { "atMs": 28000, "sfxType": "pop", "volume": 0.2 },
+      { "atMs": 29500, "sfxType": "whoosh", "volume": 0.25 },
+      { "atMs": 29800, "sfxType": "strike_red", "volume": 0.3 },
+      { "atMs": 32500, "sfxType": "whoosh", "volume": 0.25 },
+      { "atMs": 34800, "sfxType": "tick", "volume": 0.2 },
+      { "atMs": 36000, "sfxType": "tick", "volume": 0.2 },
+      { "atMs": 37000, "sfxType": "tick", "volume": 0.2 },
+      { "atMs": 37500, "sfxType": "whoosh", "volume": 0.25 },
+      { "atMs": 39000, "sfxType": "chime_success", "volume": 0.25 }
+    ]
+  },
+  "scenes": [
+    {
+      "sceneId": "scene_01",
+      "startMs": 0,
+      "endMs": 5500,
+      "transitionIn": "fade_blur",
+      "componentName": "ComparisonSplitCard",
+      "initialProps": {
+        "headline": "聪明的模型，差在哪？",
+        "question": "?",
+        "left": { "title": "传统 AI 助手", "sub": "一问一答，每次都要你发起", "tone": "waiting" },
+        "right": { "title": "实时智能体", "sub": "边听边干，一直在线", "tone": "active" }
+      },
+      "stateSteps": [
+        {
+          "stepId": "cam_push",
+          "triggerMs": 3000,
+          "triggerWord": "差在哪",
+          "propPatches": {},
+          "cameraKeyframe": { "scale": 1.12, "offsetX": 0, "offsetY": -20, "rotateY": 3, "springPreset": "smooth_camera" }
+        }
+      ]
+    },
+    {
+      "sceneId": "scene_02",
+      "startMs": 5500,
+      "endMs": 11000,
+      "transitionIn": "slide_up",
+      "componentName": "GanttParallelStream",
+      "initialProps": {
+        "mode": "serial_loop",
+        "sectionHeader": "过去：一次调用，一个答案",
+        "serialConfig": {
+          "nodes": ["请求", "答案", "等待"],
+          "activeNodeIndex": 0,
+          "orbitBallProgress": 0,
+          "bottomCaption": "每一次，都要你来发起"
+        }
+      },
+      "stateSteps": [
+        { "stepId": "s2a", "triggerMs": 7000, "triggerWord": "答案", "propPatches": { "serialConfig": { "activeNodeIndex": 1, "orbitBallProgress": 0.5 } } },
+        { "stepId": "s2b", "triggerMs": 9000, "triggerWord": "等待", "propPatches": { "serialConfig": { "activeNodeIndex": 2, "orbitBallProgress": 1 } } }
+      ]
+    },
+    {
+      "sceneId": "scene_03",
+      "startMs": 11000,
+      "endMs": 17500,
+      "transitionIn": "zoom_through",
+      "componentName": "ConcurrentDashboard",
+      "initialProps": {
+        "caption": "开车点餐的同时，让 AI 查股票和训练任务",
+        "orbState": { "mode": "listening", "label": "在听", "subBadge": null, "colorHex": "#00A86B" },
+        "tasks": [
+          { "title": "查股票行情", "progress": 0, "status": "pending" },
+          { "title": "查训练任务", "progress": 0, "status": "pending" }
+        ],
+        "contextBanner": { "icon": "👤", "text": "驾驶员和店员：不是对我说", "active": false }
+      },
+      "stateSteps": [
+        { "stepId": "s3a", "triggerMs": 12000, "triggerWord": "查股票", "propPatches": { "tasks": [{ "progress": 0.45, "status": "running" }, {}] } },
+        { "stepId": "s3b", "triggerMs": 13800, "triggerWord": "查训练", "propPatches": { "tasks": [{}, { "progress": 0.6, "status": "running" }] } },
+        { "stepId": "s3c", "triggerMs": 15500, "triggerWord": "安静地听", "propPatches": { "orbState": { "mode": "silent_monitoring", "label": "安静地听", "subBadge": "后台照常", "colorHex": "#4D7CFE" }, "contextBanner": { "active": true } } },
+        { "stepId": "s3d", "triggerMs": 16800, "triggerWord": "主动汇报", "propPatches": { "orbState": { "mode": "speaking_wave", "label": "主动汇报", "subBadge": null, "colorHex": "#00A86B" }, "tasks": [{ "progress": 1, "status": "completed" }, { "progress": 1, "status": "completed" }] } }
+      ]
+    },
+    {
+      "sceneId": "scene_04",
+      "startMs": 17500,
+      "endMs": 23500,
+      "transitionIn": "fade_blur",
+      "componentName": "SpotlightPillars",
+      "initialProps": {
+        "sectionHeader": "要跨过三道障碍",
+        "pillars": [
+          { "indexLabel": "1", "title": "实时交流", "topFloatingBadge": { "type": "waveform" }, "bottomTakeawayText": "摆脱一问一答" },
+          { "indexLabel": "2", "title": "边聊边干", "topFloatingBadge": { "type": "chat_wrench" }, "bottomTakeawayText": "边听边说时还要推理、调工具" },
+          { "indexLabel": "3", "title": "长期运行", "topFloatingBadge": { "type": "text_badge", "content": "24h" }, "bottomTakeawayText": "连续跑几个小时，成本怎么办" }
+        ],
+        "activePillarIndex": null
+      },
+      "stateSteps": [
+        { "stepId": "s4a", "triggerMs": 19000, "triggerWord": "实时交流", "propPatches": { "activePillarIndex": 0 } },
+        { "stepId": "s4b", "triggerMs": 20500, "triggerWord": "边聊边干", "propPatches": { "activePillarIndex": 1 } },
+        { "stepId": "s4c", "triggerMs": 22500, "triggerWord": "长期运行", "propPatches": { "activePillarIndex": 2 } }
+      ]
+    },
+    {
+      "sceneId": "scene_05",
+      "startMs": 23500,
+      "endMs": 29500,
+      "transitionIn": "slide_up",
+      "componentName": "EvolutionTimeline",
+      "initialProps": {
+        "sectionHeader": "一条技术演进路线",
+        "nodes": [
+          { "title": "早期语音助手", "metaTag": "串行流水线", "accentColor": "#9AA5B1" },
+          { "title": "Moshi", "metaTag": "2024 · 全双工", "accentColor": "#4D7CFE" },
+          { "title": "Thinking Machines", "metaTag": "2026.05 · 前后台", "accentColor": "#8B5CF6" },
+          { "title": "Higgs", "metaTag": "2026.11 · 前台自己干", "accentColor": "#00A86B" }
+        ],
+        "activeNodeIndex": 0
+      },
+      "stateSteps": [
+        { "stepId": "s5a", "triggerMs": 24800, "triggerWord": "Moshi", "propPatches": { "activeNodeIndex": 1 } },
+        { "stepId": "s5b", "triggerMs": 26500, "triggerWord": "Thinking Machines", "propPatches": { "activeNodeIndex": 2 } },
+        { "stepId": "s5c", "triggerMs": 28500, "triggerWord": "Higgs", "propPatches": { "activeNodeIndex": 3 } }
+      ]
+    },
+    {
+      "sceneId": "scene_06",
+      "startMs": 29500,
+      "endMs": 32500,
+      "transitionIn": "zoom_through",
+      "componentName": "MythBusterStrike",
+      "initialProps": {
+        "badgeLabel": "实时 · 全双工 · 多模态",
+        "beforeText": "同时听和说",
+        "afterText": "更根本的变化是……",
+        "active": false
+      },
+      "stateSteps": [
+        { "stepId": "s6a", "triggerMs": 30000, "triggerWord": "更根本", "propPatches": { "active": true } }
+      ]
+    },
+    {
+      "sceneId": "scene_07",
+      "startMs": 32500,
+      "endMs": 37500,
+      "transitionIn": "fade_blur",
+      "componentName": "PipelineArchitecture",
+      "initialProps": {
+        "sectionHeader": "传统语音 Agent：四段流水线",
+        "stages": [
+          { "code": "VAD", "title": "有没有在说话", "sampleTextOrWave": "⌁ 语音活动检测", "themeColor": "#4D7CFE" },
+          { "code": "ASR", "title": "声音转文字", "sampleTextOrWave": "“帮我查一下天气”", "themeColor": "#E69138" },
+          { "code": "LLM", "title": "生成回复", "sampleTextOrWave": "推理 · 调工具", "themeColor": "#8B5CF6" },
+          { "code": "TTS", "title": "文字转语音", "sampleTextOrWave": "合成语音", "themeColor": "#00A86B" }
+        ],
+        "focusedStageIndex": null
+      },
+      "stateSteps": [
+        { "stepId": "s7a", "triggerMs": 33500, "triggerWord": "VAD", "propPatches": { "focusedStageIndex": 0 } },
+        { "stepId": "s7b", "triggerMs": 34800, "triggerWord": "ASR", "propPatches": { "focusedStageIndex": 1 } },
+        { "stepId": "s7c", "triggerMs": 36000, "triggerWord": "LLM", "propPatches": { "focusedStageIndex": 2 } },
+        { "stepId": "s7d", "triggerMs": 37000, "triggerWord": "TTS", "propPatches": { "focusedStageIndex": 3 } }
+      ]
+    },
+    {
+      "sceneId": "scene_08",
+      "startMs": 37500,
+      "endMs": 42000,
+      "transitionIn": "fade_blur",
+      "componentName": "KineticTypography",
+      "initialProps": {
+        "lines": ["让 AI 助手，", "边听边说，", "边想边干。"],
+        "highlightKeywords": ["边听边说", "边想边干"]
+      },
+      "stateSteps": []
+    }
+  ],
+  "subtitles": [
+    { "id": "sub1", "startMs": 0, "endMs": 5500, "text": "聪明的模型，到底差在哪？", "highlightKeywords": ["聪明的模型"] },
+    { "id": "sub2", "startMs": 5500, "endMs": 11000, "text": "过去，一次调用一个答案", "highlightKeywords": ["一次调用"] },
+    { "id": "sub3", "startMs": 11000, "endMs": 17500, "text": "现在，AI 一边听、一边想、一边干", "highlightKeywords": ["一边听", "一边干"] },
+    { "id": "sub4", "startMs": 17500, "endMs": 23500, "text": "但要跨过三道障碍", "highlightKeywords": ["三道障碍"] },
+    { "id": "sub5", "startMs": 23500, "endMs": 29500, "text": "技术演进：从 Moshi 到 Higgs", "highlightKeywords": ["Higgs"] },
+    { "id": "sub6", "startMs": 29500, "endMs": 32500, "text": "同时听和说，更根本的变化是……", "highlightKeywords": ["同时听和说"] },
+    { "id": "sub7", "startMs": 32500, "endMs": 37500, "text": "VAD、ASR、LLM、TTS 四段流水线", "highlightKeywords": ["VAD"] },
+    { "id": "sub8", "startMs": 37500, "endMs": 42000, "text": "让 AI 边听边说，边想边干", "highlightKeywords": ["边想边干"] }
+  ]
+}

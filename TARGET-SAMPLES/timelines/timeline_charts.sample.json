@@ -1,0 +1,135 @@
+{
+  "version": "1.0",
+  "projectMeta": {
+    "title": "统计图模板演示",
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "durationMs": 30000,
+    "themePalette": {
+      "bgCanvas": "#282828",
+      "primaryHuman": "#E2BE5C",
+      "secondaryAi": "#8A918B",
+      "accentWarning": "#D9A24E",
+      "dangerStrike": "#EA3E4A",
+      "highlightGold": "#E2BE5C"
+    }
+  },
+  "audioTracks": {
+    "backgroundMusic": { "src": "audio/bg_pad.wav", "baseVolume": 0.08 },
+    "sfxEvents": [
+      { "atMs": 0, "sfxType": "whoosh", "volume": 0.22 },
+      { "atMs": 6000, "sfxType": "whoosh", "volume": 0.22 },
+      { "atMs": 12000, "sfxType": "whoosh", "volume": 0.22 },
+      { "atMs": 18000, "sfxType": "whoosh", "volume": 0.22 },
+      { "atMs": 24000, "sfxType": "whoosh", "volume": 0.22 }
+    ]
+  },
+  "scenes": [
+    {
+      "sceneId": "c1", "startMs": 0, "endMs": 6000, "transitionIn": "fade_blur",
+      "componentName": "Chart",
+      "initialProps": {
+        "title": "折线图：分数一路往上",
+        "kicker": "图 表 ①  ·  折 线",
+        "kind": "line",
+        "series": [
+          { "name": "升级前", "values": [30, 34, 33, 40, 45, 44, 52], "color": "sage" },
+          { "name": "升级后", "values": [30, 45, 58, 66, 74, 82, 94], "color": "gold" }
+        ],
+        "xLabels": ["1", "2", "3", "4", "5", "6", "7"],
+        "yLabel": "分数",
+        "xLabel": "迭代次数",
+        "progress": 0,
+        "caption": "同样的算力，分数拉开差距"
+      },
+      "stateSteps": [
+        { "stepId": "c1a", "triggerMs": 800, "propPatches": { "progress": 0.35 } },
+        { "stepId": "c1b", "triggerMs": 2400, "propPatches": { "progress": 0.7 } },
+        { "stepId": "c1c", "triggerMs": 4200, "propPatches": { "progress": 1 } }
+      ]
+    },
+    {
+      "sceneId": "c2", "startMs": 6000, "endMs": 12000, "transitionIn": "fade_blur",
+      "componentName": "Chart",
+      "initialProps": {
+        "title": "阶梯图：八条迭代曲线",
+        "kicker": "图 表 ②  ·  阶 梯",
+        "kind": "step",
+        "series": [
+          { "name": "a", "values": [20, 40, 55, 62, 70, 74, 78, 82], "color": "gold" },
+          { "name": "b", "values": [18, 32, 44, 52, 58, 62, 66, 70], "color": "sage" },
+          { "name": "c", "values": [15, 25, 30, 38, 44, 48, 52, 55], "color": "coral" }
+        ],
+        "xLabels": ["1", "2", "3", "4", "5", "6", "7", "8"],
+        "yLabel": "最高分",
+        "xLabel": "算力",
+        "progress": 0,
+        "caption": "最高分一路堆积，最后差 30 多分"
+      },
+      "stateSteps": [
+        { "stepId": "c2a", "triggerMs": 6800, "propPatches": { "progress": 0.4 } },
+        { "stepId": "c2b", "triggerMs": 8600, "propPatches": { "progress": 0.75 } },
+        { "stepId": "c2c", "triggerMs": 10400, "propPatches": { "progress": 1 } }
+      ]
+    },
+    {
+      "sceneId": "c3", "startMs": 12000, "endMs": 18000, "transitionIn": "fade_blur",
+      "componentName": "Chart",
+      "initialProps": {
+        "title": "柱状图：时间都花在哪",
+        "kicker": "图 表 ③  ·  柱 状",
+        "kind": "bar",
+        "series": [
+          { "name": "耗时", "values": [42, 28, 16, 9, 5], "color": "gold" }
+        ],
+        "xLabels": ["脚本", "画面", "配音", "剪辑", "发布"],
+        "yLabel": "分钟",
+        "progress": 0,
+        "caption": "一半时间在脚本，一半在画面"
+      },
+      "stateSteps": [
+        { "stepId": "c3a", "triggerMs": 12800, "propPatches": { "progress": 0.5 } },
+        { "stepId": "c3b", "triggerMs": 14600, "propPatches": { "progress": 0.8 } },
+        { "stepId": "c3c", "triggerMs": 16200, "propPatches": { "progress": 1 } }
+      ]
+    },
+    {
+      "sceneId": "c4", "startMs": 18000, "endMs": 24000, "transitionIn": "fade_blur",
+      "componentName": "Chart",
+      "initialProps": {
+        "title": "斜纹条：优势对比",
+        "kicker": "图 表 ④  ·  横 向 条",
+        "kind": "hbar",
+        "series": [
+          { "name": "advantage", "values": [0.62, 0.88, 0.55, 0.18, 0.74], "color": "gold" }
+        ],
+        "xLabels": ["搜索", "核对", "尺码", "直接", "下单"],
+        "yLabel": "优势",
+        "progress": 0,
+        "caption": "带 skill 之后，每一步都往上推"
+      },
+      "stateSteps": [
+        { "stepId": "c4a", "triggerMs": 18800, "propPatches": { "progress": 0.5 } },
+        { "stepId": "c4b", "triggerMs": 20600, "propPatches": { "progress": 0.85 } },
+        { "stepId": "c4c", "triggerMs": 22200, "propPatches": { "progress": 1 } }
+      ]
+    },
+    {
+      "sceneId": "c5", "startMs": 24000, "endMs": 30000, "transitionIn": "fade_blur",
+      "componentName": "KineticTypography",
+      "initialProps": {
+        "lines": ["数据会说话，", "但要有人", "让它开口。"],
+        "highlightKeywords": ["让它开口"]
+      },
+      "stateSteps": []
+    }
+  ],
+  "subtitles": [
+    { "id": "s1", "startMs": 0, "endMs": 6000, "text": "折线图：分数一路往上", "highlightKeywords": ["折线图"] },
+    { "id": "s2", "startMs": 6000, "endMs": 12000, "text": "阶梯图：八条迭代曲线", "highlightKeywords": ["阶梯图"] },
+    { "id": "s3", "startMs": 12000, "endMs": 18000, "text": "柱状图：时间都花在哪", "highlightKeywords": ["柱状图"] },
+    { "id": "s4", "startMs": 18000, "endMs": 24000, "text": "斜纹条：优势对比", "highlightKeywords": ["优势"] },
+    { "id": "s5", "startMs": 24000, "endMs": 30000, "text": "数据会说话", "highlightKeywords": ["数据"] }
+  ]
+}

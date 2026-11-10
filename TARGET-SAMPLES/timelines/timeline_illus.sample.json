@@ -1,0 +1,353 @@
+{
+  "version": "1.0",
+  "projectMeta": {
+    "title": "插画动效演示",
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "durationMs": 30000,
+    "themePalette": {
+      "bgCanvas": "#282828",
+      "primaryHuman": "#E2BE5C",
+      "secondaryAi": "#8A918B",
+      "accentWarning": "#D9A24E",
+      "dangerStrike": "#EA3E4A",
+      "highlightGold": "#E2BE5C"
+    }
+  },
+  "audioTracks": {
+    "backgroundMusic": {
+      "src": "audio/bg_pad.wav",
+      "baseVolume": 0.08
+    },
+    "sfxEvents": [
+      {
+        "atMs": 0,
+        "sfxType": "whoosh",
+        "volume": 0.22
+      },
+      {
+        "atMs": 5000,
+        "sfxType": "pop",
+        "volume": 0.22
+      },
+      {
+        "atMs": 10000,
+        "sfxType": "whoosh",
+        "volume": 0.22
+      },
+      {
+        "atMs": 15000,
+        "sfxType": "whoosh",
+        "volume": 0.22
+      },
+      {
+        "atMs": 20000,
+        "sfxType": "whoosh",
+        "volume": 0.22
+      },
+      {
+        "atMs": 25000,
+        "sfxType": "chime_success",
+        "volume": 0.25
+      }
+    ]
+  },
+  "scenes": [
+    {
+      "sceneId": "i1",
+      "startMs": 0,
+      "endMs": 5000,
+      "transitionIn": "fade_blur",
+      "componentName": "KineticTypography",
+      "initialProps": {
+        "lines": [
+          "让画面，",
+          "自己飘起来。"
+        ],
+        "highlightKeywords": [
+          "飘起来"
+        ],
+        "decor": [
+          {
+            "type": "image",
+            "src": "assets/od_float.svg",
+            "x": 0.5,
+            "y": 0.66,
+            "size": 640,
+            "anim": "bob",
+            "filter": "invert(1) hue-rotate(180deg) saturate(0.75)"
+          },
+          {
+            "type": "star",
+            "x": 0.14,
+            "y": 0.3,
+            "size": 54,
+            "tone": "gold",
+            "anim": "twinkle"
+          },
+          {
+            "type": "sparkle",
+            "x": 0.86,
+            "y": 0.4,
+            "size": 40,
+            "tone": "gold",
+            "anim": "twinkle"
+          }
+        ],
+        "hideDecor": true
+      },
+      "stateSteps": []
+    },
+    {
+      "sceneId": "i2",
+      "startMs": 5000,
+      "endMs": 10000,
+      "transitionIn": "fade_blur",
+      "componentName": "KineticTypography",
+      "initialProps": {
+        "lines": [
+          "轻松一点，",
+          "不是罪。"
+        ],
+        "highlightKeywords": [
+          "轻松"
+        ],
+        "decor": [
+          {
+            "type": "image",
+            "src": "assets/od_coffee.svg",
+            "x": 0.5,
+            "y": 0.66,
+            "size": 640,
+            "anim": "pop",
+            "filter": "invert(1) hue-rotate(180deg) saturate(0.75)",
+            "delay": 8
+          },
+          {
+            "type": "bulb",
+            "x": 0.16,
+            "y": 0.36,
+            "size": 74,
+            "tone": "gold",
+            "anim": "bob"
+          }
+        ],
+        "hideDecor": true
+      },
+      "stateSteps": []
+    },
+    {
+      "sceneId": "i3",
+      "startMs": 10000,
+      "endMs": 15000,
+      "transitionIn": "fade_blur",
+      "componentName": "KineticTypography",
+      "initialProps": {
+        "lines": [
+          "慢一点，",
+          "也没关系。"
+        ],
+        "highlightKeywords": [
+          "没关系"
+        ],
+        "decor": [
+          {
+            "type": "image",
+            "src": "assets/od_meditating.svg",
+            "x": 0.5,
+            "y": 0.66,
+            "size": 620,
+            "anim": "reveal",
+            "filter": "invert(1) hue-rotate(180deg) saturate(0.75)",
+            "delay": 6
+          },
+          {
+            "type": "wave",
+            "x": 0.5,
+            "y": 0.9,
+            "size": 220,
+            "tone": "sage",
+            "anim": "static"
+          }
+        ],
+        "hideDecor": true
+      },
+      "stateSteps": []
+    },
+    {
+      "sceneId": "i4",
+      "startMs": 15000,
+      "endMs": 20000,
+      "transitionIn": "fade_blur",
+      "componentName": "KineticTypography",
+      "initialProps": {
+        "lines": [
+          "边读，",
+          "边想。"
+        ],
+        "highlightKeywords": [
+          "边想"
+        ],
+        "decor": [
+          {
+            "type": "image",
+            "src": "assets/od_reading.svg",
+            "x": 0.5,
+            "y": 0.66,
+            "size": 640,
+            "anim": "slideIn",
+            "filter": "invert(1) hue-rotate(180deg) saturate(0.75)"
+          },
+          {
+            "type": "sparkle",
+            "x": 0.2,
+            "y": 0.42,
+            "size": 44,
+            "tone": "gold",
+            "anim": "twinkle"
+          }
+        ],
+        "hideDecor": true
+      },
+      "stateSteps": []
+    },
+    {
+      "sceneId": "i5",
+      "startMs": 20000,
+      "endMs": 25000,
+      "transitionIn": "fade_blur",
+      "componentName": "KineticTypography",
+      "initialProps": {
+        "lines": [
+          "跑起来，",
+          "把活干完。"
+        ],
+        "highlightKeywords": [
+          "跑起来"
+        ],
+        "decor": [
+          {
+            "type": "image",
+            "src": "assets/od_running.svg",
+            "x": 0.5,
+            "y": 0.66,
+            "size": 660,
+            "anim": "slideIn",
+            "filter": "invert(1) hue-rotate(180deg) saturate(0.75)"
+          },
+          {
+            "type": "arrow",
+            "x": 0.82,
+            "y": 0.6,
+            "size": 110,
+            "tone": "gold",
+            "anim": "bob"
+          }
+        ],
+        "hideDecor": true
+      },
+      "stateSteps": []
+    },
+    {
+      "sceneId": "i6",
+      "startMs": 25000,
+      "endMs": 30000,
+      "transitionIn": "fade_blur",
+      "componentName": "KineticTypography",
+      "initialProps": {
+        "lines": [
+          "内容有表情，",
+          "才有人看。"
+        ],
+        "highlightKeywords": [
+          "有表情"
+        ],
+        "decor": [
+          {
+            "type": "star",
+            "x": 0.18,
+            "y": 0.3,
+            "size": 62,
+            "tone": "gold",
+            "anim": "twinkle"
+          },
+          {
+            "type": "star",
+            "x": 0.84,
+            "y": 0.36,
+            "size": 48,
+            "tone": "gold",
+            "anim": "twinkle"
+          },
+          {
+            "type": "sparkle",
+            "x": 0.5,
+            "y": 0.86,
+            "size": 56,
+            "tone": "gold",
+            "anim": "twinkle"
+          }
+        ],
+        "hideDecor": true
+      },
+      "stateSteps": []
+    }
+  ],
+  "subtitles": [
+    {
+      "id": "s1",
+      "startMs": 0,
+      "endMs": 5000,
+      "text": "让画面自己飘起来",
+      "highlightKeywords": [
+        "飘起来"
+      ]
+    },
+    {
+      "id": "s2",
+      "startMs": 5000,
+      "endMs": 10000,
+      "text": "轻松一点，不是罪",
+      "highlightKeywords": [
+        "轻松"
+      ]
+    },
+    {
+      "id": "s3",
+      "startMs": 10000,
+      "endMs": 15000,
+      "text": "慢一点，也没关系",
+      "highlightKeywords": [
+        "没关系"
+      ]
+    },
+    {
+      "id": "s4",
+      "startMs": 15000,
+      "endMs": 20000,
+      "text": "边读边想",
+      "highlightKeywords": [
+        "边想"
+      ]
+    },
+    {
+      "id": "s5",
+      "startMs": 20000,
+      "endMs": 25000,
+      "text": "跑起来，把活干完",
+      "highlightKeywords": [
+        "跑起来"
+      ]
+    },
+    {
+      "id": "s6",
+      "startMs": 25000,
+      "endMs": 30000,
+      "text": "内容有表情，才有人看",
+      "highlightKeywords": [
+        "有表情"
+      ]
+    }
+  ]
+}

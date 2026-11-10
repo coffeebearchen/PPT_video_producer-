@@ -1,0 +1,211 @@
+{
+  "version": "1.0",
+  "projectMeta": {
+    "title": "Lottie 真动画演示",
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "durationMs": 20000,
+    "themePalette": {
+      "bgCanvas": "#282828",
+      "primaryHuman": "#E2BE5C",
+      "secondaryAi": "#8A918B",
+      "accentWarning": "#D9A24E",
+      "dangerStrike": "#EA3E4A",
+      "highlightGold": "#E2BE5C"
+    }
+  },
+  "audioTracks": {
+    "backgroundMusic": {
+      "src": "audio/bg_pad.wav",
+      "baseVolume": 0.08
+    },
+    "sfxEvents": [
+      {
+        "atMs": 0,
+        "sfxType": "pop",
+        "volume": 0.22
+      },
+      {
+        "atMs": 5000,
+        "sfxType": "pop",
+        "volume": 0.22
+      },
+      {
+        "atMs": 10000,
+        "sfxType": "whoosh",
+        "volume": 0.22
+      },
+      {
+        "atMs": 15000,
+        "sfxType": "chime_success",
+        "volume": 0.25
+      }
+    ]
+  },
+  "scenes": [
+    {
+      "sceneId": "l1",
+      "startMs": 0,
+      "endMs": 5000,
+      "transitionIn": "fade_blur",
+      "componentName": "KineticTypography",
+      "initialProps": {
+        "lines": [
+          "角色，",
+          "真的会动。"
+        ],
+        "highlightKeywords": [
+          "会动"
+        ],
+        "hideDecor": true,
+        "decor": [
+          {
+            "type": "lottie",
+            "src": "assets/lottie_starfish.json",
+            "x": 0.5,
+            "y": 0.68,
+            "size": 620,
+            "anim": "bob"
+          },
+          {
+            "type": "star",
+            "x": 0.14,
+            "y": 0.3,
+            "size": 54,
+            "tone": "gold",
+            "anim": "twinkle"
+          }
+        ]
+      },
+      "stateSteps": []
+    },
+    {
+      "sceneId": "l2",
+      "startMs": 5000,
+      "endMs": 10000,
+      "transitionIn": "fade_blur",
+      "componentName": "KineticTypography",
+      "initialProps": {
+        "lines": [
+          "结构，",
+          "会转起来。"
+        ],
+        "highlightKeywords": [
+          "转起来"
+        ],
+        "hideDecor": true,
+        "decor": [
+          {
+            "type": "lottie",
+            "src": "assets/lottie_ripple.json",
+            "x": 0.5,
+            "y": 0.68,
+            "size": 640
+          }
+        ]
+      },
+      "stateSteps": []
+    },
+    {
+      "sceneId": "l3",
+      "startMs": 10000,
+      "endMs": 15000,
+      "transitionIn": "fade_blur",
+      "componentName": "KineticTypography",
+      "initialProps": {
+        "lines": [
+          "小星球，",
+          "也会自转。"
+        ],
+        "highlightKeywords": [
+          "自转"
+        ],
+        "hideDecor": true,
+        "decor": [
+          {
+            "type": "lottie",
+            "src": "assets/lottie_navidad.json",
+            "x": 0.5,
+            "y": 0.68,
+            "size": 640
+          }
+        ]
+      },
+      "stateSteps": []
+    },
+    {
+      "sceneId": "l4",
+      "startMs": 15000,
+      "endMs": 20000,
+      "transitionIn": "fade_blur",
+      "componentName": "KineticTypography",
+      "initialProps": {
+        "lines": [
+          "这才是",
+          "真动效。"
+        ],
+        "highlightKeywords": [
+          "真动效"
+        ],
+        "decor": [
+          {
+            "type": "star",
+            "x": 0.18,
+            "y": 0.32,
+            "size": 58,
+            "tone": "gold",
+            "anim": "twinkle"
+          },
+          {
+            "type": "sparkle",
+            "x": 0.84,
+            "y": 0.4,
+            "size": 46,
+            "tone": "gold",
+            "anim": "twinkle"
+          }
+        ]
+      },
+      "stateSteps": []
+    }
+  ],
+  "subtitles": [
+    {
+      "id": "s1",
+      "startMs": 0,
+      "endMs": 5000,
+      "text": "角色真的会动",
+      "highlightKeywords": [
+        "会动"
+      ]
+    },
+    {
+      "id": "s2",
+      "startMs": 5000,
+      "endMs": 10000,
+      "text": "动作真的会演",
+      "highlightKeywords": [
+        "会演"
+      ]
+    },
+    {
+      "id": "s3",
+      "startMs": 10000,
+      "endMs": 15000,
+      "text": "光效也会呼吸",
+      "highlightKeywords": [
+        "呼吸"
+      ]
+    },
+    {
+      "id": "s4",
+      "startMs": 15000,
+      "endMs": 20000,
+      "text": "这才是真动效",
+      "highlightKeywords": [
+        "真动效"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,659 @@
+{
+  "version": "1.0",
+  "projectMeta": {
+    "title": "AI 视频为什么一眼就假？",
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "durationMs": 47000,
+    "themePalette": {
+      "bgCanvas": "#282828",
+      "primaryHuman": "#E2BE5C",
+      "secondaryAi": "#8A918B",
+      "accentWarning": "#D9A24E",
+      "dangerStrike": "#EA3E4A",
+      "highlightGold": "#E2BE5C"
+    }
+  },
+  "audioTracks": {
+    "backgroundMusic": {
+      "src": "audio/bg_pad.wav",
+      "baseVolume": 0.08
+    },
+    "sfxEvents": [
+      {
+        "atMs": 0,
+        "sfxType": "whoosh",
+        "volume": 0.25
+      },
+      {
+        "atMs": 6000,
+        "sfxType": "whoosh",
+        "volume": 0.25
+      },
+      {
+        "atMs": 7200,
+        "sfxType": "pop",
+        "volume": 0.25
+      },
+      {
+        "atMs": 9200,
+        "sfxType": "pop",
+        "volume": 0.25
+      },
+      {
+        "atMs": 11200,
+        "sfxType": "pop",
+        "volume": 0.25
+      },
+      {
+        "atMs": 13000,
+        "sfxType": "whoosh",
+        "volume": 0.25
+      },
+      {
+        "atMs": 14500,
+        "sfxType": "pop",
+        "volume": 0.22
+      },
+      {
+        "atMs": 16500,
+        "sfxType": "pop",
+        "volume": 0.22
+      },
+      {
+        "atMs": 18500,
+        "sfxType": "pop",
+        "volume": 0.22
+      },
+      {
+        "atMs": 20000,
+        "sfxType": "whoosh",
+        "volume": 0.25
+      },
+      {
+        "atMs": 21000,
+        "sfxType": "tick",
+        "volume": 0.2
+      },
+      {
+        "atMs": 22500,
+        "sfxType": "tick",
+        "volume": 0.2
+      },
+      {
+        "atMs": 24000,
+        "sfxType": "tick",
+        "volume": 0.2
+      },
+      {
+        "atMs": 25200,
+        "sfxType": "chime_success",
+        "volume": 0.25
+      },
+      {
+        "atMs": 26000,
+        "sfxType": "whoosh",
+        "volume": 0.25
+      },
+      {
+        "atMs": 28500,
+        "sfxType": "tick",
+        "volume": 0.2
+      },
+      {
+        "atMs": 30500,
+        "sfxType": "strike_red",
+        "volume": 0.3
+      },
+      {
+        "atMs": 32000,
+        "sfxType": "whoosh",
+        "volume": 0.25
+      },
+      {
+        "atMs": 33000,
+        "sfxType": "tick",
+        "volume": 0.2
+      },
+      {
+        "atMs": 34500,
+        "sfxType": "tick",
+        "volume": 0.2
+      },
+      {
+        "atMs": 36200,
+        "sfxType": "tick",
+        "volume": 0.2
+      },
+      {
+        "atMs": 38000,
+        "sfxType": "chime_success",
+        "volume": 0.25
+      },
+      {
+        "atMs": 39000,
+        "sfxType": "whoosh",
+        "volume": 0.25
+      },
+      {
+        "atMs": 40000,
+        "sfxType": "strike_red",
+        "volume": 0.3
+      },
+      {
+        "atMs": 43000,
+        "sfxType": "whoosh",
+        "volume": 0.25
+      },
+      {
+        "atMs": 46000,
+        "sfxType": "chime_success",
+        "volume": 0.25
+      }
+    ]
+  },
+  "scenes": [
+    {
+      "sceneId": "scene_01",
+      "startMs": 0,
+      "endMs": 6000,
+      "transitionIn": "fade_blur",
+      "componentName": "ComparisonSplitCard",
+      "initialProps": {
+        "headline": "AI 视频，为什么一眼就假？",
+        "question": "?",
+        "left": {
+          "title": "静 止 看",
+          "sub": "一帧一帧，美得像壁纸",
+          "tone": "waiting"
+        },
+        "right": {
+          "title": "动 起 来",
+          "sub": "两秒之后就开始露馅",
+          "tone": "active"
+        }
+      },
+      "stateSteps": [
+        {
+          "stepId": "cam1",
+          "triggerMs": 3000,
+          "triggerWord": "假",
+          "propPatches": {},
+          "cameraKeyframe": {
+            "scale": 1.03,
+            "offsetX": 0,
+            "offsetY": -10,
+            "rotateY": 2,
+            "springPreset": "smooth_camera"
+          }
+        }
+      ]
+    },
+    {
+      "sceneId": "scene_02",
+      "startMs": 6000,
+      "endMs": 13000,
+      "transitionIn": "slide_up",
+      "componentName": "SpotlightPillars",
+      "initialProps": {
+        "sectionHeader": "假在三个地方",
+        "pillars": [
+          {
+            "indexLabel": "1",
+            "title": "动作不连贯",
+            "topFloatingBadge": {
+              "type": "waveform"
+            },
+            "bottomTakeawayText": "走两步就开始飘"
+          },
+          {
+            "indexLabel": "2",
+            "title": "光影乱跳",
+            "topFloatingBadge": {
+              "type": "chat_wrench"
+            },
+            "bottomTakeawayText": "上一帧亮，下一帧暗"
+          },
+          {
+            "indexLabel": "3",
+            "title": "物理不对",
+            "topFloatingBadge": {
+              "type": "text_badge",
+              "content": "重力"
+            },
+            "bottomTakeawayText": "杯子落地像飘着"
+          }
+        ],
+        "activePillarIndex": null
+      },
+      "stateSteps": [
+        {
+          "stepId": "p1",
+          "triggerMs": 7200,
+          "triggerWord": "动作",
+          "propPatches": {
+            "activePillarIndex": 0
+          },
+          "cameraKeyframe": {
+            "scale": 1.02,
+            "offsetX": -6,
+            "offsetY": 0,
+            "springPreset": "snappy"
+          }
+        },
+        {
+          "stepId": "p2",
+          "triggerMs": 9200,
+          "triggerWord": "光影",
+          "propPatches": {
+            "activePillarIndex": 1
+          },
+          "cameraKeyframe": {
+            "scale": 1.03,
+            "offsetX": 0,
+            "offsetY": 0,
+            "springPreset": "snappy"
+          }
+        },
+        {
+          "stepId": "p3",
+          "triggerMs": 11200,
+          "triggerWord": "物理",
+          "propPatches": {
+            "activePillarIndex": 2
+          },
+          "cameraKeyframe": {
+            "scale": 1.02,
+            "offsetX": 6,
+            "offsetY": 0,
+            "springPreset": "snappy"
+          }
+        }
+      ]
+    },
+    {
+      "sceneId": "scene_03",
+      "startMs": 13000,
+      "endMs": 20000,
+      "transitionIn": "fade_blur",
+      "componentName": "EvolutionTimeline",
+      "initialProps": {
+        "sectionHeader": "技术上走了三步",
+        "nodes": [
+          {
+            "title": "逐帧动画",
+            "metaTag": "2023 · 一帧一帧画",
+            "accentColor": "#8A8A80"
+          },
+          {
+            "title": "视频生成",
+            "metaTag": "2024 · 直接出片段",
+            "accentColor": "#E2BE5C"
+          },
+          {
+            "title": "世界模型",
+            "metaTag": "2025 · 先懂物理",
+            "accentColor": "#8A918B"
+          },
+          {
+            "title": "实时交互",
+            "metaTag": "2026 · 边生成边改",
+            "accentColor": "#EA3E4A"
+          }
+        ],
+        "activeNodeIndex": 0
+      },
+      "stateSteps": [
+        {
+          "stepId": "e1",
+          "triggerMs": 14500,
+          "triggerWord": "视频生成",
+          "propPatches": {
+            "activeNodeIndex": 1
+          }
+        },
+        {
+          "stepId": "e2",
+          "triggerMs": 16500,
+          "triggerWord": "世界模型",
+          "propPatches": {
+            "activeNodeIndex": 2
+          }
+        },
+        {
+          "stepId": "e3",
+          "triggerMs": 18500,
+          "triggerWord": "实时",
+          "propPatches": {
+            "activeNodeIndex": 3
+          }
+        }
+      ]
+    },
+    {
+      "sceneId": "scene_04",
+      "startMs": 20000,
+      "endMs": 26000,
+      "transitionIn": "fade_blur",
+      "componentName": "PipelineArchitecture",
+      "initialProps": {
+        "sectionHeader": "现在的主流四步",
+        "kicker": "生 产 流 程",
+        "stages": [
+          {
+            "code": "KEY",
+            "title": "生成关键帧",
+            "sampleTextOrWave": "先画几帧定调",
+            "themeColor": "#E2BE5C"
+          },
+          {
+            "code": "INP",
+            "title": "中间插帧",
+            "sampleTextOrWave": "中间帧靠补",
+            "themeColor": "#D9A24E"
+          },
+          {
+            "code": "LGT",
+            "title": "光影对齐",
+            "sampleTextOrWave": "统一明暗和色温",
+            "themeColor": "#8A918B"
+          },
+          {
+            "code": "RND",
+            "title": "渲染输出",
+            "sampleTextOrWave": "合成成整段视频",
+            "themeColor": "#EA3E4A"
+          }
+        ],
+        "focusedStageIndex": null
+      },
+      "stateSteps": [
+        {
+          "stepId": "s4a",
+          "triggerMs": 21000,
+          "triggerWord": "关键帧",
+          "propPatches": {
+            "focusedStageIndex": 0
+          }
+        },
+        {
+          "stepId": "s4b",
+          "triggerMs": 22500,
+          "triggerWord": "插帧",
+          "propPatches": {
+            "focusedStageIndex": 1
+          }
+        },
+        {
+          "stepId": "s4c",
+          "triggerMs": 24000,
+          "triggerWord": "光影",
+          "propPatches": {
+            "focusedStageIndex": 2
+          }
+        },
+        {
+          "stepId": "s4d",
+          "triggerMs": 25200,
+          "triggerWord": "渲染",
+          "propPatches": {
+            "focusedStageIndex": 3
+          },
+          "cameraKeyframe": {
+            "scale": 1.02,
+            "offsetX": 0,
+            "offsetY": -6,
+            "springPreset": "snappy"
+          }
+        }
+      ]
+    },
+    {
+      "sceneId": "scene_05",
+      "startMs": 26000,
+      "endMs": 32000,
+      "transitionIn": "slide_up",
+      "componentName": "GanttParallelStream",
+      "initialProps": {
+        "mode": "serial_loop",
+        "sectionHeader": "一帧错，全片废",
+        "serialConfig": {
+          "nodes": [
+            "第1帧",
+            "第10帧",
+            "崩了"
+          ],
+          "activeNodeIndex": 0,
+          "orbitBallProgress": 0,
+          "bottomCaption": "后面的帧会越来越歪"
+        }
+      },
+      "stateSteps": [
+        {
+          "stepId": "s5a",
+          "triggerMs": 28500,
+          "triggerWord": "第10帧",
+          "propPatches": {
+            "serialConfig": {
+              "activeNodeIndex": 1,
+              "orbitBallProgress": 0.5
+            }
+          }
+        },
+        {
+          "stepId": "s5b",
+          "triggerMs": 30500,
+          "triggerWord": "崩",
+          "propPatches": {
+            "serialConfig": {
+              "activeNodeIndex": 2,
+              "orbitBallProgress": 1
+            }
+          },
+          "cameraKeyframe": {
+            "scale": 1.03,
+            "offsetX": 0,
+            "offsetY": -8,
+            "springPreset": "bouncy_emphasis"
+          }
+        }
+      ]
+    },
+    {
+      "sceneId": "scene_06",
+      "startMs": 32000,
+      "endMs": 39000,
+      "transitionIn": "fade_blur",
+      "componentName": "FlowChart",
+      "initialProps": {
+        "title": "好用的做法：先预测运动",
+        "kicker": "动 态 流 程",
+        "nodes": [
+          {
+            "id": "scene",
+            "label": "理解场景",
+            "sub": "看懂物体"
+          },
+          {
+            "id": "motion",
+            "label": "预测运动",
+            "sub": "先算怎么动"
+          },
+          {
+            "id": "frame",
+            "label": "生成画面",
+            "sub": "再画出来"
+          },
+          {
+            "id": "fix",
+            "label": "回滚修正",
+            "sub": "错了重来"
+          }
+        ],
+        "activeStep": 0,
+        "stepCaption": "先理解场景"
+      },
+      "stateSteps": [
+        {
+          "stepId": "f1",
+          "triggerMs": 33000,
+          "triggerWord": "理解",
+          "propPatches": {
+            "activeStep": 0.2,
+            "stepCaption": "第一步：看懂场景里有什么"
+          }
+        },
+        {
+          "stepId": "f2",
+          "triggerMs": 34500,
+          "triggerWord": "预测",
+          "propPatches": {
+            "activeStep": 1.2,
+            "stepCaption": "第二步：先算出它该怎么动"
+          }
+        },
+        {
+          "stepId": "f3",
+          "triggerMs": 36200,
+          "triggerWord": "生成",
+          "propPatches": {
+            "activeStep": 2.2,
+            "stepCaption": "第三步：按运动轨迹生成画面"
+          }
+        },
+        {
+          "stepId": "f4",
+          "triggerMs": 38000,
+          "triggerWord": "回滚",
+          "propPatches": {
+            "activeStep": 3.2,
+            "stepCaption": "第四步：不对就退回重来"
+          }
+        }
+      ]
+    },
+    {
+      "sceneId": "scene_07",
+      "startMs": 39000,
+      "endMs": 43000,
+      "transitionIn": "zoom_through",
+      "componentName": "MythBusterStrike",
+      "initialProps": {
+        "badgeLabel": "不是画质不够，是时间没建模",
+        "beforeText": "画得更清楚",
+        "afterText": "先想清楚它怎么动",
+        "active": false
+      },
+      "stateSteps": [
+        {
+          "stepId": "s7a",
+          "triggerMs": 40000,
+          "triggerWord": "时间",
+          "propPatches": {
+            "active": true
+          },
+          "cameraKeyframe": {
+            "scale": 1.04,
+            "offsetX": 0,
+            "offsetY": 0,
+            "springPreset": "bouncy_emphasis"
+          }
+        }
+      ]
+    },
+    {
+      "sceneId": "scene_08",
+      "startMs": 43000,
+      "endMs": 47000,
+      "transitionIn": "fade_blur",
+      "componentName": "KineticTypography",
+      "initialProps": {
+        "lines": [
+          "AI 视频的胜负，",
+          "不在像素，",
+          "在时间。"
+        ],
+        "highlightKeywords": [
+          "不在像素",
+          "在时间"
+        ]
+      },
+      "stateSteps": []
+    }
+  ],
+  "subtitles": [
+    {
+      "id": "s1",
+      "startMs": 0,
+      "endMs": 6000,
+      "text": "AI 视频，单看一帧很美，一动就假",
+      "highlightKeywords": [
+        "一动就假"
+      ]
+    },
+    {
+      "id": "s2",
+      "startMs": 6000,
+      "endMs": 13000,
+      "text": "假在三个地方：动作、光影、物理",
+      "highlightKeywords": [
+        "三个地方"
+      ]
+    },
+    {
+      "id": "s3",
+      "startMs": 13000,
+      "endMs": 20000,
+      "text": "三步：逐帧、视频生成、世界模型",
+      "highlightKeywords": [
+        "世界模型"
+      ]
+    },
+    {
+      "id": "s4",
+      "startMs": 20000,
+      "endMs": 26000,
+      "text": "流程：关键帧、插帧、光影、渲染",
+      "highlightKeywords": [
+        "插帧"
+      ]
+    },
+    {
+      "id": "s5",
+      "startMs": 26000,
+      "endMs": 32000,
+      "text": "一帧错，后面越来越歪",
+      "highlightKeywords": [
+        "一帧错"
+      ]
+    },
+    {
+      "id": "s6",
+      "startMs": 32000,
+      "endMs": 39000,
+      "text": "先预测运动，再生成画面",
+      "highlightKeywords": [
+        "预测运动"
+      ]
+    },
+    {
+      "id": "s7",
+      "startMs": 39000,
+      "endMs": 43000,
+      "text": "不是画质不够，是时间没建模",
+      "highlightKeywords": [
+        "时间"
+      ]
+    },
+    {
+      "id": "s8",
+      "startMs": 43000,
+      "endMs": 47000,
+      "text": "AI 视频的胜负，不在像素，在时间",
+      "highlightKeywords": [
+        "在时间"
+      ]
+    }
+  ]
+}
