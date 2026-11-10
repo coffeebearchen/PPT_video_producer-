@@ -1,11 +1,15 @@
 {
   "colors": {
-    "bg": "#282828",
-    "ink": "#FDFDFB",
-    "gold": "#E2BE5C",
-    "sage": "#8A918B",
-    "coral": "#EA3E4A",
+    "bg": "#F3EDE1",
+    "ink": "#101112",
+    "gold": "#C73520",
+    "sage": "#6F8F6F",
+    "coral": "#C73520",
     "amber": "#D9A24E",
-    "muted": "#8A8A80"
+    "muted": "#7B7468"
+  },
+  "fonts": {
+    "heading": "ZCOOL KuaiLe",
+    "body": "LXGW WenKai"
   }
 }

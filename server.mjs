@@ -13,6 +13,7 @@ import { generateAngles, generateSpec, llmConfigured, testLLM, draftBriefFromDir
 import { publishWechat, testWechat } from './lib/wechat.mjs';
 import { renderVibeMotion, buildTimeline, ENGINE_DIR } from './lib/vibemotion.mjs';import { synthesizeSpeech, ttsConfigured } from './lib/tts.mjs';
 import { ELEMENT_CATALOG, PALETTES, FONT_PAIRS, TEMPLATES } from './lib/element-catalog.mjs';
+import { listElementAssets } from './lib/element-assets.mjs';
 import { checkCompliance } from './lib/compliance.mjs';
 import { TEMPLATE_THEMES, listTemplates, getTemplate, applyTemplatePreset } from './lib/templates.mjs';
 import { ELEMENTS, ELEMENT_SPEC, listElements, getElement, selectElements, validateGeneratedSvg } from './lib/elements.mjs';
@@ -1895,6 +1896,7 @@ async function route(req, res) {
     }
 
     if (method === 'GET' && p === '/api/element-catalog') return send(res, 200, { elements: ELEMENT_CATALOG, palettes: PALETTES, fonts: FONT_PAIRS, templates: TEMPLATES });
+    if (method === 'GET' && p === '/api/element-assets') return send(res, 200, listElementAssets());
     if (method === 'GET' && p === '/api/fonts') {
       const fontsFile = path.join(ENGINE_DIR, 'fonts.json');
       let fonts = ['LXGW WenKai', 'ZCOOL KuaiLe'];
