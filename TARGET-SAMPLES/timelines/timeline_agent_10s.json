@@ -1,0 +1,172 @@
+{
+  "version": "1.0",
+  "projectMeta": {
+    "title": "Agent 为什么一干活就翻车？",
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "durationMs": 10000,
+    "themePalette": {
+      "bgCanvas": "#26251F",
+      "primaryHuman": "#F2C94C",
+      "secondaryAi": "#7FB0A0",
+      "accentWarning": "#E8A33C",
+      "dangerStrike": "#E0604E",
+      "highlightGold": "#F2C94C"
+    }
+  },
+  "audioTracks": {
+    "backgroundMusic": {
+      "src": "audio/bg_pad.wav",
+      "baseVolume": 0.08
+    },
+    "sfxEvents": [
+      {
+        "atMs": 0,
+        "sfxType": "whoosh",
+        "volume": 0.25
+      },
+      {
+        "atMs": 6000,
+        "sfxType": "whoosh",
+        "volume": 0.25
+      },
+      {
+        "atMs": 7500,
+        "sfxType": "pop",
+        "volume": 0.25
+      },
+      {
+        "atMs": 9500,
+        "sfxType": "pop",
+        "volume": 0.25
+      }
+    ]
+  },
+  "scenes": [
+    {
+      "sceneId": "scene_01",
+      "startMs": 0,
+      "endMs": 6000,
+      "transitionIn": "fade_blur",
+      "componentName": "ComparisonSplitCard",
+      "initialProps": {
+        "headline": "Agent 为什么一干活就翻车？",
+        "question": "?",
+        "left": {
+          "title": "演 示 里",
+          "sub": "一次成功，看起来什么都会",
+          "tone": "waiting"
+        },
+        "right": {
+          "title": "真 项 目 里",
+          "sub": "多跑两步，就开始出错",
+          "tone": "active"
+        }
+      },
+      "stateSteps": [
+        {
+          "stepId": "cam1",
+          "triggerMs": 3200,
+          "triggerWord": "翻车",
+          "propPatches": {},
+          "cameraKeyframe": {
+            "scale": 1.03,
+            "offsetX": 0,
+            "offsetY": -8,
+            "rotateY": 2,
+            "springPreset": "smooth_camera"
+          }
+        }
+      ]
+    },
+    {
+      "sceneId": "scene_02",
+      "startMs": 6000,
+      "endMs": 10000,
+      "transitionIn": "slide_up",
+      "componentName": "SpotlightPillars",
+      "initialProps": {
+        "sectionHeader": "真正的坑有三个",
+        "pillars": [
+          {
+            "indexLabel": "1",
+            "title": "编造接口",
+            "topFloatingBadge": {
+              "type": "waveform"
+            },
+            "bottomTakeawayText": "不存在的 API 也敢写"
+          },
+          {
+            "indexLabel": "2",
+            "title": "工具调错",
+            "topFloatingBadge": {
+              "type": "chat_wrench"
+            },
+            "bottomTakeawayText": "一次错，后面全错"
+          },
+          {
+            "indexLabel": "3",
+            "title": "长任务失忆",
+            "topFloatingBadge": {
+              "type": "text_badge",
+              "content": "10 步"
+            },
+            "bottomTakeawayText": "跑到一半忘了前面"
+          }
+        ],
+        "activePillarIndex": null
+      },
+      "stateSteps": [
+        {
+          "stepId": "p1",
+          "triggerMs": 7500,
+          "triggerWord": "编造",
+          "propPatches": {
+            "activePillarIndex": 0
+          },
+          "cameraKeyframe": {
+            "scale": 1.02,
+            "offsetX": -6,
+            "offsetY": 0,
+            "springPreset": "snappy"
+          }
+        },
+        {
+          "stepId": "p2",
+          "triggerMs": 9500,
+          "triggerWord": "工具",
+          "propPatches": {
+            "activePillarIndex": 1
+          },
+          "cameraKeyframe": {
+            "scale": 1.03,
+            "offsetX": 0,
+            "offsetY": 0,
+            "springPreset": "snappy"
+          }
+        }
+      ]
+    }
+  ],
+  "subtitles": [
+    {
+      "id": "s1",
+      "startMs": 0,
+      "endMs": 6000,
+      "text": "AI Agent 看起来很聪明，为什么一干活就翻车？",
+      "highlightKeywords": [
+        "翻车"
+      ]
+    },
+    {
+      "id": "s2",
+      "startMs": 6000,
+      "endMs": 10000,
+      "text": "真正的坑有三个",
+      "highlightKeywords": [
+        "三个"
+      ]
+    }
+  ]
+}
