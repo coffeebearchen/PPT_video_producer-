@@ -7,12 +7,14 @@ import round4 from './data/round4-project.json';
 import {GraphicVideo} from './graphics/GraphicScene';
 import {GraphicGallery} from './graphics/GraphicGallery';
 import {GRAPHIC_CATALOG} from './graphics/catalog';
+import {AvatarDemo} from './avatar/AvatarDemo';
 
 const durationInFrames = Math.round((timeline.projectMeta.durationMs / 1000) * timeline.projectMeta.fps);
 
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+    <Composition id="Round5Avatar" component={AvatarDemo} width={1080} height={1920} fps={30} durationInFrames={360}/>
     <Composition id="Round4Industrial" component={GraphicVideo} width={1080} height={1920} fps={30} durationInFrames={Math.round(round4.durationMs/1000*30)} defaultProps={{style:'industrial'}}/>
     <Composition id="Round4Clean" component={GraphicVideo} width={1080} height={1920} fps={30} durationInFrames={Math.round(round4.durationMs/1000*30)} defaultProps={{style:'clean'}}/>
     <Composition id="Round4Dynamic" component={GraphicVideo} width={1080} height={1920} fps={30} durationInFrames={Math.round(round4.durationMs/1000*30)} defaultProps={{style:'dynamic'}}/>

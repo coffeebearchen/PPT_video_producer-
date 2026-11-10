@@ -17,7 +17,7 @@ async function loadEnergy(audioSrc:string,energySrc?:string):Promise<EnergyTrack
   const response=await fetch(resource(energySrc??audioSrc));if(!response.ok)throw new Error(`头像音频/能量文件读取失败：${response.status}`);
   if(energySrc){
    const track=await response.json() as EnergyTrack;
-   if(track.version!==1||track.fps<=0||!Array.isArray(track.values)||track.values.some(v=>!Number.isFinite(v)||v<0||v>1))throw new Error('头像音频能量文件格式无效');
+   if(track.version!==1||!Number.isFinite(track.fps)||track.fps<=0||!Number.isFinite(track.durationMs)||track.durationMs<=0||!Array.isArray(track.values)||track.values.length<Math.ceil(track.durationMs/1000*track.fps)-1||track.values.some(v=>!Number.isFinite(v)||v<0||v>1))throw new Error('头像音频能量文件格式无效');
    if(track.source&&track.source!==audioSrc)throw new Error('能量文件与配音路径不一致，请重新计算');
    return track;
   }
@@ -49,11 +49,12 @@ const LoadedAvatar:React.FC<{config:AvatarConfig;audioSrc:string;style:Explanati
   return()=>{alive=false;};
  },[audioSrc,config.energySrc,handle]);
  if(config.src&&!config.mouth)throw new Error('用户头像需要提供 mouth 的 x/y/width（0–1），请先校准嘴部位置');
- if(config.mouth&&[config.mouth.x,config.mouth.y,config.mouth.width].some(v=>!Number.isFinite(v)||v<0||v>1))throw new Error('头像嘴部坐标必须在0–1之间');
+ if(config.mouth&&([config.mouth.x,config.mouth.y,config.mouth.width].some(v=>!Number.isFinite(v)||v<0||v>1)||config.mouth.width===0))throw new Error('头像嘴部坐标必须在0–1之间，嘴宽必须大于0');
  const energy=track?energyAt(track,frame/fps*1000-(config.offsetMs??0)):0;
  const x=config.position==='center'?(width-160)/2:width-310,y=height-600;
  // This footer slot is reserved by GraphicScene; it is separate from diagrams, source and captions.
- return <div style={{position:'absolute',left:x,top:y,width:160,height:160,background:t.surface,border:`1px solid ${t.line}`,borderRadius:18,overflow:'hidden',pointerEvents:'none',boxSizing:'border-box'}}>
+ if(x<width*.1||x+160>width*.9||y<height*.1||y+144>height*.9)throw new Error('当前画幅需要重新预留头像位置；默认头像小窗为9:16竖屏布局');
+ return <div style={{position:'absolute',left:x,top:y,width:160,height:144,background:t.surface,border:`1px solid ${t.line}`,borderRadius:18,overflow:'hidden',pointerEvents:'none',boxSizing:'border-box'}}>
   <div style={{height:130,transform:`rotate(${energy*.45}deg)`,transformOrigin:'50% 90%'}}>
    {config.src?<><Img src={resource(config.src)} style={{width:160,height:130,objectFit:'cover'}}/><svg width="160" height="130" style={{position:'absolute',inset:0}}><Mouth energy={energy} x={config.mouth!.x*160} y={config.mouth!.y*130} width={config.mouth!.width*160} maskColor={config.mouth!.maskColor}/></svg></>:
     <svg width="160" height="130" viewBox="0 0 160 130" aria-label="代码绘制的内置卡通头像">
@@ -68,7 +69,7 @@ const LoadedAvatar:React.FC<{config:AvatarConfig;audioSrc:string;style:Explanati
      <Mouth energy={energy} x={80} y={87} width={25}/>
     </svg>}
   </div>
-  <div style={{position:'absolute',left:0,right:0,bottom:4,textAlign:'center',fontFamily:'LXGW WenKai',fontSize:24,lineHeight:1.1,color:t.muted}}>模拟口型</div>
+  <div style={{position:'absolute',left:0,right:0,bottom:4,textAlign:'center',fontFamily:'LXGW WenKai',fontSize:24,lineHeight:1.1,color:t.muted,background:t.surface}}>模拟口型</div>
  </div>;
 };
 

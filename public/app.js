@@ -1563,6 +1563,7 @@ async function renderAutogen() {
             <div class="field"><label>时长（秒）</label><input name="duration_sec" type="number" value="30" min="5" max="60"></div>
             <div class="field"><label>模式</label><select name="mode"><option value="auto">自动：直接出片</option><option value="manual">人工：先确认分镜</option></select></div>
             <div class="field"><label>批量</label><label class="check-row"><input type="checkbox" name="batch_styles"> 同文案出 3 种风格</label></div>
+            <div class="field"><label>口播头像</label><label class="check-row"><input type="checkbox" name="avatar"> 加数字人口播（可选）</label></div>
           </div>
           <div class="flex mt-16" style="gap:10px">
             <button class="btn" type="button" data-action="ai-draft-script">✨ AI 写文案</button>
@@ -1593,7 +1594,8 @@ async function renderAutogen() {
       style: fd.get('style') || 'industrial',
       duration_ms: (Number(fd.get('duration_sec')) || 30) * 1000,
       engine: 'vibemotion',
-      mode: fd.get('mode') || 'auto'
+      mode: fd.get('mode') || 'auto',
+      avatar: fd.get('avatar') ? true : false
     };
     if (!body.title && !body.script) { toast('至少填标题或文案', 'error'); return; }
     try {

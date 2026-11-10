@@ -1883,10 +1883,10 @@ async function route(req, res) {
       const structureType = String(body.structure_type || 'causal');
       const structureName = String(body.structure_name || '');
       db.prepare(`INSERT INTO video_tasks
-        (id,title,engine,mode,template,style,structure_type,structure_name,script,voice_path,voice_provider,timeline_json,palette,duration_ms,status,progress,video_path,cover_path,error,retry_count,user_id,source,created_at,updated_at)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(
+        (id,title,engine,mode,template,style,avatar,structure_type,structure_name,script,voice_path,voice_provider,timeline_json,palette,duration_ms,status,progress,video_path,cover_path,error,retry_count,user_id,source,created_at,updated_at)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(
         id, String(body.title || body.script.slice(0, 20)), String(body.engine || 'vibemotion'), String(body.mode || 'auto'),
-        String(body.template || ''), String(body.style || 'industrial'), structureType, structureName, String(body.script || body.title || ''), String(body.voice_path || ''),
+        String(body.template || ''), String(body.style || 'industrial'), body.avatar ? 1 : 0, structureType, structureName, String(body.script || body.title || ''), String(body.voice_path || ''),
         String(body.voice_provider || ''), '', String(body.palette || 'cream'), Math.max(5000, Number(body.duration_ms) || 30000),
         'queued', 0, '', '', '', 0, String(body.user_id || ''), String(body.source || 'autogen'), t, t
       );
@@ -1925,6 +1925,7 @@ async function route(req, res) {
         script: body.script !== undefined ? String(body.script) : task.script,
         structure_type: body.structure_type !== undefined ? String(body.structure_type) : task.structure_type,
         style: body.style !== undefined ? String(body.style) : task.style,
+        avatar: body.avatar !== undefined ? (body.avatar ? 1 : 0) : task.avatar,
         duration_ms: body.duration_ms !== undefined ? Number(body.duration_ms) : task.duration_ms,
         mode: body.mode !== undefined ? String(body.mode) : task.mode,
         status: 'queued', progress: 0, error: '', timeline_json: '', video_path: '', cover_path: ''

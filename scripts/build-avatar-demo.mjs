@@ -1,0 +1,23 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import {execFileSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
+import {computeEnergy} from '../engines/vibemotion/renderer/src/avatar/energy.ts';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),renderer=path.join(root,'engines/vibemotion/renderer');
+const audioDir=path.join(renderer,'public/audio/round5'),out=path.join(renderer,'out/round5');
+fs.mkdirSync(audioDir,{recursive:true});fs.mkdirSync(out,{recursive:true});
+const ff=args=>execFileSync('ffmpeg',['-y','-hide_banner','-loglevel','error',...args],{maxBuffer:256*1024*1024});
+// Stop in the pause after the second sentence, then pad to a clean 12-second endpoint.
+ff(['-i',path.join(renderer,'public/audio/sampleA/narration.wav'),'-af','atrim=end=11.9,apad','-t','12','-ar','16000','-ac','1',path.join(audioDir,'narration.wav')]);
+const pcm=ff(['-i',path.join(audioDir,'narration.wav'),'-f','f32le','-ar','16000','-ac','1','pipe:1']);
+const samples=new Float32Array(pcm.buffer.slice(pcm.byteOffset,pcm.byteOffset+pcm.length));
+const energy={...computeEnergy(samples,16000,30),source:'audio/round5/narration.wav'};
+fs.writeFileSync(path.join(audioDir,'energy.json'),JSON.stringify(energy));
+const baseline=JSON.parse(fs.readFileSync(path.join(renderer,'out/accepted-v1/timeline_dsl.json'),'utf8'));
+const project={version:'1.0',durationMs:12000,fps:30,width:1080,height:1920,style:'industrial',avatar:{enabled:true,position:'bottom-right',energySrc:'audio/round5/energy.json'},audioSrc:energy.source,scenes:[{startMs:0,endMs:4933,title:'一个想法，要经过检验',claim:'听起来可行，还需要一次尝试',kind:'cycle',labels:['提出方案','执行尝试','观察结果','调整方案']},{startMs:4933,endMs:12000,title:'运行之后，才知道怎么改',claim:'记录执行与观察，找到下一步',kind:'swimlane',labels:['提出方案','执行尝试','记录结果','调整方案']}],subtitles:baseline.subtitles.slice(0,2).map(s=>({...s,timestampMs:null,confidence:1}))};
+fs.writeFileSync(path.join(renderer,'src/data/round5-avatar.json'),JSON.stringify(project,null,2));
+fs.writeFileSync(path.join(out,'project.json'),JSON.stringify(project,null,2));
+const silence=energy.rms.map((r,i)=>r<=energy.silenceFloor?i:-1).filter(i=>i>=0);
+const speech=energy.values.map((v,i)=>({v,i})).filter(x=>x.v>0.2);
+fs.writeFileSync(path.join(out,'audio-analysis.json'),JSON.stringify({algorithm:'mono PCM RMS at 30 fps; noise gate + attack/release; simulated mouth only',frames:energy.values.length,silentFrames:silence.length,voicedFrames:speech.length,min:Math.min(...energy.values),max:Math.max(...energy.values),silenceMouthClosed:silence.every(i=>energy.values[i]===0)},null,2));
+console.log(JSON.stringify({durationMs:project.durationMs,frames:energy.values.length,silentFrames:silence.length,voicedFrames:speech.length}));

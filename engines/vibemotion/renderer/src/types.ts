@@ -1,4 +1,5 @@
 // TimelineDSL v1.0 协议 —— 与《技术开发总规范》第五章一致
+import type {AvatarOption} from './avatar/AvatarOverlay';
 export type SpringPreset = 'snappy' | 'smooth_camera' | 'bouncy_emphasis';
 
 export type SfxType =
@@ -76,6 +77,7 @@ export interface ThemePalette {
 }
 
 export interface TimelineDSL {
+  avatar?: AvatarOption;
   version: '1.0';
   projectMeta: {
     style?: 'industrial' | 'clean' | 'dynamic';
