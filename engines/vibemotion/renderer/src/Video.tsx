@@ -165,17 +165,14 @@ export const Video: React.FC = () => {
     position: 'absolute',
     inset: 0,
     opacity: Math.max(0, Math.min(1, enter)) * (1 - exit),
-    transform: `translate(${Math.cos(local / 110) * 3}px, ${
-      (1 - enter) * 30 - exit * 22 + Math.sin(local / 130) * 3
-    }px) rotate(${Math.sin(local / 90) * 0.22}deg) scale(${0.94 + 0.06 * enter + 0.05 * exit})`,
+    transform: `translateY(${(1 - enter) * 24 - exit * 16}px) scale(${0.97 + 0.03 * enter + 0.02 * exit})`,
     textShadow: '0 0 1px rgba(16,17,18,0.12)',
   };
 
   return (
     <AbsoluteFill style={{background: palette.bgCanvas, overflow: 'hidden'}}>
       <AmbientBg palette={palette} camera={cam} />
-      <ChalkParticles />
-      <LightSweep />
+      {/* Keep emphasis motion inside the scene; avoid ambient decorative movement. */}
 
       {/* 粉笔粉尘滤镜（线条改由 Rough.js 绘制，不再用位移滤镜硬造） */}
       <svg width="0" height="0" style={{position: 'absolute'}} aria-hidden>
@@ -219,6 +216,9 @@ export const Video: React.FC = () => {
       </svg>
 
       <SubtitleTrack subtitles={DSL.subtitles} palette={palette} />
+      {sceneIndex === DSL.scenes.length - 1 ? (
+        <div style={{position: 'absolute', right: 112, bottom: 206, color: palette.ink, fontSize: 26, fontFamily: 'sans-serif', opacity: 0.72}}>有问题，评论区问</div>
+      ) : null}
 
       {DSL.audioTracks.masterVoiceover ? (
         <Audio src={staticFile(cleanSrc(DSL.audioTracks.masterVoiceover.src))} volume={DSL.audioTracks.masterVoiceover.volume} />
