@@ -1885,6 +1885,22 @@ async function route(req, res) {
       enqueueVideoTask(id);
       return send(res, 200, db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id));
     }
+    if (method === 'PUT' && /^\/api\/video-tasks\/[^/]+$/.test(p)) {
+      const id = p.split('/').pop();
+      const task = db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id);
+      if (!task) return fail(res, 404, '任务不存在');
+      const body = await readBody(req);
+      updateVideoTask(id, {
+        title: body.title !== undefined ? String(body.title) : task.title,
+        script: body.script !== undefined ? String(body.script) : task.script,
+        structure_type: body.structure_type !== undefined ? String(body.structure_type) : task.structure_type,
+        duration_ms: body.duration_ms !== undefined ? Number(body.duration_ms) : task.duration_ms,
+        mode: body.mode !== undefined ? String(body.mode) : task.mode,
+        status: 'queued', progress: 0, error: '', timeline_json: '', video_path: '', cover_path: ''
+      });
+      enqueueVideoTask(id);
+      return send(res, 200, db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id));
+    }
     if (method === 'POST' && /^\/api\/video-tasks\/[^/]+\/confirm$/.test(p)) {
       const id = p.split('/')[3];
       const task = db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id);
@@ -1897,6 +1913,11 @@ async function route(req, res) {
 
     if (method === 'GET' && p === '/api/element-catalog') return send(res, 200, { elements: ELEMENT_CATALOG, palettes: PALETTES, fonts: FONT_PAIRS, templates: TEMPLATES });
     if (method === 'GET' && p === '/api/element-assets') return send(res, 200, listElementAssets());
+    if (method === 'POST' && p === '/api/ai/draft-script') {
+      const body = await readBody(req);
+      const script = await draftAutoScript(String(body.title || ''), String(body.structure_type || 'causal'));
+      return send(res, 200, { script });
+    }
     if (method === 'GET' && p === '/api/fonts') {
       const fontsFile = path.join(ENGINE_DIR, 'fonts.json');
       let fonts = ['LXGW WenKai', 'ZCOOL KuaiLe'];

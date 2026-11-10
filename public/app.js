@@ -1485,6 +1485,7 @@ function autogenTaskRow(t) {
     <div class="autogen-progress"><div class="progress"><i style="width:${t.progress || 0}%"></i></div><span>${t.progress || 0}%</span></div>
     <div class="autogen-actions">
       ${t.status === 'done' ? `<a class="btn btn-sm" href="${mediaUrl(t.video_path)}" target="_blank" rel="noreferrer">播放</a>` : ''}
+      <button class="btn btn-sm" data-action="edit-video-task" data-id="${esc(t.id)}">编辑</button>
       ${['queued','running'].includes(t.status) ? `<button class="btn btn-sm" data-action="cancel-video-task" data-id="${esc(t.id)}">取消</button>` : ''}
       ${t.status === 'pending_confirm' ? `<button class="btn btn-sm btn-primary" data-action="confirm-video-task" data-id="${esc(t.id)}">确认并生成</button>` : ''}
       ${['failed','blocked','canceled'].includes(t.status) ? `<button class="btn btn-sm" data-action="retry-video-task" data-id="${esc(t.id)}">重试</button>` : ''}
@@ -1493,35 +1494,99 @@ function autogenTaskRow(t) {
 }
 
 async function renderAutogen() {
-  setNav('autogen'); setCrumb('工作台 / 自动生成');
+  setNav('autogen'); setCrumb('工作台 / 视频工作台');
   const data = await api('/api/video-tasks');
   const tasks = data.tasks || [];
   const c = data.counts || {};
-  const listHtml = tasks.length ? tasks.map(autogenTaskRow).join('') : '<div class="empty"><h3>还没有自动任务</h3><p>点右上角「新建自动任务」。</p></div>';
+  const listHtml = tasks.length ? tasks.map(autogenTaskRow).join('') : '<div class="empty"><h3>还没有任务</h3><p>在下面填好题材，点「自动生成」。</p></div>';
   $('#view').innerHTML = `
     <div class="page-head">
-      <div><p class="eyebrow">COPILOT / 自动生成</p><h1 class="page-title">题材定好，剩下的交给 AI。</h1><p class="page-sub">结构 → 文案 → 语音 → 分镜 → 渲染，全程自动；这里一屏看全部。</p></div>
-      <div class="head-actions"><button class="btn btn-primary" data-action="open-autogen">+ 新建自动任务</button></div>
+      <div><p class="eyebrow">WORKBENCH / 视频工作台</p><h1 class="page-title">一条视频，一个界面。</h1><p class="page-sub">默认全自动；需要时让 AI 帮写文案，人也能随时改。</p></div>
     </div>
-    <div class="stats-grid">
+    <div class="card">
+      <div class="card-head"><div><h2 class="section-title">新建视频</h2><p class="section-sub">填好题材点生成，或先让 AI 帮你写文案。</p></div></div>
+      <div class="card-body">
+        <form id="workbench-form">
+          <div class="form-grid">
+            <div class="field full"><label>标题</label><input name="title" placeholder="例如：为什么 AI 会一本正经地胡说八道"></div>
+            <div class="field full"><label>文案 / 口播稿</label><textarea name="script" id="workbench-script" rows="4" placeholder="留空可让 AI 自动写"></textarea></div>
+            <div class="field"><label>结构</label><select name="structure_type"><option value="causal">因果 / 流程</option><option value="contrast">对照</option><option value="misconception">误区修正</option><option value="checklist">清单</option><option value="timeline">时间演进</option></select></div>
+            <div class="field"><label>时长（秒）</label><input name="duration_sec" type="number" value="30" min="5" max="60"></div>
+            <div class="field"><label>模式</label><select name="mode"><option value="auto">自动：直接出片</option><option value="manual">人工：先确认分镜</option></select></div>
+          </div>
+          <div class="flex mt-16" style="gap:10px">
+            <button class="btn" type="button" data-action="ai-draft-script">✨ AI 写文案</button>
+            <button class="btn btn-primary" type="submit">自动生成</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div class="stats-grid mt-16">
       <div class="stat"><div class="stat-label">待办</div><div class="stat-value">${c.todo || 0}</div><div class="stat-foot">等待生成</div></div>
       <div class="stat ok"><div class="stat-label">进行中</div><div class="stat-value">${c.doing || 0}</div><div class="stat-foot">正在渲染</div></div>
       <div class="stat blue"><div class="stat-label">已完成</div><div class="stat-value">${c.done || 0}</div><div class="stat-foot">可播放 / 可发布</div></div>
       <div class="stat"><div class="stat-label">异常</div><div class="stat-value">${c.blocked || 0}</div><div class="stat-foot">失败 / 拦截</div></div>
     </div>
     <div class="card mt-16">
-      <div class="card-head"><div><h2 class="section-title">Copilot 大屏 <span class="muted tiny">${tasks.length}</span></h2><p class="section-sub">点击任务可查看；完成后直接播放。</p></div></div>
+      <div class="card-head"><div><h2 class="section-title">任务列表 <span class="muted tiny">${tasks.length}</span></h2><p class="section-sub">自动刷新；完成后直接播放。</p></div></div>
       <div class="card-body" id="autogen-list">${listHtml}</div>
     </div>
   `;
+  const form = $('#workbench-form');
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const body = {
+      title: fd.get('title'),
+      script: fd.get('script'),
+      structure_type: fd.get('structure_type'),
+      duration_ms: (Number(fd.get('duration_sec')) || 30) * 1000,
+      engine: 'vibemotion',
+      mode: fd.get('mode') || 'auto'
+    };
+    if (!body.title && !body.script) { toast('至少填标题或文案', 'error'); return; }
+    try {
+      await post('/api/video-tasks', body);
+      toast('已开始自动生成'); renderAutogen();
+    } catch (err) { toast(err.message, 'error'); }
+  });
   const timer = setInterval(async () => {
     try {
       const d = await api('/api/video-tasks');
       const box = $('#autogen-list');
-      if (box) box.innerHTML = (d.tasks || []).length ? (d.tasks || []).map(autogenTaskRow).join('') : '<div class="empty"><h3>还没有自动任务</h3></div>';
+      if (box) box.innerHTML = (d.tasks || []).length ? (d.tasks || []).map(autogenTaskRow).join('') : '<div class="empty"><h3>还没有任务</h3></div>';
     } catch {}
   }, 3000);
   state.pollTimers.push(timer);
+}
+
+async function openEditVideoTask(id) {
+  const t = await api(`/api/video-tasks/${id}`);
+  openModal({
+    title: '编辑视频',
+    body: `<form id="edit-video-form">
+      <div class="form-grid">
+        <div class="field full"><label>标题</label><input name="title" value="${esc(t.title || '')}"></div>
+        <div class="field full"><label>文案 / 口播稿</label><textarea name="script" rows="4">${esc(t.script || '')}</textarea></div>
+        <div class="field"><label>结构</label><select name="structure_type"><option value="causal" ${t.structure_type==='causal'?'selected':''}>因果 / 流程</option><option value="contrast" ${t.structure_type==='contrast'?'selected':''}>对照</option><option value="misconception" ${t.structure_type==='misconception'?'selected':''}>误区修正</option><option value="checklist" ${t.structure_type==='checklist'?'selected':''}>清单</option><option value="timeline" ${t.structure_type==='timeline'?'selected':''}>时间演进</option></select></div>
+        <div class="field"><label>时长（秒）</label><input name="duration_sec" type="number" value="${Math.round((t.duration_ms||30000)/1000)}" min="5" max="60"></div>
+      </div>
+    </form>`,
+    foot: `<button class="btn" data-action="close-modal">取消</button><button class="btn btn-primary" type="submit" form="edit-video-form">保存并重新生成</button>`,
+    onMount: () => {
+      const form = $('#edit-video-form');
+      form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(form);
+        const body = {
+          title: fd.get('title'), script: fd.get('script'), structure_type: fd.get('structure_type'),
+          duration_ms: (Number(fd.get('duration_sec')) || 30) * 1000
+        };
+        try { await put(`/api/video-tasks/${encodeURIComponent(id)}`, body); toast('已保存，重新生成中'); closeModal(); renderAutogen(); }
+        catch (err) { toast(err.message, 'error'); }
+      });
+    }
+  });
 }
 
 function openAutogenNew() {
@@ -2843,6 +2908,21 @@ document.addEventListener('click', async (e) => {
   if (el) {
     const action = el.dataset.action;
     if (action === 'new-brief') { e.preventDefault(); navigate('/create'); return; }
+    if (action === 'edit-video-task') { e.preventDefault(); openEditVideoTask(el.dataset.id); return; }
+    if (action === 'ai-draft-script') {
+      e.preventDefault();
+      const title = document.querySelector('#workbench-form input[name="title"]')?.value || '';
+      const structure = document.querySelector('#workbench-form select[name="structure_type"]')?.value || 'causal';
+      if (!title) { toast('先填标题，再让 AI 写文案', 'error'); return; }
+      const box = $('#workbench-script');
+      if (box) box.value = 'AI 正在写…';
+      try {
+        const r = await post('/api/ai/draft-script', { title, structure_type: structure });
+        if (box && r.script) box.value = r.script;
+        toast('AI 文案已生成，可修改后生成');
+      } catch (err) { toast(err.message, 'error'); }
+      return;
+    }
     if (action === 'open-autogen') { e.preventDefault(); openAutogenNew(); return; }
     if (action === 'open-asset-upload') { e.preventDefault(); openAssetUpload(); return; }
     if (action === 'open-voice-upload') { e.preventDefault(); openVoiceUpload(); return; }
