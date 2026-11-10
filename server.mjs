@@ -1625,6 +1625,7 @@ async function route(req, res) {
         tts_base_url: s.tts_base_url || '',
         tts_model: s.tts_model || '',
         tts_voice: s.tts_voice || '',
+        tts_appid: s.tts_appid || '',
         tts_speed: Number(s.tts_speed) || 1,
         tts_api_key_set: Boolean(s.tts_api_key),
         font_heading: s.font_heading || 'ZCOOL KuaiLe',
@@ -1638,7 +1639,7 @@ async function route(req, res) {
     if (method === 'PUT' && p === '/api/settings') {
       const body = await readBody(req);
       const map = {};
-      for (const k of ['wechat_appid', 'wechat_author', 'wechat_dry_run', 'wechat_auto_submit', 'llm_base_url', 'llm_model', 'brand_name', 'operator_name', 'engine_default', 'engine_default_mode', 'render_service_url', 'tts_provider', 'tts_base_url', 'tts_model', 'tts_voice', 'font_heading', 'font_body']) {
+      for (const k of ['wechat_appid', 'wechat_author', 'wechat_dry_run', 'wechat_auto_submit', 'llm_base_url', 'llm_model', 'brand_name', 'operator_name', 'engine_default', 'engine_default_mode', 'render_service_url', 'tts_provider', 'tts_base_url', 'tts_model', 'tts_voice', 'tts_appid', 'font_heading', 'font_body']) {
         if (body[k] !== undefined) map[k] = String(body[k]);
       }
       if (body.tts_speed !== undefined) map.tts_speed = String(body.tts_speed);

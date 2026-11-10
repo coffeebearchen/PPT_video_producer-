@@ -2375,7 +2375,8 @@ async function renderSettings() {
                 <div class="field"><label>TTS 供应商</label><select name="tts_provider"><option value="none" ${(s.tts_provider || 'none') === 'none' ? 'selected' : ''}>暂未接入（字幕版）</option><option value="mock" ${s.tts_provider === 'mock' ? 'selected' : ''}>测试语音（静音）</option><option value="openai_compat" ${s.tts_provider === 'openai_compat' ? 'selected' : ''}>OpenAI 兼容</option><option value="volcano" ${s.tts_provider === 'volcano' ? 'selected' : ''}>火山引擎 · 声音克隆</option><option value="minimax" ${s.tts_provider === 'minimax' ? 'selected' : ''}>MiniMax</option><option value="iflytek" ${s.tts_provider === 'iflytek' ? 'selected' : ''}>讯飞</option><option value="siliconflow" ${s.tts_provider === 'siliconflow' ? 'selected' : ''}>硅基流动</option></select></div>
                 <div class="field"><label>TTS Base URL</label><input name="tts_base_url" value="${esc(s.tts_base_url || '')}" placeholder="OpenAI 兼容时填"></div>
                 <div class="field"><label>TTS Model</label><input name="tts_model" value="${esc(s.tts_model || '')}" placeholder="tts-1"></div>
-                <div class="field"><label>声音 / 音色 ID</label><input name="tts_voice" value="${esc(s.tts_voice || '')}" placeholder="alloy / 你的克隆音色"></div>
+                <div class="field"><label>声音 / 音色 ID（voice_type）</label><input name="tts_voice" value="${esc(s.tts_voice || '')}" placeholder="火山：你克隆后的 voice_type"></div>
+                <div class="field"><label>火山引擎 AppID</label><input name="tts_appid" value="${esc(s.tts_appid || '')}" placeholder="火山引擎控制台的 AppID"></div>
                 <div class="field"><label>TTS API Key</label><input name="tts_api_key" type="password" value="" placeholder="${s.tts_api_key_set ? '已保存，留空不修改' : '只保存在本地数据库'}"></div>
               </div>
               <div class="flex mt-16"><button class="btn btn-primary" type="submit">保存视频引擎设置</button></div>
@@ -3553,6 +3554,7 @@ document.addEventListener('submit', async (e) => {
       tts_base_url: fd.get('tts_base_url'),
       tts_model: fd.get('tts_model'),
       tts_voice: fd.get('tts_voice'),
+      tts_appid: fd.get('tts_appid'),
       font_heading: fd.get('font_heading'),
       font_body: fd.get('font_body')
     };
