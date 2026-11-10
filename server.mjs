@@ -9,7 +9,7 @@ import {
   listWechatAccounts, getWechatAccount, getDefaultWechatAccount, saveWechatAccount, deleteWechatAccount,
   listAccountGroups, getAccountGroup, getDefaultAccountGroup, saveAccountGroup, deleteAccountGroup, listChannelsByGroup
 } from './lib/db.mjs';
-import { generateAngles, generateSpec, llmConfigured, testLLM, draftBriefFromDirection, draftAnalogyFromNote, draftSoulFromDirection, diagnoseStructures, checkDirection, checkStructure, draftQuoteCandidates, draftElementSvg } from './lib/generator.mjs';
+import { generateAngles, generateSpec, llmConfigured, testLLM, draftBriefFromDirection, draftAnalogyFromNote, draftSoulFromDirection, diagnoseStructures, checkDirection, checkStructure, draftQuoteCandidates, draftElementSvg, draftAutoScript } from './lib/generator.mjs';
 import { publishWechat, testWechat } from './lib/wechat.mjs';
 import { renderVibeMotion, buildTimeline, ENGINE_DIR } from './lib/vibemotion.mjs';
 import { synthesizeSpeech, ttsConfigured } from './lib/tts.mjs';
@@ -261,24 +261,32 @@ async function processVideoTask(id) {
   const task = db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id);
   if (!task || task.status === 'canceled') return;
   updateVideoTask(id, { status: 'running', progress: 2, error: '' });
-  const compliance = checkCompliance(task.script || task.title);
+  let script = task.script || '';
+  if (!script && task.title) {
+    try {
+      script = await draftAutoScript(task.title, task.structure_type || 'causal');
+      updateVideoTask(id, { script });
+    } catch (e) { script = task.title + '。'; }
+  }
+  const compliance = checkCompliance(script || task.title);
   if (!compliance.ok) {
     updateVideoTask(id, { status: 'blocked', progress: 0, error: '合规拦截：' + compliance.hits.join('、') });
     return;
   }
+  const taskWithScript = { ...task, script };
   const isManual = task.mode === 'manual';
-  let voicePath = task.voice_path || '';
+  let voicePath = taskWithScript.voice_path || '';
   if (!voicePath && ttsConfigured()) {
     try {
       const voiceFile = path.join(ENGINE_DIR, 'public', 'audio', `${id}.mp3`);
-      await synthesizeSpeech(task.script || task.title, voiceFile, { durationSec: Math.round((task.duration_ms || 30000) / 1000) });
+      await synthesizeSpeech(taskWithScript.script || taskWithScript.title, voiceFile, { durationSec: Math.round((taskWithScript.duration_ms || 30000) / 1000) });
       voicePath = `audio/${id}.mp3`;
       updateVideoTask(id, { voice_path: voicePath });
     } catch (e) {
       console.error('[tts] skipped:', e.message);
     }
   }
-  const taskWithVoice = { ...task, voice_path: voicePath };
+  const taskWithVoice = { ...taskWithScript, voice_path: voicePath };
   let timeline = null;
   if (task.timeline_json) {
     try { timeline = JSON.parse(task.timeline_json); } catch {}
