@@ -1510,6 +1510,7 @@ function wbRow(r) {
     <div class="autogen-actions">
       ${r.video_path ? `<a class="btn btn-sm" href="${mediaUrl(r.video_path)}" target="_blank" rel="noreferrer">播放</a>` : ''}
       ${r.kind === 'vtask' ? `<button class="btn btn-sm" data-action="edit-video-task" data-id="${esc(r.id)}">编辑</button>` : ''}
+      ${r.kind === 'vtask' && r.brief_status === '待发布' ? `<button class="btn btn-sm btn-primary" data-action="open-vtask-publish" data-id="${esc(r.id)}">生成发布包</button>` : ''}
       ${r.kind === 'vtask' && r.brief_status !== '待发布' ? `<button class="btn btn-sm btn-primary" data-action="publish-video-task" data-id="${esc(r.id)}">准备发布</button>` : ''}
       <a class="btn btn-sm" href="${link}">前往</a>
     </div>
@@ -1642,6 +1643,30 @@ async function openEditVideoTask(id) {
         };
         try { await put(`/api/video-tasks/${encodeURIComponent(id)}`, body); toast('已保存，重新生成中'); closeModal(); renderAutogen(); }
         catch (err) { toast(err.message, 'error'); }
+      });
+    }
+  });
+}
+
+function openVtaskPublish(id) {
+  openModal({
+    title: '生成发布包',
+    body: `<form id="vtask-publish-form">
+      <div class="field"><label>发布渠道</label>
+        <label class="check-row"><input type="radio" name="channel" value="wechat_channels" checked> 视频号（手动上传）</label>
+        <label class="check-row"><input type="radio" name="channel" value="wechat_article"> 公众号（文章草稿）</label>
+      </div>
+    </form>`,
+    foot: `<button class="btn" data-action="close-modal">取消</button><button class="btn btn-primary" type="submit" form="vtask-publish-form">生成发布包</button>`,
+    onMount: () => {
+      const form = $('#vtask-publish-form');
+      form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(form);
+        try {
+          const r = await post(`/api/video-tasks/${encodeURIComponent(id)}/publish`, { channel: fd.get('channel') });
+          toast('发布包已生成：' + r.kit); closeModal(); renderWorkbench();
+        } catch (err) { toast(err.message, 'error'); }
       });
     }
   });
@@ -2994,6 +3019,7 @@ document.addEventListener('click', async (e) => {
     const action = el.dataset.action;
     if (action === 'new-brief') { e.preventDefault(); navigate('/create'); return; }
     if (action === 'edit-video-task') { e.preventDefault(); openEditVideoTask(el.dataset.id); return; }
+    if (action === 'open-vtask-publish') { e.preventDefault(); openVtaskPublish(el.dataset.id); return; }
     if (action === 'publish-video-task') {
       e.preventDefault();
       try { await post(`/api/video-tasks/${encodeURIComponent(el.dataset.id)}/publish-ready`, {}); toast('已标记待发布'); renderWorkbench(); }

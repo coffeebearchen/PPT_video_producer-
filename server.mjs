@@ -1933,6 +1933,33 @@ async function route(req, res) {
       enqueueVideoTask(id);
       return send(res, 200, db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id));
     }
+    if (method === 'POST' && /^\/api\/video-tasks\/[^/]+\/publish$/.test(p)) {
+      const id = p.split('/')[3];
+      const task = db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id);
+      if (!task) return fail(res, 404, '任务不存在');
+      if (task.status !== 'done') return fail(res, 400, '只有完成的视频才能发布');
+      const body = await readBody(req);
+      const channel = String(body.channel || 'wechat_channels');
+      const kitDir = path.join(KITS_DIR, `vtask-${id}-${channel}`);
+      fs.mkdirSync(kitDir, { recursive: true });
+      const videoSrc = path.join(MEDIA_DIR, task.video_path);
+      const coverSrc = path.join(MEDIA_DIR, task.cover_path);
+      if (fs.existsSync(videoSrc)) fs.copyFileSync(videoSrc, path.join(kitDir, 'video.mp4'));
+      if (fs.existsSync(coverSrc)) fs.copyFileSync(coverSrc, path.join(kitDir, 'cover.png'));
+      const channelName = channel === 'wechat_article' ? '公众号（文章草稿）' : '视频号（手动上传）';
+      fs.writeFileSync(path.join(kitDir, 'copy.txt'), `标题：${task.title}\n\n文案：\n${task.script || ''}\n\n结构：${task.structure_type || ''}\n风格：${task.style || ''}\n`, 'utf8');
+      fs.writeFileSync(path.join(kitDir, 'README.txt'), [
+        `发布渠道：${channelName}`,
+        `标题：${task.title}`,
+        ``,
+        '视频号：请用「视频.mp4 + 封面.png + 文案」手动上传。',
+        '公众号：请用文案生成文章草稿，可内嵌视频号视频。',
+        '发布前请再次检查：标题 / 文案 / 封面 / 合规。'
+      ].join('\n'), 'utf8');
+      updateVideoTask(id, { publish_status: 'packaged' });
+      return send(res, 200, { ok: true, kit: `kits/vtask-${id}-${channel}` });
+    }
+
     if (method === 'POST' && /^\/api\/video-tasks\/[^/]+\/publish-ready$/.test(p)) {
       const id = p.split('/')[3];
       const task = db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id);
