@@ -180,6 +180,7 @@ function parseRoute() {
   const hash = location.hash.replace(/^#/, '') || '/';
   const parts = hash.split('/').filter(Boolean);
   if (!parts.length) return { name: 'dashboard' };
+  if (parts[0] === 'workbench') return { name: 'workbench' };
   if ((parts[0] === 'brief' || parts[0] === 'briefs') && parts[1]) return { name: 'brief', id: parts[1] };
   if (parts[0] === 'briefs' || parts[0] === 'brief') return { name: 'briefs' };
   if (parts[0] === 'create') return { name: 'create' };
@@ -222,6 +223,7 @@ async function route() {
     if (state.route.name === 'publish') return await renderPublish();
     if (state.route.name === 'wechat') return await renderAccountGroupWorkspace(state.route.id);
     if (state.route.name === 'batch') return await renderBatch();
+    if (state.route.name === 'workbench') return await renderWorkbench();
     if (state.route.name === 'autogen') return await renderAutogen();
     if (state.route.name === 'knowledge') return await renderKnowledge();
     if (state.route.name === 'analogies') return await renderAnalogies();
@@ -1491,6 +1493,44 @@ function autogenTaskRow(t) {
       ${['failed','blocked','canceled'].includes(t.status) ? `<button class="btn btn-sm" data-action="retry-video-task" data-id="${esc(t.id)}">重试</button>` : ''}
     </div>
   </div>`;
+}
+
+const WB_TABS = [['todo', '待办'], ['doing', '生成中'], ['review', '待审批'], ['publish', '待发布'], ['done', '已完成'], ['error', '异常']];
+
+function wbRow(r) {
+  const kindLabel = r.kind === 'vtask' ? '自动视频' : r.kind === 'brief' ? '选题(模板)' : '发布';
+  const styleLabel = r.style ? { industrial: '工业', clean: '简洁', dynamic: '动感' }[r.style] || r.style : '';
+  const mediaUrl = (p) => p ? `/media/${esc(p)}` : '';
+  const link = r.kind === 'vtask' ? `#/autogen` : r.kind === 'brief' ? `#/brief/${esc(r.id)}` : `#/publish`;
+  return `<div class="autogen-row">
+    <div class="autogen-main">
+      <div class="autogen-title"><a href="${link}">${esc(r.title || '未命名')}</a></div>
+      <div class="autogen-meta"><span class="badge">${kindLabel}</span>${styleLabel ? `<span class="badge engine">${esc(styleLabel)}</span>` : ''}<span>${esc(r.brief_status || '')}</span></div>
+    </div>
+    <div class="autogen-actions">
+      ${r.video_path ? `<a class="btn btn-sm" href="${mediaUrl(r.video_path)}" target="_blank" rel="noreferrer">播放</a>` : ''}
+      ${r.kind === 'vtask' ? `<button class="btn btn-sm" data-action="edit-video-task" data-id="${esc(r.id)}">编辑</button>` : ''}
+      <a class="btn btn-sm" href="${link}">前往</a>
+    </div>
+  </div>`;
+}
+
+async function renderWorkbench() {
+  setNav('workbench'); setCrumb('工作台 / 工作台');
+  const d = await api('/api/unified-queue');
+  const rows = d.rows || [];
+  const counts = d.counts || {};
+  state.wbTab = state.wbTab || 'todo';
+  const tab = state.wbTab;
+  const filtered = rows.filter(r => r.bucket === tab);
+  $('#view').innerHTML = `
+    <div class="page-head">
+      <div><p class="eyebrow">WORKBENCH / 工作台</p><h1 class="page-title">所有内容，一个队列。</h1><p class="page-sub">选题、生成、审批、发布，都在这里；按状态点标签。</p></div>
+      <div class="head-actions"><a class="btn btn-primary" href="#/autogen">+ 新建视频</a></div>
+    </div>
+    <div class="filter-tabs">${WB_TABS.map(([k, l]) => `<button class="${tab === k ? 'active' : ''}" data-action="wb-tab" data-tab="${k}">${l} <b>${counts[k] || 0}</b></button>`).join('')}</div>
+    <div class="card mt-16"><div class="card-body">${filtered.length ? filtered.map(wbRow).join('') : '<div class="empty"><h3>暂无</h3></div>'}</div></div>
+  `;
 }
 
 async function renderAutogen() {
@@ -2951,6 +2991,7 @@ document.addEventListener('click', async (e) => {
     const action = el.dataset.action;
     if (action === 'new-brief') { e.preventDefault(); navigate('/create'); return; }
     if (action === 'edit-video-task') { e.preventDefault(); openEditVideoTask(el.dataset.id); return; }
+    if (action === 'wb-tab') { e.preventDefault(); state.wbTab = el.dataset.tab; renderWorkbench(); return; }
     if (action === 'ai-draft-script') {
       e.preventDefault();
       const title = document.querySelector('#workbench-form input[name="title"]')?.value || '';

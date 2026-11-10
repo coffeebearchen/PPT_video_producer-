@@ -188,6 +188,35 @@ function listBriefs(filter = '') {
   }).filter(b => !filter || filter === 'all' || b.status === filter);
 }
 
+function unifiedQueue() {
+  const rows = [];
+  const vtasks = db.prepare('SELECT * FROM video_tasks ORDER BY created_at DESC').all();
+  for (const t of vtasks) {
+    let bucket = 'todo';
+    if (t.status === 'running') bucket = 'doing';
+    else if (t.status === 'done') bucket = 'done';
+    else if (['failed', 'blocked'].includes(t.status)) bucket = 'error';
+    else if (t.status === 'canceled') bucket = 'done';
+    rows.push({ id: t.id, kind: 'vtask', title: t.title, engine: t.engine, style: t.style, bucket, created_at: t.created_at, video_path: t.video_path, cover_path: t.cover_path, brief_status: t.status });
+  }
+  const briefs = db.prepare('SELECT * FROM briefs ORDER BY created_at DESC').all();
+  for (const b of briefs) {
+    let bucket = 'todo';
+    if (b.status === 'in_review') bucket = 'review';
+    else if (['approved', 'scheduled', 'published'].includes(b.status)) bucket = 'done';
+    rows.push({ id: b.id, kind: 'brief', title: b.title, engine: 'template', style: '', bucket, created_at: b.created_at, video_path: '', cover_path: '', brief_status: b.status });
+  }
+  const pubs = db.prepare('SELECT * FROM publications ORDER BY created_at DESC').all();
+  for (const p of pubs) {
+    let bucket = 'publish';
+    if (p.status === 'published') bucket = 'done';
+    rows.push({ id: p.id, kind: 'pub', title: p.title || '', engine: 'template', style: '', bucket, created_at: p.created_at, video_path: p.video_path || '', cover_path: p.cover_path || '', brief_status: p.status });
+  }
+  const counts = { todo: 0, doing: 0, review: 0, publish: 0, done: 0, error: 0 };
+  rows.forEach(r => { counts[r.bucket] = (counts[r.bucket] || 0) + 1; });
+  return { rows: rows.sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))), counts };
+}
+
 function dashboard() {
   const briefs = db.prepare('SELECT * FROM briefs').all();
   const renders = db.prepare('SELECT * FROM renders').all();
@@ -861,6 +890,7 @@ async function route(req, res) {
 
   if (p.startsWith('/api/')) {
     if (method === 'GET' && p === '/api/dashboard') return send(res, 200, dashboard());
+    if (method === 'GET' && p === '/api/unified-queue') return send(res, 200, unifiedQueue());
     if (method === 'POST' && p === '/api/ai/quote-candidates') {
       const body = await readBody(req);
       const specRow = db.prepare('SELECT * FROM specs WHERE id=?').get(body.spec_id || '');
