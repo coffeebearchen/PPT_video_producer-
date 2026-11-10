@@ -1522,6 +1522,7 @@ async function renderAutogen() {
             <div class="field"><label>结构</label><select name="structure_type"><option value="causal">因果 / 流程</option><option value="contrast">对照</option><option value="misconception">误区修正</option><option value="checklist">清单</option><option value="timeline">时间演进</option></select></div>
             <div class="field"><label>时长（秒）</label><input name="duration_sec" type="number" value="30" min="5" max="60"></div>
             <div class="field"><label>模式</label><select name="mode"><option value="auto">自动：直接出片</option><option value="manual">人工：先确认分镜</option></select></div>
+            <div class="field"><label>批量</label><label class="check-row"><input type="checkbox" name="batch_styles"> 同文案出 3 种风格</label></div>
           </div>
           <div class="flex mt-16" style="gap:10px">
             <button class="btn" type="button" data-action="ai-draft-script">✨ AI 写文案</button>
@@ -1556,8 +1557,11 @@ async function renderAutogen() {
     };
     if (!body.title && !body.script) { toast('至少填标题或文案', 'error'); return; }
     try {
-      await post('/api/video-tasks', body);
-      toast('已开始自动生成'); renderAutogen();
+      const styles = fd.get('batch_styles') ? ['industrial', 'clean', 'dynamic'] : [body.style];
+      for (const st of styles) {
+        await post('/api/video-tasks', { ...body, style: st, title: styles.length > 1 ? `${body.title} · ${st}` : body.title });
+      }
+      toast(styles.length > 1 ? `已批量生成 ${styles.length} 条` : '已开始自动生成'); renderAutogen();
     } catch (err) { toast(err.message, 'error'); }
   });
   const timer = setInterval(async () => {
