@@ -271,7 +271,7 @@ async function processVideoTask(id) {
   if (!voicePath && ttsConfigured()) {
     try {
       const voiceFile = path.join(ENGINE_DIR, 'public', 'audio', `${id}.mp3`);
-      await synthesizeSpeech(task.script || task.title, voiceFile);
+      await synthesizeSpeech(task.script || task.title, voiceFile, { durationSec: Math.round((task.duration_ms || 30000) / 1000) });
       voicePath = `audio/${id}.mp3`;
       updateVideoTask(id, { voice_path: voicePath });
     } catch (e) {
