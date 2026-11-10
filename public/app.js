@@ -1510,7 +1510,15 @@ async function renderAutogen() {
           <div class="form-grid">
             <div class="field full"><label>标题</label><input name="title" placeholder="例如：为什么 AI 会一本正经地胡说八道"></div>
             <div class="field full"><label>文案 / 口播稿</label><textarea name="script" id="workbench-script" rows="4" placeholder="留空可让 AI 自动写"></textarea></div>
-            <div class="field"><label>讲解风格</label><select name="style"><option value="industrial">严谨工业风</option><option value="clean">简洁风格</option><option value="dynamic">活泼动感风</option></select></div>
+            <div class="field full"><label>讲解风格</label>
+              <div class="style-picker">
+                ${['industrial','clean','dynamic'].map((s, i) => {
+                  const name = s === 'industrial' ? '严谨工业风' : s === 'clean' ? '简洁风格' : '活泼动感风';
+                  const desc = s === 'industrial' ? '深灰 · 细分隔线 · 数据' : s === 'clean' ? '浅底 · 留白 · 插画' : '流动 · 强节奏 · 高亮';
+                  return `<label class="style-card ${i === 0 ? 'sel' : ''}"><input type="radio" name="style" value="${s}" ${i === 0 ? 'checked' : ''}><img src="/gallery/styles/${s}.png" alt="${name}"><span>${name}</span><small>${desc}</small></label>`;
+                }).join('')}
+              </div>
+            </div>
             <div class="field"><label>结构</label><select name="structure_type"><option value="causal">因果 / 流程</option><option value="contrast">对照</option><option value="misconception">误区修正</option><option value="checklist">清单</option><option value="timeline">时间演进</option></select></div>
             <div class="field"><label>时长（秒）</label><input name="duration_sec" type="number" value="30" min="5" max="60"></div>
             <div class="field"><label>模式</label><select name="mode"><option value="auto">自动：直接出片</option><option value="manual">人工：先确认分镜</option></select></div>
@@ -2903,6 +2911,12 @@ document.addEventListener('change', (e) => {
   if (e.target.id === 'music-search') {
     state.musicQuery = e.target.value;
     renderMusic();
+  }
+});
+
+document.addEventListener('change', (e) => {
+  if (e.target && e.target.name === 'style') {
+    document.querySelectorAll('.style-card').forEach(c => c.classList.toggle('sel', c.querySelector('input') === e.target));
   }
 });
 
