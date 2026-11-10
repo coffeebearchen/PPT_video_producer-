@@ -10,7 +10,7 @@ import {
   listAccountGroups, getAccountGroup, getDefaultAccountGroup, saveAccountGroup, deleteAccountGroup, listChannelsByGroup
 } from './lib/db.mjs';
 import { generateAngles, generateSpec, llmConfigured, testLLM, draftBriefFromDirection, draftAnalogyFromNote, draftSoulFromDirection, diagnoseStructures, checkDirection, checkStructure, draftQuoteCandidates, draftElementSvg, draftAutoScript } from './lib/generator.mjs';
-import { publishWechat, testWechat } from './lib/wechat.mjs';
+import { publishWechat, testWechat, publishVtaskWechat } from './lib/wechat.mjs';
 import { renderVibeMotion, buildTimeline, ENGINE_DIR } from './lib/vibemotion.mjs';import { synthesizeSpeech, ttsConfigured } from './lib/tts.mjs';
 import { ELEMENT_CATALOG, PALETTES, FONT_PAIRS, TEMPLATES } from './lib/element-catalog.mjs';
 import { listElementAssets } from './lib/element-assets.mjs';
@@ -1932,6 +1932,18 @@ async function route(req, res) {
       });
       enqueueVideoTask(id);
       return send(res, 200, db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id));
+    }
+    if (method === 'POST' && /^\/api\/video-tasks\/[^/]+\/publish-wechat$/.test(p)) {
+      const id = p.split('/')[3];
+      const task = db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id);
+      if (!task) return fail(res, 404, '任务不存在');
+      try {
+        const r = await publishVtaskWechat(task);
+        updateVideoTask(id, { publish_status: r.dry_run ? 'ready' : 'published' });
+        return send(res, 200, r);
+      } catch (e) {
+        return fail(res, 500, e.message);
+      }
     }
     if (method === 'POST' && /^\/api\/video-tasks\/[^/]+\/publish$/.test(p)) {
       const id = p.split('/')[3];

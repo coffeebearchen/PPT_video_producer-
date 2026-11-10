@@ -1664,8 +1664,15 @@ function openVtaskPublish(id) {
         e.preventDefault();
         const fd = new FormData(form);
         try {
-          const r = await post(`/api/video-tasks/${encodeURIComponent(id)}/publish`, { channel: fd.get('channel') });
-          toast('发布包已生成：' + r.kit); closeModal(); renderWorkbench();
+          const channel = fd.get('channel');
+          if (channel === 'wechat_article') {
+            const r = await post(`/api/video-tasks/${encodeURIComponent(id)}/publish-wechat`, {});
+            toast(r.dry_run ? '公众号草稿（dry-run 已生成，未真调微信）' : '公众号草稿已创建');
+          } else {
+            const r = await post(`/api/video-tasks/${encodeURIComponent(id)}/publish`, { channel });
+            toast('发布包已生成：' + r.kit);
+          }
+          closeModal(); renderWorkbench();
         } catch (err) { toast(err.message, 'error'); }
       });
     }
