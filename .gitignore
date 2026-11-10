@@ -32,3 +32,4 @@ renderer/**/.chrome-profile*/
 data/
 **/.chrome-profile/
 **/*.pma
+engines/

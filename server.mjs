@@ -11,6 +11,8 @@ import {
 } from './lib/db.mjs';
 import { generateAngles, generateSpec, llmConfigured, testLLM, draftBriefFromDirection, draftAnalogyFromNote, draftSoulFromDirection, diagnoseStructures, checkDirection, checkStructure, draftQuoteCandidates, draftElementSvg } from './lib/generator.mjs';
 import { publishWechat, testWechat } from './lib/wechat.mjs';
+import { renderVibeMotion, buildTimeline } from './lib/vibemotion.mjs';
+import { checkCompliance } from './lib/compliance.mjs';
 import { TEMPLATE_THEMES, listTemplates, getTemplate, applyTemplatePreset } from './lib/templates.mjs';
 import { ELEMENTS, ELEMENT_SPEC, listElements, getElement, selectElements, validateGeneratedSvg } from './lib/elements.mjs';
 import { runPreflight } from './lib/preflight.mjs';
@@ -244,6 +246,57 @@ const batchQueue = [];
 let batchRunning = false;
 fs.mkdirSync(BATCH_DIR, { recursive: true });
 let batches = {};
+let videoChain = Promise.resolve();
+
+function updateVideoTask(id, fields) {
+  const sets = [];
+  const vals = [];
+  for (const [k, v] of Object.entries(fields)) { sets.push(`${k}=?`); vals.push(v); }
+  vals.push(now(), id);
+  db.prepare(`UPDATE video_tasks SET ${sets.join(',')}, updated_at=? WHERE id=?`).run(...vals);
+}
+
+async function processVideoTask(id) {
+  const task = db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id);
+  if (!task || task.status === 'canceled') return;
+  updateVideoTask(id, { status: 'running', progress: 2, error: '' });
+  const compliance = checkCompliance(task.script || task.title);
+  if (!compliance.ok) {
+    updateVideoTask(id, { status: 'blocked', progress: 0, error: '合规拦截：' + compliance.hits.join('、') });
+    return;
+  }
+  const isManual = task.mode === 'manual';
+  let timeline = null;
+  if (task.timeline_json) {
+    try { timeline = JSON.parse(task.timeline_json); } catch {}
+  }
+  if (isManual && !timeline) {
+    timeline = buildTimeline(task);
+    updateVideoTask(id, { status: 'pending_confirm', progress: 25, timeline_json: JSON.stringify(timeline), error: '' });
+    return;
+  }
+  const outRel = path.join('video-tasks', id);
+  const outDir = path.join(MEDIA_DIR, outRel);
+  try {
+    const res = await renderVibeMotion({ ...task, id }, outDir, (p, stage) => {
+      updateVideoTask(id, { progress: p, error: '' });
+    }, timeline);
+    updateVideoTask(id, {
+      status: 'done', progress: 100,
+      video_path: outRel.replaceAll('\\', '/') + '/video.mp4',
+      cover_path: outRel.replaceAll('\\', '/') + '/cover.png'
+    });
+  } catch (e) {
+    updateVideoTask(id, { status: 'failed', progress: 0, error: String(e.message || e).slice(-900) });
+  }
+}
+
+function enqueueVideoTask(id) {
+  videoChain = videoChain.then(() => processVideoTask(id)).catch(e => {
+    updateVideoTask(id, { status: 'failed', progress: 0, error: String(e.message || e).slice(-900) });
+  });
+}
+
 try { batches = JSON.parse(fs.readFileSync(BATCH_INDEX, 'utf8')) || {}; } catch {}
 const saveBatches = () => fs.writeFileSync(BATCH_INDEX, JSON.stringify(batches, null, 2));
 
@@ -1741,6 +1794,65 @@ async function route(req, res) {
       } catch (e) {
         return fail(res, 500, e.message);
       }
+    }
+
+    if (method === 'GET' && p === '/api/video-tasks') {
+      const rows = db.prepare('SELECT * FROM video_tasks ORDER BY created_at DESC').all();
+      return send(res, 200, { tasks: rows, counts: {
+        todo: rows.filter(t => ['queued', 'pending_confirm'].includes(t.status)).length,
+        doing: rows.filter(t => ['running'].includes(t.status)).length,
+        done: rows.filter(t => ['done'].includes(t.status)).length,
+        blocked: rows.filter(t => ['blocked', 'failed'].includes(t.status)).length
+      } });
+    }
+    if (method === 'POST' && p === '/api/video-tasks') {
+      const body = await readBody(req);
+      if (!body.title && !body.script) return fail(res, 400, '标题或文案必填');
+      const id = newId('vtask');
+      const t = now();
+      const structureType = String(body.structure_type || 'causal');
+      const structureName = String(body.structure_name || '');
+      db.prepare(`INSERT INTO video_tasks
+        (id,title,engine,mode,structure_type,structure_name,script,voice_path,voice_provider,timeline_json,palette,duration_ms,status,progress,video_path,cover_path,error,retry_count,user_id,source,created_at,updated_at)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(
+        id, String(body.title || body.script.slice(0, 20)), String(body.engine || 'vibemotion'), String(body.mode || 'auto'),
+        structureType, structureName, String(body.script || body.title || ''), String(body.voice_path || ''),
+        String(body.voice_provider || ''), '', String(body.palette || 'cream'), Math.max(5000, Number(body.duration_ms) || 30000),
+        'queued', 0, '', '', '', 0, String(body.user_id || ''), String(body.source || 'autogen'), t, t
+      );
+      event('video_task', id, 'created', body.title || '');
+      enqueueVideoTask(id);
+      return send(res, 201, db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id));
+    }
+    if (method === 'GET' && /^\/api\/video-tasks\/[^/]+$/.test(p)) {
+      const id = p.split('/').pop();
+      const task = db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id);
+      if (!task) return fail(res, 404, '任务不存在');
+      return send(res, 200, task);
+    }
+    if (method === 'POST' && /^\/api\/video-tasks\/[^/]+\/cancel$/.test(p)) {
+      const id = p.split('/')[3];
+      const task = db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id);
+      if (!task) return fail(res, 404, '任务不存在');
+      if (['queued', 'running'].includes(task.status)) updateVideoTask(id, { status: 'canceled' });
+      return send(res, 200, db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id));
+    }
+    if (method === 'POST' && /^\/api\/video-tasks\/[^/]+\/retry$/.test(p)) {
+      const id = p.split('/')[3];
+      const task = db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id);
+      if (!task) return fail(res, 404, '任务不存在');
+      updateVideoTask(id, { status: 'queued', progress: 0, error: '', retry_count: (task.retry_count || 0) + 1 });
+      enqueueVideoTask(id);
+      return send(res, 200, db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id));
+    }
+    if (method === 'POST' && /^\/api\/video-tasks\/[^/]+\/confirm$/.test(p)) {
+      const id = p.split('/')[3];
+      const task = db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id);
+      if (!task) return fail(res, 404, '任务不存在');
+      if (task.status !== 'pending_confirm') return fail(res, 400, '任务不在待确认状态');
+      updateVideoTask(id, { status: 'queued', progress: 25, error: '' });
+      enqueueVideoTask(id);
+      return send(res, 200, db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id));
     }
 
     return fail(res, 404, 'API 不存在');

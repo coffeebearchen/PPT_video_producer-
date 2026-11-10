@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#EDE5D6;color:#101112;font-family:"Microsoft YaHei",sans-serif}
+  .app{display:grid;grid-template-columns:238px 1fr;height:1100px}
+  .side{background:#101112;color:#F1EBDD;padding:22px 16px}
+  .brand{display:flex;gap:10px;align-items:center;margin-bottom:26px}
+  .mark{width:30px;height:30px;border-radius:7px;background:#D9FF57;color:#101112;display:grid;place-items:center;font-weight:900}
+  .nav a{display:flex;gap:9px;align-items:center;padding:9px 10px;color:#CFC8BC;text-decoration:none;border-radius:6px;font-size:13px}
+  .nav a.on{background:#D9FF57;color:#101112;font-weight:800}
+  .label{font-size:10px;letter-spacing:.2em;color:#8A918B;margin:18px 0 8px}
+  .main{background:#F3EDE1;padding:24px 30px;overflow:auto}
+  .crumb{color:#7B7468;font-size:12px}
+  h1{font-family:"Noto Serif SC",serif;font-size:30px;margin:8px 0 4px}
+  .sub{color:#7B7468;font-size:13px;margin:0 0 18px}
+  .card{background:#fff;border:1px solid #E2DACB;border-radius:12px;padding:18px;margin-bottom:16px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  label{display:block;font-size:11px;color:#7B7468;margin:10px 0 5px}
+  input,select,textarea{width:100%;background:#FDFCF8;border:1px solid #D8CFBE;border-radius:6px;padding:9px 10px;font-size:13px;color:#101112}
+  .field{display:flex;flex-direction:column}
+  .row{display:flex;gap:10px;align-items:flex-end}
+  .btn{display:inline-block;background:#101112;color:#F3EDE1;border-radius:6px;padding:9px 14px;font-size:12px;font-weight:700;border:0}
+  .btn.lime{background:#D9FF57;color:#101112}
+  .btn.ghost{background:transparent;border:1px solid #CFC4B2;color:#101112}
+  .engine{display:flex;gap:10px}
+  .engine label{display:flex;flex-direction:row;align-items:center;gap:8px;border:1px solid #E2DACB;border-radius:8px;padding:10px 12px;cursor:pointer;font-size:13px;color:#101112;margin:0}
+  .engine label.sel{border:2px solid #101112;background:#F7F4EC}
+  .engine .dot{width:12px;height:12px;border-radius:50%;border:1px solid #101112;display:inline-block}
+  .engine label.sel .dot{background:#D9FF57}
+  .badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:10px;background:#F2EEE3;border:1px solid #D8CFBE}
+  .badge.engine{background:#D9FF57;color:#101112;border:0;font-weight:800}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th,td{text-align:left;padding:9px 8px;border-bottom:1px solid #EDE5D6}
+  th{color:#7B7468;font-size:10px;letter-spacing:.1em}
+  .progress{height:7px;background:#EDE5D6;border-radius:4px}
+  .progress i{display:block;height:100%;background:#D9FF57;width:64%;border-radius:4px}
+  .note{background:#FBF7EE;border:1px solid #EADFC9;border-radius:8px;padding:10px 12px;font-size:12px;color:#6F675A;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="side">
+    <div class="brand"><span class="mark">FA</span><span>固定地址<small style="display:block;font-size:9px;color:#8A918B">CONTENT STUDIO</small></span></div>
+    <div class="label">工作台</div>
+    <div class="nav">
+      <a href="#">总览</a>
+      <a class="on" href="#">创作台</a>
+      <a href="#">选题</a>
+      <a href="#">审批</a>
+      <a href="#">发布</a>
+      <a href="#">账号</a>
+      <a href="#">批量生产</a>
+    </div>
+    <div class="label">内容资产</div>
+    <div class="nav"><a href="#">素材库</a><a href="#">音乐库</a><a href="#">知识库</a><a href="#">结构库</a><a href="#">模板库</a><a href="#">元素库</a></div>
+    <div class="label">系统</div>
+    <div class="nav"><a href="#">设置</a></div>
+  </div>
+
+  <div class="main">
+    <div class="crumb">工作台 / 创作台</div>
+    <h1>新建选题</h1>
+    <p class="sub">内容资产统一，只换“怎么生成视频”。</p>
+
+    <div class="card">
+      <div class="grid2">
+        <div class="field"><label>标题</label><input value="为什么 AI 会一本正经地胡说八道"></div>
+        <div class="field"><label>视频引擎</label>
+          <div class="engine">
+            <label><span class="dot"></span>本地模板</label>
+            <label class="sel"><span class="dot"></span>VibeMotion 奶油纸风</label>
+          </div>
+        </div>
+        <div class="field"><label>输入方式</label><select><option>文稿 + 口播语音</option><option>现成分镜模板</option></select></div>
+        <div class="field"><label>分镜模板</label><select><option>流程图 · 3 步</option><option>对比卡</option><option>时间轴</option></select></div>
+        <div class="field"><label>口播语音（必需）</label><input value="上传 voiceover.wav" style="color:#7B7468"></div>
+        <div class="field"><label>背景音乐（可选 · 音乐库）</label><select><option>无背景音乐</option><option>bg_pad 氛围底噪</option><option>从音乐库选…</option></select></div>
+        <div class="field" style="grid-column:1/-1"><label>话题 / 口播稿</label><textarea rows="3">AI 不是有意骗你，它只是被训练成必须给出一个答案……</textarea></div>
+      </div>
+      <div class="row" style="margin-top:12px"><button class="btn lime">生成并预览</button><button class="btn ghost">存为草稿</button></div>
+      <div class="note">语音驱动画面：字幕 / 关键词高亮 / 场景状态都按口播时间点走。输出 1080×1920 / 30fps / 20–60 秒，奶油纸配色。</div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center"><b>视频任务</b><span class="badge engine">VibeMotion</span></div>
+      <table>
+        <tr><th>任务</th><th>引擎</th><th>进度</th><th>状态</th><th>操作</th></tr>
+        <tr><td>AI 幻觉避坑 01</td><td><span class="badge engine">VibeMotion</span></td><td><div class="progress"><i></i></div></td><td>渲染中</td><td><button class="btn ghost">取消</button></td></tr>
+        <tr><td>Token 计费 02</td><td><span class="badge">本地模板</span></td><td>—</td><td>已通过</td><td><button class="btn ghost">预览</button></td></tr>
+      </table>
+      <div class="note">审批页会显示引擎标识；发布包不变，仍走视频号人工上传。</div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center"><b>设置 · 视频引擎</b><a class="btn ghost" href="#">打开设置</a></div>
+      <div class="grid2">
+        <div class="field"><label>渲染服务地址</label><input value="http://127.0.0.1:5001"></div>
+        <div class="field"><label>默认视觉风格</label><select><option>奶油纸（锁定）</option><option>黑板报</option></select></div>
+        <div class="field"><label>默认输入方式</label><select><option>文稿 + 口播语音</option><option>现成分镜模板</option></select></div>
+        <div class="field"><label>并发数</label><input type="number" value="2"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

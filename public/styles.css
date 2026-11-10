@@ -1203,3 +1203,14 @@ input::placeholder, textarea::placeholder { color: #B2A897; }
 .wx-group-channels { padding:0 14px 8px 26px; border-top:1px solid var(--line); }
 .wx-group-channels .wx-account { border:0; border-top:1px dashed var(--line); border-radius:0; background:transparent; padding:10px 0; }
 .wx-group-channels .wx-account:first-child { border-top:0; }
+
+.autogen-row { display:flex; align-items:center; gap:16px; padding:12px 0; border-top:1px solid var(--line); }
+.autogen-row:first-child { border-top:0; }
+.autogen-main { flex:1 1 auto; min-width:0; }
+.autogen-title { font-size:14px; font-weight:800; }
+.autogen-meta { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:5px; color:var(--muted); font-size:11px; }
+.autogen-error { margin-top:5px; color:#B3261E; font-size:11px; line-height:1.5; }
+.autogen-progress { width:180px; flex:0 0 180px; display:flex; align-items:center; gap:8px; }
+.autogen-progress .progress { flex:1; }
+.autogen-actions { display:flex; gap:6px; flex:0 0 auto; }
+.status.red { color:#B3261E; }

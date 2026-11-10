@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#E8E0D1;font-family:"Microsoft YaHei",sans-serif;color:#101112}
+  .screen{position:relative;width:1240px;height:980px;background:#F3EDE1;border-bottom:2px solid #101112;padding:22px 26px;overflow:hidden}
+  .kicker{font-size:11px;letter-spacing:.2em;color:#7B7468}
+  h2{font-family:"Noto Serif SC",serif;font-size:26px;margin:6px 0 14px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .card{background:#fff;border:1px solid #E2DACB;border-radius:12px;padding:16px}
+  .card.soft{background:#FDFBF5}
+  label{display:block;font-size:11px;color:#7B7468;margin:9px 0 4px}
+  input,select,textarea{width:100%;background:#FDFCF8;border:1px solid #D8CFBE;border-radius:6px;padding:9px 10px;font-size:13px;color:#101112}
+  .row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+  .btn{display:inline-block;background:#101112;color:#F3EDE1;border-radius:6px;padding:9px 14px;font-size:12px;font-weight:700;border:0}
+  .btn.lime{background:#D9FF57;color:#101112}
+  .btn.ghost{background:transparent;border:1px solid #CFC4B2;color:#101112}
+  .engine{display:flex;gap:10px;flex-wrap:wrap}
+  .engine label{display:flex;align-items:center;gap:8px;border:1px solid #E2DACB;border-radius:8px;padding:9px 12px;cursor:pointer;font-size:13px;color:#101112;margin:0}
+  .engine label.sel{border:2px solid #101112;background:#F7F4EC}
+  .dot{width:12px;height:12px;border-radius:50%;border:1px solid #101112;display:inline-block}
+  .sel .dot{background:#D9FF57}
+  .badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:10px;background:#F2EEE3;border:1px solid #D8CFBE}
+  .badge.engine{background:#D9FF57;color:#101112;border:0;font-weight:800}
+  .badge.old{background:#E7E0D2;color:#101112}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th,td{text-align:left;padding:9px 8px;border-bottom:1px solid #EDE5D6}
+  th{color:#7B7468;font-size:10px;letter-spacing:.1em}
+  .diff{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .diff .card{border-top:5px solid}
+  .diff .old{border-top-color:#CFC4B2}
+  .diff .new{border-top-color:#D9FF57}
+  .k{font-size:11px;color:#7B7468;margin:6px 0 3px}
+  .v{font-size:13px;font-weight:650}
+  .note{background:#FBF7EE;border:1px solid #EADFC9;border-radius:8px;padding:10px 12px;font-size:12px;color:#6F675A;margin-top:10px}
+  .same{background:#F2F6E3;border:1px solid #DCE8B8;border-radius:8px;padding:10px 12px;font-size:12px;color:#4F5A38;margin-top:10px}
+</style>
+</head>
+<body>
+
+<!-- P1 创作台 -->
+<div class="screen">
+  <div class="kicker">UI · 01 / 创作台</div>
+  <h2>新建选题：两个引擎共用上游</h2>
+  <div class="grid2">
+    <div class="card">
+      <label>内容结构（结构库）</label><select><option>对照</option><option>因果 / 流水线</option><option>误区修正</option><option>时间演进</option></select>
+      <label>话题 / 口播稿</label><textarea rows="4">AI 不是有意骗你，它只是被训练成必须给出一个答案……</textarea>
+      <label>口播语音（必需）</label><input value="上传 voiceover.wav" style="color:#7B7468">
+      <div class="row" style="margin-top:10px">
+        <label style="margin:0">背景音乐（音乐库，可选）</label>
+        <select style="width:auto;flex:1"><option>无</option><option>bg_pad 氛围底噪</option><option>从音乐库选…</option></select>
+      </div>
+      <label>素材 / SVG 元素</label><select><option>无</option><option>Open Doodles · star</option><option>从素材库选…</option></select>
+    </div>
+    <div class="card soft">
+      <label>视频引擎（这里才分岔）</label>
+      <div class="engine">
+        <label><span class="dot"></span>本地模板</label>
+        <label class="sel"><span class="dot"></span>VibeMotion 奶油纸风</label>
+      </div>
+      <label>输入方式</label><select><option>文稿 + 口播语音</option><option>现成分镜模板</option></select>
+      <div class="same">同一套结构 / 文案 / 语音 / 音乐 / 素材，喂给两个引擎。</div>
+      <div class="row" style="margin-top:14px"><button class="btn lime">生成并预览</button><button class="btn ghost">存为草稿</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- P2 引擎差异 -->
+<div class="screen">
+  <div class="kicker">UI · 02 / 引擎差异</div>
+  <h2>同一个内容，两个引擎怎么生成画面</h2>
+  <div class="diff">
+    <div class="card old">
+      <div style="display:flex;justify-content:space-between"><b>本地模板</b><span class="badge old">现有</span></div>
+      <div class="k">数据入口</div><div class="v">spec 字段</div>
+      <div class="k">页面</div><div class="v">固定 4 / 5 / 6 页</div>
+      <div class="k">动效</div><div class="v">旧背景 + 旧元素 + 半速</div>
+      <div class="k">驱动</div><div class="v">固定时间轴</div>
+      <div class="k">视觉</div><div class="v">已做品牌适配</div>
+      <div class="k">可控性</div><div class="v">白盒，很强</div>
+    </div>
+    <div class="card new">
+      <div style="display:flex;justify-content:space-between"><b>VibeMotion</b><span class="badge engine">新引擎</span></div>
+      <div class="k">数据入口</div><div class="v">TimelineDSL JSON</div>
+      <div class="k">页面</div><div class="v">16 个画面组件自由组合</div>
+      <div class="k">动效</div><div class="v">弹簧 / 镜头 / 粒子 / 手绘</div>
+      <div class="k">驱动</div><div class="v">语音时间点 stateSteps</div>
+      <div class="k">视觉</div><div class="v">奶油纸风（先锁定）</div>
+      <div class="k">可控性</div><div class="v">数据契约清晰，动效更自动</div>
+    </div>
+  </div>
+  <div class="note">区别只在“渲染这一步”；结构、文案、语音、音乐、素材完全一样。</div>
+</div>
+
+<!-- P3 视频任务 -->
+<div class="screen">
+  <div class="kicker">UI · 03 / 视频任务</div>
+  <h2>任务列表：用引擎标识区分</h2>
+  <table>
+    <tr><th>任务</th><th>引擎</th><th>本引擎参数</th><th>状态</th><th>操作</th></tr>
+    <tr>
+      <td>AI 幻觉避坑 01</td>
+      <td><span class="badge engine">VibeMotion</span></td>
+      <td>分镜：误区修正 · 语音：voiceover.wav · 20s</td>
+      <td>渲染中 64%</td>
+      <td><button class="btn ghost">取消</button></td>
+    </tr>
+    <tr>
+      <td>Token 计费 02</td>
+      <td><span class="badge old">本地模板</span></td>
+      <td>4 页 · Archive · 无语音</td>
+      <td>已通过</td>
+      <td><button class="btn ghost">预览</button></td>
+    </tr>
+    <tr>
+      <td>上下文窗口 03</td>
+      <td><span class="badge engine">VibeMotion</span></td>
+      <td>分镜：流程图 · 语音：voiceover.wav · 30s</td>
+      <td>已通过</td>
+      <td><button class="btn ghost">预览</button></td>
+    </tr>
+  </table>
+  <div class="note">审批页同样显示引擎标识；发布包不变。</div>
+</div>
+
+<!-- P4 设置 -->
+<div class="screen">
+  <div class="kicker">UI · 04 / 设置</div>
+  <h2>视频引擎设置</h2>
+  <div class="grid2">
+    <div class="card">
+      <label>渲染服务地址</label><input value="http://127.0.0.1:5001">
+      <label>默认视觉风格</label><select><option>奶油纸（锁定）</option><option>黑板报</option></select>
+      <label>默认输入方式</label><select><option>文稿 + 口播语音</option><option>现成分镜模板</option></select>
+      <label>并发数</label><input type="number" value="2">
+    </div>
+    <div class="card soft">
+      <label>默认视频引擎</label>
+      <div class="engine">
+        <label><span class="dot"></span>本地模板</label>
+        <label class="sel"><span class="dot"></span>VibeMotion 奶油纸风</label>
+      </div>
+      <div class="note">独立渲染服务：平台后端调 VibeMotion 服务出片；服务端需 Node 20 + Chrome Headless。</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

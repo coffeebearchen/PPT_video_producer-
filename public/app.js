@@ -192,6 +192,7 @@ function parseRoute() {
   if (parts[0] === 'publish') return { name: 'publish' };
   if (parts[0] === 'wechat') return { name: 'wechat', id: parts[1] || '' };
   if (parts[0] === 'batch') return { name: 'batch' };
+  if (parts[0] === 'autogen') return { name: 'autogen' };
   if (parts[0] === 'knowledge') return { name: 'knowledge' };
   if (parts[0] === 'analogies') return { name: 'analogies' };
   if (parts[0] === 'soul') return { name: 'soul' };
@@ -217,6 +218,7 @@ async function route() {
     if (state.route.name === 'publish') return await renderPublish();
     if (state.route.name === 'wechat') return await renderAccountGroupWorkspace(state.route.id);
     if (state.route.name === 'batch') return await renderBatch();
+    if (state.route.name === 'autogen') return await renderAutogen();
     if (state.route.name === 'knowledge') return await renderKnowledge();
     if (state.route.name === 'analogies') return await renderAnalogies();
     if (state.route.name === 'soul') return await renderSoul();
@@ -1462,6 +1464,98 @@ async function renderAccountGroupWorkspace(groupId = '') {
 }
 
 // ---------- knowledge ----------
+function autogenStatusChip(s) {
+  const map = { queued: ['待生成', ''], pending_confirm: ['待确认', ''], running: ['生成中', 'lime'], done: ['已完成', 'lime'], failed: ['失败', 'red'], blocked: ['已拦截', 'red'], canceled: ['已取消', ''] };
+  const [label, cls] = map[s] || [s, ''];
+  return `<span class="status ${cls}">${label}</span>`;
+}
+
+function autogenTaskRow(t) {
+  const mediaUrl = (p) => p ? `/media/${esc(p)}` : '';
+  return `<div class="autogen-row" data-id="${esc(t.id)}">
+    <div class="autogen-main">
+      <div class="autogen-title">${esc(t.title || '未命名')}</div>
+      <div class="autogen-meta"><span class="badge engine">VibeMotion</span><span>${esc(t.structure_type || 'causal')}</span><span>${Math.round((t.duration_ms||30000)/1000)}s</span>${autogenStatusChip(t.status)}</div>
+      ${t.error ? `<div class="autogen-error">${esc(t.error)}</div>` : ''}
+    </div>
+    <div class="autogen-progress"><div class="progress"><i style="width:${t.progress || 0}%"></i></div><span>${t.progress || 0}%</span></div>
+    <div class="autogen-actions">
+      ${t.status === 'done' ? `<a class="btn btn-sm" href="${mediaUrl(t.video_path)}" target="_blank" rel="noreferrer">播放</a>` : ''}
+      ${['queued','running'].includes(t.status) ? `<button class="btn btn-sm" data-action="cancel-video-task" data-id="${esc(t.id)}">取消</button>` : ''}
+      ${t.status === 'pending_confirm' ? `<button class="btn btn-sm btn-primary" data-action="confirm-video-task" data-id="${esc(t.id)}">确认并生成</button>` : ''}
+      ${['failed','blocked','canceled'].includes(t.status) ? `<button class="btn btn-sm" data-action="retry-video-task" data-id="${esc(t.id)}">重试</button>` : ''}
+    </div>
+  </div>`;
+}
+
+async function renderAutogen() {
+  setNav('autogen'); setCrumb('工作台 / 自动生成');
+  const data = await api('/api/video-tasks');
+  const tasks = data.tasks || [];
+  const c = data.counts || {};
+  const listHtml = tasks.length ? tasks.map(autogenTaskRow).join('') : '<div class="empty"><h3>还没有自动任务</h3><p>点右上角「新建自动任务」。</p></div>';
+  $('#view').innerHTML = `
+    <div class="page-head">
+      <div><p class="eyebrow">COPILOT / 自动生成</p><h1 class="page-title">题材定好，剩下的交给 AI。</h1><p class="page-sub">结构 → 文案 → 语音 → 分镜 → 渲染，全程自动；这里一屏看全部。</p></div>
+      <div class="head-actions"><button class="btn btn-primary" data-action="open-autogen">+ 新建自动任务</button></div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-label">待办</div><div class="stat-value">${c.todo || 0}</div><div class="stat-foot">等待生成</div></div>
+      <div class="stat ok"><div class="stat-label">进行中</div><div class="stat-value">${c.doing || 0}</div><div class="stat-foot">正在渲染</div></div>
+      <div class="stat blue"><div class="stat-label">已完成</div><div class="stat-value">${c.done || 0}</div><div class="stat-foot">可播放 / 可发布</div></div>
+      <div class="stat"><div class="stat-label">异常</div><div class="stat-value">${c.blocked || 0}</div><div class="stat-foot">失败 / 拦截</div></div>
+    </div>
+    <div class="card mt-16">
+      <div class="card-head"><div><h2 class="section-title">Copilot 大屏 <span class="muted tiny">${tasks.length}</span></h2><p class="section-sub">点击任务可查看；完成后直接播放。</p></div></div>
+      <div class="card-body" id="autogen-list">${listHtml}</div>
+    </div>
+  `;
+  const timer = setInterval(async () => {
+    try {
+      const d = await api('/api/video-tasks');
+      const box = $('#autogen-list');
+      if (box) box.innerHTML = (d.tasks || []).length ? (d.tasks || []).map(autogenTaskRow).join('') : '<div class="empty"><h3>还没有自动任务</h3></div>';
+    } catch {}
+  }, 3000);
+  state.pollTimers.push(timer);
+}
+
+function openAutogenNew() {
+  openModal({
+    title: '新建自动任务',
+    subtitle: '输入题材，AI 自动走完整条管线。',
+    body: `<form id="autogen-form">
+      <div class="form-grid">
+        <div class="field full"><label>标题</label><input name="title" placeholder="例如：为什么 AI 会一本正经地胡说八道" required></div>
+        <div class="field full"><label>题材 / 口播稿</label><textarea name="script" rows="4" placeholder="给一句话或一段文案"></textarea></div>
+        <div class="field"><label>结构</label><select name="structure_type"><option value="causal">因果 / 流程</option><option value="contrast">对照</option><option value="misconception">误区修正</option><option value="checklist">清单</option><option value="timeline">时间演进</option></select></div>
+        <div class="field"><label>生成模式</label><select name="mode"><option value="auto">自动：直接出片</option><option value="manual">人工：先确认分镜</option></select></div>
+        <div class="field"><label>时长（秒）</label><input name="duration_sec" type="number" value="30" min="5" max="60"></div>
+      </div>
+    </form>`,
+    foot: `<button class="btn" data-action="close-modal">取消</button><button class="btn btn-primary" type="submit" form="autogen-form">自动生成</button>`,
+    onMount: () => {
+      const form = $('#autogen-form');
+      form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(form);
+        const body = {
+          title: fd.get('title'),
+          script: fd.get('script'),
+          structure_type: fd.get('structure_type'),
+          duration_ms: (Number(fd.get('duration_sec')) || 30) * 1000,
+          engine: 'vibemotion',
+          mode: fd.get('mode') || 'auto'
+        };
+        try {
+          const task = await post('/api/video-tasks', body);
+          toast('任务已创建，开始自动生成'); closeModal(); renderAutogen();
+        } catch (err) { toast(err.message, 'error'); }
+      });
+    }
+  });
+}
+
 async function renderKnowledge(q = '') {
   setNav('knowledge'); setCrumb('工作台 / 知识库');
   const data = await api('/api/knowledge');
@@ -2176,6 +2270,18 @@ async function renderSettings() {
 
       <div class="stack">
         <div class="card">
+          <div class="card-head"><div><h2 class="section-title">视频引擎 / TTS</h2><p class="section-sub">自动生成模式使用 VibeMotion + 语音。</p></div><span class="tag lime">奶油纸 · 已锁定</span></div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="field"><label>默认视觉风格</label><select><option>奶油纸（锁定）</option><option>黑板报（后续）</option></select></div>
+              <div class="field"><label>渲染服务地址</label><input value="http://127.0.0.1:5001"></div>
+              <div class="field"><label>默认生成模式</label><select><option>自动：直接出片</option><option>人工：先确认分镜</option></select></div>
+              <div class="field"><label>TTS / 声音克隆</label><select><option>暂未接入（当前为字幕版）</option><option>火山引擎 · 声音克隆</option><option>MiniMax</option><option>讯飞</option><option>硅基流动</option></select></div>
+            </div>
+            <div class="note-box mt-12">声音克隆服务与 API 待配置；未配置时自动生成仍可用，只有字幕、无口播。</div>
+          </div>
+        </div>
+        <div class="card">
           <div class="card-head"><div><h2 class="section-title">当前模板</h2></div></div>
           <div class="card-body">
             <dl class="kv-grid">
@@ -2625,6 +2731,25 @@ document.addEventListener('click', async (e) => {
   if (el) {
     const action = el.dataset.action;
     if (action === 'new-brief') { e.preventDefault(); navigate('/create'); return; }
+    if (action === 'open-autogen') { e.preventDefault(); openAutogenNew(); return; }
+    if (action === 'cancel-video-task') {
+      e.preventDefault();
+      try { await post(`/api/video-tasks/${encodeURIComponent(el.dataset.id)}/cancel`, {}); toast('已取消'); renderAutogen(); }
+      catch (err) { toast(err.message, 'error'); }
+      return;
+    }
+    if (action === 'retry-video-task') {
+      e.preventDefault();
+      try { await post(`/api/video-tasks/${encodeURIComponent(el.dataset.id)}/retry`, {}); toast('已重新入队'); renderAutogen(); }
+      catch (err) { toast(err.message, 'error'); }
+      return;
+    }
+    if (action === 'confirm-video-task') {
+      e.preventDefault();
+      try { await post(`/api/video-tasks/${encodeURIComponent(el.dataset.id)}/confirm`, {}); toast('已确认，开始生成'); renderAutogen(); }
+      catch (err) { toast(err.message, 'error'); }
+      return;
+    }
     if (action === 'new-brief-account') { e.preventDefault(); openNewBrief(el.dataset.id || ''); return; }
     if (action === 'filter-structure') {
       e.preventDefault();
