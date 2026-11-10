@@ -11,8 +11,7 @@ import {
 } from './lib/db.mjs';
 import { generateAngles, generateSpec, llmConfigured, testLLM, draftBriefFromDirection, draftAnalogyFromNote, draftSoulFromDirection, diagnoseStructures, checkDirection, checkStructure, draftQuoteCandidates, draftElementSvg, draftAutoScript } from './lib/generator.mjs';
 import { publishWechat, testWechat } from './lib/wechat.mjs';
-import { renderVibeMotion, buildTimeline, ENGINE_DIR } from './lib/vibemotion.mjs';
-import { synthesizeSpeech, ttsConfigured } from './lib/tts.mjs';
+import { renderVibeMotion, buildTimeline, ENGINE_DIR } from './lib/vibemotion.mjs';import { synthesizeSpeech, ttsConfigured } from './lib/tts.mjs';
 import { ELEMENT_CATALOG, PALETTES, FONT_PAIRS, TEMPLATES } from './lib/element-catalog.mjs';
 import { checkCompliance } from './lib/compliance.mjs';
 import { TEMPLATE_THEMES, listTemplates, getTemplate, applyTemplatePreset } from './lib/templates.mjs';
@@ -300,9 +299,11 @@ async function processVideoTask(id) {
   const outRel = path.join('video-tasks', id);
   const outDir = path.join(MEDIA_DIR, outRel);
   try {
+    const tpl = TEMPLATES.find(t => t.templateId === task.template);
+    const style = tpl ? (PALETTES[tpl.palette] || PALETTES['cream-paper']) : PALETTES['cream-paper'];
     const res = await renderVibeMotion(taskWithVoice, outDir, (p, stage) => {
       updateVideoTask(id, { progress: p, error: '' });
-    }, timeline);
+    }, timeline, style);
     updateVideoTask(id, {
       status: 'done', progress: 100,
       video_path: outRel.replaceAll('\\', '/') + '/video.mp4',
@@ -1846,10 +1847,10 @@ async function route(req, res) {
       const structureType = String(body.structure_type || 'causal');
       const structureName = String(body.structure_name || '');
       db.prepare(`INSERT INTO video_tasks
-        (id,title,engine,mode,structure_type,structure_name,script,voice_path,voice_provider,timeline_json,palette,duration_ms,status,progress,video_path,cover_path,error,retry_count,user_id,source,created_at,updated_at)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(
+        (id,title,engine,mode,template,structure_type,structure_name,script,voice_path,voice_provider,timeline_json,palette,duration_ms,status,progress,video_path,cover_path,error,retry_count,user_id,source,created_at,updated_at)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(
         id, String(body.title || body.script.slice(0, 20)), String(body.engine || 'vibemotion'), String(body.mode || 'auto'),
-        structureType, structureName, String(body.script || body.title || ''), String(body.voice_path || ''),
+        String(body.template || ''), structureType, structureName, String(body.script || body.title || ''), String(body.voice_path || ''),
         String(body.voice_provider || ''), '', String(body.palette || 'cream'), Math.max(5000, Number(body.duration_ms) || 30000),
         'queued', 0, '', '', '', 0, String(body.user_id || ''), String(body.source || 'autogen'), t, t
       );
