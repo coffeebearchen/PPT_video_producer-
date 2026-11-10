@@ -193,7 +193,7 @@ export const Video: React.FC = () => {
         </SceneStartContext.Provider>
       </div>
 
-      {(props as any)?.hideDecor ? null : <SceneDecor />}
+      {(props as any)?.hideDecor || (props as any)?.density === 'simple' ? null : <SceneDecor />}
 
       {/* 手绘小配件层（由场景 props.decor 驱动） */}
       {Array.isArray((props as any)?.decor) ? (
@@ -217,7 +217,7 @@ export const Video: React.FC = () => {
 
       <SubtitleTrack subtitles={DSL.subtitles} palette={palette} />
       {sceneIndex === DSL.scenes.length - 1 ? (
-        <div style={{position: 'absolute', right: 112, bottom: 206, color: palette.ink, fontSize: 26, fontFamily: 'sans-serif', opacity: 0.72}}>有问题，评论区问</div>
+        <div style={{position: 'absolute', right: 112, bottom: 206, color: palette.ink, fontSize: 26, fontFamily: 'LXGW WenKai', opacity: 0.72}}>有问题，评论区问</div>
       ) : null}
 
       {DSL.audioTracks.masterVoiceover ? (
