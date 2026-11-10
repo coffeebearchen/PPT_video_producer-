@@ -1,0 +1,25 @@
+{
+  "name": "vibemotion-renderer",
+  "private": true,
+  "version": "1.0.0",
+  "description": "VibeMotion Engine — 音频驱动 / TimelineDSL 驱动的 Remotion 渲染引擎",
+  "scripts": {
+    "dev": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts VibeMotion out/master.mp4",
+    "still": "remotion still src/index.ts VibeMotion out/still.png"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.542",
+    "@remotion/lottie": "^4.0.542",
+    "lottie-web": "^5.13.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "remotion": "4.0.542",
+    "roughjs": "^4.6.6"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "typescript": "5.9.3"
+  }
+}

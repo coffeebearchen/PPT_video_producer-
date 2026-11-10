@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>VibeMotion 配色设置</title>
+<style>
+  :root { color-scheme: dark; }
+  body {
+    margin: 0; padding: 32px; background: #1b1b1b; color: #fdfdff;
+    font-family: "ZCOOL KuaiLe", "Microsoft YaHei", system-ui, sans-serif;
+  }
+  h1 { font-size: 24px; margin: 0 0 6px; font-weight: 400; }
+  p.hint { color: #8a8a80; font-size: 13px; margin: 0 0 24px; line-height: 1.7; }
+  .grid { display: grid; grid-template-columns: 220px 1fr 90px; gap: 14px 18px; align-items: center; max-width: 720px; }
+  .label { font-size: 16px; }
+  .label small { color: #8a8a80; font-size: 12px; margin-left: 6px; }
+  input[type="color"] { width: 100%; height: 42px; border: none; background: none; padding: 0; cursor: pointer; }
+  .swatch { height: 42px; border-radius: 8px; border: 1px solid #3a3a3a; }
+  .preview {
+    margin-top: 28px; padding: 22px; border-radius: 12px;
+    border: 1px solid #3a3a3a; max-width: 720px; position: relative; overflow: hidden;
+  }
+  .preview .box { display: inline-block; padding: 10px 18px; border-radius: 10px; border: 2px solid; margin-right: 10px; }
+  .btns { margin-top: 24px; display: flex; gap: 12px; }
+  button {
+    font-family: inherit; font-size: 15px; padding: 10px 20px; border-radius: 10px;
+    border: 1px solid #e2be5c; background: #e2be5c22; color: #fdfdff; cursor: pointer;
+  }
+  button:hover { background: #e2be5c44; }
+  textarea { width: 100%; max-width: 720px; height: 150px; margin-top: 16px; background: #111; color: #ddd;
+    border: 1px solid #333; border-radius: 8px; padding: 10px; font-family: monospace; font-size: 12px; }
+</style>
+</head>
+<body>
+  <h1>VibeMotion · 配色设置</h1>
+  <p class="hint">
+    调好后点「下载 style.settings.json」，用它覆盖 <code>03_renderer/style.settings.json</code>，重新渲染即生效。<br>
+    颜色对应：背景 / 文字 / 金色重点 / 灰绿描边 / 珊瑚红 / 琥珀 / 弱化灰。
+  </p>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="preview" id="preview">
+    <div style="margin-bottom:12px;font-size:22px">标题文字 · 看得清才叫字号</div>
+    <div class="box" id="pGold">金色重点</div>
+    <div class="box" id="pSage">灰绿描边</div>
+    <div class="box" id="pCoral">珊瑚红</div>
+  </div>
+
+  <div class="btns">
+    <button onclick="download()">下载 style.settings.json</button>
+    <button onclick="copyJson()">复制 JSON</button>
+  </div>
+  <textarea id="out" readonly></textarea>
+
+<script>
+const KEYS = [
+  ["bg", "背景", "#282828"],
+  ["ink", "文字", "#FDFDFB"],
+  ["gold", "金色重点", "#E2BE5C"],
+  ["sage", "灰绿描边", "#8A918B"],
+  ["coral", "珊瑚红", "#EA3E4A"],
+  ["amber", "琥珀", "#D9A24E"],
+  ["muted", "弱化灰", "#8A8A80"],
+];
+const state = {};
+const grid = document.getElementById("grid");
+KEYS.forEach(([k, label, def]) => {
+  state[k] = def;
+  const row = document.createElement("div");
+  row.style.display = "contents";
+  const lab = document.createElement("div");
+  lab.className = "label";
+  lab.innerHTML = label + " <small>" + k + "</small>";
+  const inp = document.createElement("input");
+  inp.type = "color"; inp.value = def;
+  const sw = document.createElement("div");
+  sw.className = "swatch"; sw.style.background = def;
+  inp.addEventListener("input", () => {
+    state[k] = inp.value; sw.style.background = inp.value; render();
+  });
+  row.appendChild(lab); row.appendChild(inp); row.appendChild(sw);
+  grid.appendChild(row);
+});
+
+function render() {
+  const p = document.getElementById("preview");
+  p.style.background = state.bg;
+  p.style.color = state.ink;
+  document.getElementById("pGold").style.borderColor = state.gold;
+  document.getElementById("pGold").style.color = state.gold;
+  document.getElementById("pSage").style.borderColor = state.sage;
+  document.getElementById("pSage").style.color = state.sage;
+  document.getElementById("pCoral").style.borderColor = state.coral;
+  document.getElementById("pCoral").style.color = state.coral;
+  document.getElementById("out").value = json();
+}
+function json() {
+  return JSON.stringify({ colors: state, notes: "VibeMotion 配色" }, null, 2);
+}
+function download() {
+  const blob = new Blob([json()], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "style.settings.json";
+  a.click(); URL.revokeObjectURL(a.href);
+}
+function copyJson() {
+  navigator.clipboard.writeText(json());
+  alert("已复制，粘贴覆盖 03_renderer/style.settings.json 即可");
+}
+render();
+</script>
+</body>
+</html>

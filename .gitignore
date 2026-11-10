@@ -32,4 +32,5 @@ renderer/**/.chrome-profile*/
 data/
 **/.chrome-profile/
 **/*.pma
-engines/
+engines/vibemotion/renderer/src/data/timeline_dsl.json
+engines/vibemotion/renderer/public/audio/*.mp3
