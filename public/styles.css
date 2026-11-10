@@ -1220,3 +1220,8 @@ input::placeholder, textarea::placeholder { color: #B2A897; }
 .asset-thumb { height:180px; display:flex; align-items:center; justify-content:center; background:#F7F4EC; }
 .asset-thumb img { max-width:100%; max-height:100%; object-fit:contain; }
 .asset-meta { display:flex; align-items:center; justify-content:space-between; padding:8px 10px; font-size:12px; }
+
+.voice-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 0; border-top:1px solid var(--line); }
+.voice-row:first-child { border-top:0; }
+.voice-main { flex:1; min-width:0; }
+.voice-name { font-size:13px; font-weight:700; }

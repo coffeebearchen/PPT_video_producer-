@@ -1900,6 +1900,34 @@ async function route(req, res) {
       try { fonts = Object.keys(JSON.parse(fs.readFileSync(fontsFile, 'utf8'))); } catch {}
       return send(res, 200, { fonts });
     }
+    if (method === 'GET' && p === '/api/voice-assets') {
+      const rows = db.prepare("SELECT * FROM media_assets WHERE category='voice' ORDER BY created_at DESC").all();
+      return send(res, 200, { assets: rows });
+    }
+    if (method === 'POST' && p === '/api/voice-assets') {
+      const body = await readBody(req);
+      if (!body.data) return fail(res, 400, '缺少音频数据');
+      const id = newId('voice');
+      const ext = (body.mime || '').includes('wav') ? 'wav' : 'mp3';
+      const dir = path.join(MEDIA_DIR, 'voice-assets');
+      fs.mkdirSync(dir, { recursive: true });
+      const file = `${id}.${ext}`;
+      fs.writeFileSync(path.join(dir, file), Buffer.from(String(body.data).replace(/^data:[^;]+;base64,/, ''), 'base64'));
+      const t = now();
+      db.prepare('INSERT INTO media_assets (id,name,category,mime,path,created_at) VALUES (?,?,?,?,?,?)')
+        .run(id, String(body.name || id), 'voice', String(body.mime || 'audio/mpeg'), 'voice-assets/' + file, t);
+      return send(res, 201, db.prepare('SELECT * FROM media_assets WHERE id=?').get(id));
+    }
+    if (method === 'POST' && /^\/api\/voice-assets\/[^/]+\/delete$/.test(p)) {
+      const id = p.split('/')[3];
+      const row = db.prepare("SELECT * FROM media_assets WHERE id=? AND category='voice'").get(id);
+      if (!row) return fail(res, 404, '声音不存在');
+      const full = path.join(MEDIA_DIR, row.path);
+      if (fs.existsSync(full)) { try { fs.unlinkSync(full); } catch {} }
+      db.prepare('DELETE FROM media_assets WHERE id=?').run(id);
+      return send(res, 200, { ok: true });
+    }
+
     if (method === 'GET' && p === '/api/media-assets') {
       const rows = db.prepare('SELECT * FROM media_assets ORDER BY created_at DESC').all();
       return send(res, 200, { assets: rows });

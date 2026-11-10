@@ -185,6 +185,7 @@ function parseRoute() {
   if (parts[0] === 'create') return { name: 'create' };
   if (parts[0] === 'library') return { name: 'library' };
   if (parts[0] === 'assets') return { name: 'assets' };
+  if (parts[0] === 'voices') return { name: 'voices' };
   if (parts[0] === 'music') return { name: 'music' };
   if (parts[0] === 'templates') return { name: 'templates' };
   if (parts[0] === 'elements') return { name: 'elements' };
@@ -212,6 +213,7 @@ async function route() {
     if (state.route.name === 'brief') return await renderBrief(state.route.id);
     if (state.route.name === 'library') return await renderLibrary();
     if (state.route.name === 'assets') return await renderAssets();
+    if (state.route.name === 'voices') return await renderVoices();
     if (state.route.name === 'music') return await renderMusic();
     if (state.route.name === 'templates') return await renderTemplates();
     if (state.route.name === 'elements') return await renderElements();
@@ -1601,6 +1603,50 @@ function openAssetUpload() {
   });
 }
 
+async function renderVoices() {
+  setNav('voices'); setCrumb('工作台 / 声音');
+  const data = await api('/api/voice-assets').catch(() => ({ assets: [] }));
+  const assets = data.assets || [];
+  const list = assets.length ? assets.map(a => `
+    <div class="voice-row">
+      <div class="voice-main"><div class="voice-name">${esc(a.name)}</div><audio controls src="/media/${esc(a.path)}" style="height:32px;margin-top:4px"></audio></div>
+      <button class="btn btn-sm" data-action="delete-voice" data-id="${esc(a.id)}">删除</button>
+    </div>`).join('') : '<div class="empty"><h3>还没有声音样本</h3><p>上传你的声音 1 / 2 / 3 / 4 段，用于声音克隆。</p></div>';
+  $('#view').innerHTML = `
+    <div class="page-head">
+      <div><p class="eyebrow">VOICE / 声音</p><h1 class="page-title">上传你的声音样本。</h1><p class="page-sub">用于声音克隆：干净、无背景音乐，每段 10–30 秒，wav / mp3。</p></div>
+      <div class="head-actions"><button class="btn btn-primary" data-action="open-voice-upload">+ 上传声音</button></div>
+    </div>
+    <div class="card mt-16"><div class="card-body">${list}</div></div>
+    <div class="note-box mt-12">克隆服务在「设置 → 视频引擎 / TTS」里填 API Key 和音色 ID；填好后，出片就用你的声音。</div>
+  `;
+}
+
+function openVoiceUpload() {
+  openModal({
+    title: '上传声音样本',
+    body: `<form id="voice-upload-form">
+      <div class="field"><label>名称</label><input name="name" placeholder="例如：我的声音-1"></div>
+      <div class="field"><label>音频文件（wav / mp3）</label><input name="file" type="file" accept="audio/*" required></div>
+    </form>`,
+    foot: `<button class="btn" data-action="close-modal">取消</button><button class="btn btn-primary" type="submit" form="voice-upload-form">上传</button>`,
+    onMount: () => {
+      const form = $('#voice-upload-form');
+      form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(form);
+        const file = fd.get('file');
+        if (!file || !file.size) { toast('请选择音频', 'error'); return; }
+        const dataUrl = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); });
+        try {
+          await post('/api/voice-assets', { name: fd.get('name') || file.name, mime: file.type, data: dataUrl });
+          toast('已上传'); closeModal(); renderVoices();
+        } catch (err) { toast(err.message, 'error'); }
+      });
+    }
+  });
+}
+
 async function renderKnowledge(q = '') {
   setNav('knowledge'); setCrumb('工作台 / 知识库');
   const data = await api('/api/knowledge');
@@ -2789,6 +2835,14 @@ document.addEventListener('click', async (e) => {
     if (action === 'new-brief') { e.preventDefault(); navigate('/create'); return; }
     if (action === 'open-autogen') { e.preventDefault(); openAutogenNew(); return; }
     if (action === 'open-asset-upload') { e.preventDefault(); openAssetUpload(); return; }
+    if (action === 'open-voice-upload') { e.preventDefault(); openVoiceUpload(); return; }
+    if (action === 'delete-voice') {
+      e.preventDefault();
+      if (!confirm('删除这段声音？')) return;
+      try { await post(`/api/voice-assets/${encodeURIComponent(el.dataset.id)}/delete`, {}); toast('已删除'); renderVoices(); }
+      catch (err) { toast(err.message, 'error'); }
+      return;
+    }
     if (action === 'delete-asset') {
       e.preventDefault();
       if (!confirm('删除这张素材？')) return;
