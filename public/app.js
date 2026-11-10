@@ -1510,6 +1510,7 @@ async function renderAutogen() {
           <div class="form-grid">
             <div class="field full"><label>标题</label><input name="title" placeholder="例如：为什么 AI 会一本正经地胡说八道"></div>
             <div class="field full"><label>文案 / 口播稿</label><textarea name="script" id="workbench-script" rows="4" placeholder="留空可让 AI 自动写"></textarea></div>
+            <div class="field"><label>讲解风格</label><select name="style"><option value="industrial">严谨工业风</option><option value="clean">简洁风格</option><option value="dynamic">活泼动感风</option></select></div>
             <div class="field"><label>结构</label><select name="structure_type"><option value="causal">因果 / 流程</option><option value="contrast">对照</option><option value="misconception">误区修正</option><option value="checklist">清单</option><option value="timeline">时间演进</option></select></div>
             <div class="field"><label>时长（秒）</label><input name="duration_sec" type="number" value="30" min="5" max="60"></div>
             <div class="field"><label>模式</label><select name="mode"><option value="auto">自动：直接出片</option><option value="manual">人工：先确认分镜</option></select></div>
@@ -1540,6 +1541,7 @@ async function renderAutogen() {
       title: fd.get('title'),
       script: fd.get('script'),
       structure_type: fd.get('structure_type'),
+      style: fd.get('style') || 'industrial',
       duration_ms: (Number(fd.get('duration_sec')) || 30) * 1000,
       engine: 'vibemotion',
       mode: fd.get('mode') || 'auto'
@@ -1568,6 +1570,7 @@ async function openEditVideoTask(id) {
       <div class="form-grid">
         <div class="field full"><label>标题</label><input name="title" value="${esc(t.title || '')}"></div>
         <div class="field full"><label>文案 / 口播稿</label><textarea name="script" rows="4">${esc(t.script || '')}</textarea></div>
+        <div class="field"><label>讲解风格</label><select name="style"><option value="industrial" ${t.style==='industrial'?'selected':''}>严谨工业风</option><option value="clean" ${t.style==='clean'?'selected':''}>简洁风格</option><option value="dynamic" ${t.style==='dynamic'?'selected':''}>活泼动感风</option></select></div>
         <div class="field"><label>结构</label><select name="structure_type"><option value="causal" ${t.structure_type==='causal'?'selected':''}>因果 / 流程</option><option value="contrast" ${t.structure_type==='contrast'?'selected':''}>对照</option><option value="misconception" ${t.structure_type==='misconception'?'selected':''}>误区修正</option><option value="checklist" ${t.structure_type==='checklist'?'selected':''}>清单</option><option value="timeline" ${t.structure_type==='timeline'?'selected':''}>时间演进</option></select></div>
         <div class="field"><label>时长（秒）</label><input name="duration_sec" type="number" value="${Math.round((t.duration_ms||30000)/1000)}" min="5" max="60"></div>
       </div>
@@ -1579,7 +1582,7 @@ async function openEditVideoTask(id) {
         e.preventDefault();
         const fd = new FormData(form);
         const body = {
-          title: fd.get('title'), script: fd.get('script'), structure_type: fd.get('structure_type'),
+          title: fd.get('title'), script: fd.get('script'), structure_type: fd.get('structure_type'), style: fd.get('style') || 'industrial',
           duration_ms: (Number(fd.get('duration_sec')) || 30) * 1000
         };
         try { await put(`/api/video-tasks/${encodeURIComponent(id)}`, body); toast('已保存，重新生成中'); closeModal(); renderAutogen(); }

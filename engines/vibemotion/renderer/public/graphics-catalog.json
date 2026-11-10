@@ -1,0 +1,459 @@
+{
+  "version": "1.0",
+  "styles": [
+    "industrial",
+    "clean",
+    "dynamic"
+  ],
+  "stylePresets": {
+    "industrial": {
+      "label": "严谨工业风",
+      "bg": "#0B1210",
+      "surface": "#111A16",
+      "ink": "#ECF0E4",
+      "muted": "#A4B0A6",
+      "primary": "#AEC56B",
+      "accent": "#D99C4A",
+      "line": "#3F5145",
+      "heading": "LXGW WenKai",
+      "radius": 4,
+      "density": "standard",
+      "motion": "precise-reveal",
+      "decor": "grid+hatch",
+      "fonts": {
+        "heading": "LXGW WenKai",
+        "body": "LXGW WenKai"
+      }
+    },
+    "clean": {
+      "label": "简洁风格",
+      "bg": "#F4F1E9",
+      "surface": "#FBFAF6",
+      "ink": "#253B34",
+      "muted": "#62766B",
+      "primary": "#497F70",
+      "accent": "#BD713E",
+      "line": "#B8C6BA",
+      "heading": "LXGW WenKai",
+      "radius": 20,
+      "density": "simple",
+      "motion": "precise-reveal",
+      "decor": "illustration+geometry",
+      "fonts": {
+        "heading": "LXGW WenKai",
+        "body": "LXGW WenKai"
+      }
+    },
+    "dynamic": {
+      "label": "活泼动感风",
+      "bg": "#122C2B",
+      "surface": "#1E3B37",
+      "ink": "#F5EFD9",
+      "muted": "#ADC7BA",
+      "primary": "#D7DC78",
+      "accent": "#F29B70",
+      "line": "#527B6F",
+      "heading": "ZCOOL KuaiLe",
+      "radius": 24,
+      "density": "standard",
+      "motion": "directed-flow",
+      "decor": "flow+trail",
+      "fonts": {
+        "heading": "ZCOOL KuaiLe",
+        "body": "LXGW WenKai"
+      }
+    }
+  },
+  "items": [
+    {
+      "id": "process-flow",
+      "family": "process",
+      "kind": "flow",
+      "label": "流程",
+      "preview": "gallery/round4/process-flow.png",
+      "component": "ProcessDiagram"
+    },
+    {
+      "id": "process-swimlane",
+      "family": "process",
+      "kind": "swimlane",
+      "label": "泳道",
+      "preview": "gallery/round4/process-swimlane.png",
+      "component": "ProcessDiagram"
+    },
+    {
+      "id": "process-causal",
+      "family": "process",
+      "kind": "causal",
+      "label": "因果链",
+      "preview": "gallery/round4/process-causal.png",
+      "component": "ProcessDiagram"
+    },
+    {
+      "id": "process-cycle",
+      "family": "process",
+      "kind": "cycle",
+      "label": "循环",
+      "preview": "gallery/round4/process-cycle.png",
+      "component": "ProcessDiagram"
+    },
+    {
+      "id": "process-branch",
+      "family": "process",
+      "kind": "branch",
+      "label": "分支",
+      "preview": "gallery/round4/process-branch.png",
+      "component": "ProcessDiagram"
+    },
+    {
+      "id": "process-tree",
+      "family": "process",
+      "kind": "tree",
+      "label": "树形",
+      "preview": "gallery/round4/process-tree.png",
+      "component": "ProcessDiagram"
+    },
+    {
+      "id": "process-matrix",
+      "family": "process",
+      "kind": "matrix",
+      "label": "矩阵",
+      "preview": "gallery/round4/process-matrix.png",
+      "component": "ProcessDiagram"
+    },
+    {
+      "id": "process-pyramid",
+      "family": "process",
+      "kind": "pyramid",
+      "label": "金字塔",
+      "preview": "gallery/round4/process-pyramid.png",
+      "component": "ProcessDiagram"
+    },
+    {
+      "id": "process-hub",
+      "family": "process",
+      "kind": "hub",
+      "label": "中心辐射",
+      "preview": "gallery/round4/process-hub.png",
+      "component": "ProcessDiagram"
+    },
+    {
+      "id": "process-layers",
+      "family": "process",
+      "kind": "layers",
+      "label": "层级",
+      "preview": "gallery/round4/process-layers.png",
+      "component": "ProcessDiagram"
+    },
+    {
+      "id": "process-funnel",
+      "family": "process",
+      "kind": "funnel",
+      "label": "漏斗",
+      "preview": "gallery/round4/process-funnel.png",
+      "component": "ProcessDiagram"
+    },
+    {
+      "id": "shape-triangle",
+      "family": "shape",
+      "kind": "triangle",
+      "label": "三角形",
+      "preview": "gallery/round4/shape-triangle.png",
+      "component": "Shape"
+    },
+    {
+      "id": "shape-circle",
+      "family": "shape",
+      "kind": "circle",
+      "label": "圆形",
+      "preview": "gallery/round4/shape-circle.png",
+      "component": "Shape"
+    },
+    {
+      "id": "shape-square",
+      "family": "shape",
+      "kind": "square",
+      "label": "方形",
+      "preview": "gallery/round4/shape-square.png",
+      "component": "Shape"
+    },
+    {
+      "id": "shape-diamond",
+      "family": "shape",
+      "kind": "diamond",
+      "label": "菱形",
+      "preview": "gallery/round4/shape-diamond.png",
+      "component": "Shape"
+    },
+    {
+      "id": "shape-hexagon",
+      "family": "shape",
+      "kind": "hexagon",
+      "label": "六边形",
+      "preview": "gallery/round4/shape-hexagon.png",
+      "component": "Shape"
+    },
+    {
+      "id": "shape-polygon",
+      "family": "shape",
+      "kind": "polygon",
+      "label": "多边形",
+      "preview": "gallery/round4/shape-polygon.png",
+      "component": "Shape"
+    },
+    {
+      "id": "shape-arrow",
+      "family": "shape",
+      "kind": "arrow",
+      "label": "箭头",
+      "preview": "gallery/round4/shape-arrow.png",
+      "component": "Shape"
+    },
+    {
+      "id": "shape-bracket",
+      "family": "shape",
+      "kind": "bracket",
+      "label": "括号",
+      "preview": "gallery/round4/shape-bracket.png",
+      "component": "Shape"
+    },
+    {
+      "id": "shape-gear",
+      "family": "shape",
+      "kind": "gear",
+      "label": "齿轮",
+      "preview": "gallery/round4/shape-gear.png",
+      "component": "Shape"
+    },
+    {
+      "id": "shape-star",
+      "family": "shape",
+      "kind": "star",
+      "label": "星形",
+      "preview": "gallery/round4/shape-star.png",
+      "component": "Shape"
+    },
+    {
+      "id": "shape-flag",
+      "family": "shape",
+      "kind": "flag",
+      "label": "旗帜",
+      "preview": "gallery/round4/shape-flag.png",
+      "component": "Shape"
+    },
+    {
+      "id": "shape-tag",
+      "family": "shape",
+      "kind": "tag",
+      "label": "标签角",
+      "preview": "gallery/round4/shape-tag.png",
+      "component": "Shape"
+    },
+    {
+      "id": "chart-radar",
+      "family": "chart",
+      "kind": "radar",
+      "label": "雷达图",
+      "preview": "gallery/round4/chart-radar.png",
+      "component": "AdvancedChart"
+    },
+    {
+      "id": "chart-scatter",
+      "family": "chart",
+      "kind": "scatter",
+      "label": "散点图",
+      "preview": "gallery/round4/chart-scatter.png",
+      "component": "AdvancedChart"
+    },
+    {
+      "id": "chart-gauge",
+      "family": "chart",
+      "kind": "gauge",
+      "label": "仪表",
+      "preview": "gallery/round4/chart-gauge.png",
+      "component": "AdvancedChart"
+    },
+    {
+      "id": "chart-funnel",
+      "family": "chart",
+      "kind": "funnel",
+      "label": "漏斗",
+      "preview": "gallery/round4/chart-funnel.png",
+      "component": "AdvancedChart"
+    },
+    {
+      "id": "chart-heatmap",
+      "family": "chart",
+      "kind": "heatmap",
+      "label": "热力图",
+      "preview": "gallery/round4/chart-heatmap.png",
+      "component": "AdvancedChart"
+    },
+    {
+      "id": "chart-ring",
+      "family": "chart",
+      "kind": "ring",
+      "label": "进度环",
+      "preview": "gallery/round4/chart-ring.png",
+      "component": "AdvancedChart"
+    },
+    {
+      "id": "decor-flow",
+      "family": "decor",
+      "kind": "flow",
+      "label": "流程",
+      "preview": "gallery/round4/decor-flow.png",
+      "component": "Ornament"
+    },
+    {
+      "id": "decor-trail",
+      "family": "decor",
+      "kind": "trail",
+      "label": "轨迹",
+      "preview": "gallery/round4/decor-trail.png",
+      "component": "Ornament"
+    },
+    {
+      "id": "decor-particle",
+      "family": "decor",
+      "kind": "particle",
+      "label": "粒子流",
+      "preview": "gallery/round4/decor-particle.png",
+      "component": "Ornament"
+    },
+    {
+      "id": "decor-beam",
+      "family": "decor",
+      "kind": "beam",
+      "label": "光束",
+      "preview": "gallery/round4/decor-beam.png",
+      "component": "Ornament"
+    },
+    {
+      "id": "decor-ripple",
+      "family": "decor",
+      "kind": "ripple",
+      "label": "波纹",
+      "preview": "gallery/round4/decor-ripple.png",
+      "component": "Ornament"
+    },
+    {
+      "id": "decor-dots",
+      "family": "decor",
+      "kind": "dots",
+      "label": "点阵",
+      "preview": "gallery/round4/decor-dots.png",
+      "component": "Ornament"
+    },
+    {
+      "id": "decor-hatch",
+      "family": "decor",
+      "kind": "hatch",
+      "label": "斜纹",
+      "preview": "gallery/round4/decor-hatch.png",
+      "component": "Ornament"
+    },
+    {
+      "id": "decor-geometry",
+      "family": "decor",
+      "kind": "geometry",
+      "label": "几何纹样",
+      "preview": "gallery/round4/decor-geometry.png",
+      "component": "Ornament"
+    },
+    {
+      "id": "decor-corner",
+      "family": "decor",
+      "kind": "corner",
+      "label": "角标",
+      "preview": "gallery/round4/decor-corner.png",
+      "component": "Ornament"
+    },
+    {
+      "id": "icon-person",
+      "family": "icon",
+      "kind": "person",
+      "label": "人物",
+      "preview": "gallery/round4/icon-person.png",
+      "component": "Icon"
+    },
+    {
+      "id": "icon-money",
+      "family": "icon",
+      "kind": "money",
+      "label": "金额",
+      "preview": "gallery/round4/icon-money.png",
+      "component": "Icon"
+    },
+    {
+      "id": "icon-time",
+      "family": "icon",
+      "kind": "time",
+      "label": "计时",
+      "preview": "gallery/round4/icon-time.png",
+      "component": "Icon"
+    },
+    {
+      "id": "icon-warning",
+      "family": "icon",
+      "kind": "warning",
+      "label": "警告",
+      "preview": "gallery/round4/icon-warning.png",
+      "component": "Icon"
+    },
+    {
+      "id": "icon-check",
+      "family": "icon",
+      "kind": "check",
+      "label": "对勾",
+      "preview": "gallery/round4/icon-check.png",
+      "component": "Icon"
+    },
+    {
+      "id": "icon-clock",
+      "family": "icon",
+      "kind": "clock",
+      "label": "时钟",
+      "preview": "gallery/round4/icon-clock.png",
+      "component": "Icon"
+    },
+    {
+      "id": "icon-gear",
+      "family": "icon",
+      "kind": "gear",
+      "label": "齿轮",
+      "preview": "gallery/round4/icon-gear.png",
+      "component": "Icon"
+    }
+  ],
+  "props": {
+    "shared": {
+      "kind": "catalog kind",
+      "style": "industrial | clean | dynamic",
+      "progress": "0..1",
+      "active": "current index"
+    },
+    "chart": {
+      "values": "0..100 number[]",
+      "labels": "string[]",
+      "points": "scatter: {x,y}[] in 0..100"
+    },
+    "process": {
+      "labels": "short labels: cycle up to 6; tree/hub up to 5; branch 3; other layouts up to 4"
+    },
+    "shape": {
+      "color": "CSS color",
+      "fill": "CSS fill",
+      "size": "pixels"
+    },
+    "decor": {
+      "enabled": "boolean"
+    },
+    "note": "所有默认数据为示意；来源字段由调用方传入。图库可显示组件名称，成片不显示。"
+  },
+  "integration": {
+    "componentName": "GraphicScene",
+    "projectStyle": "projectMeta.style",
+    "sceneStyle": "initialProps.style overrides projectMeta.style"
+  }
+}

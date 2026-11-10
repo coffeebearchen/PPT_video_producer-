@@ -11,6 +11,7 @@ export type SfxType =
 
 export type ComponentName =
   | 'ChalkBoard'
+  | 'GraphicScene'
   | 'ComparisonSplitCard'
   | 'ConcurrentDashboard'
   | 'DualRoleVideoSync'
@@ -77,6 +78,7 @@ export interface ThemePalette {
 export interface TimelineDSL {
   version: '1.0';
   projectMeta: {
+    style?: 'industrial' | 'clean' | 'dynamic';
     title: string;
     width: number;
     height: number;

@@ -1,5 +1,6 @@
 import React from 'react';
 import {ChalkBoard} from '../components/ChalkBoard';
+import {GraphicScene} from '../graphics/GraphicScene';
 import type {ComponentName} from '../types';
 import {ComparisonSplitCard} from '../components/ComparisonSplitCard';
 import {ConcurrentDashboard} from '../components/ConcurrentDashboard';
@@ -22,6 +23,7 @@ import {Placeholder} from '../components/Placeholder';
 // 组件注册表：timeline_dsl.json 的 componentName → React 组件
 export const REGISTRY: Partial<Record<ComponentName, React.FC<any>>> = {
   ChalkBoard,
+  GraphicScene,
   ComparisonSplitCard,
   ConcurrentDashboard,
   DualRoleVideoSync,

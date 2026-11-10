@@ -10,6 +10,7 @@ import {resolveComponent} from './engine/registry';
 import {SceneStartContext} from './engine/sceneContext';
 import {DEFAULT_PALETTE} from './engine/tokens';
 import {DoodleLayer, type DoodleItem} from './components/Doodle';
+import {styleTokens} from './graphics/styles';
 
 const DSL = timeline as TimelineDSL;
 
@@ -189,7 +190,7 @@ export const Video: React.FC = () => {
 
       <div style={sceneStyle}>
         <SceneStartContext.Provider value={startFrame}>
-          <CameraRig camera={cam}>{Comp ? <Comp {...(props as any)} /> : null}</CameraRig>
+          <CameraRig camera={cam}>{Comp ? <Comp {...(props as any)} {...(scene.componentName==='GraphicScene'?{style:(props as any).style??DSL.projectMeta.style??'industrial'}:{})} /> : null}</CameraRig>
         </SceneStartContext.Provider>
       </div>
 
@@ -217,7 +218,7 @@ export const Video: React.FC = () => {
 
       <SubtitleTrack subtitles={DSL.subtitles} palette={palette} />
       {sceneIndex === DSL.scenes.length - 1 ? (
-        <div style={{position: 'absolute', right: 112, bottom: 206, color: '#F1E5B1', fontSize: 26, fontFamily: 'LXGW WenKai', opacity: 0.72}}>有问题，评论区问</div>
+        <div style={{position: 'absolute', right: 112, bottom: 206, color: scene.componentName==='GraphicScene'?styleTokens((props as any).style??DSL.projectMeta.style??'industrial').muted:'#F1E5B1', fontSize: 26, fontFamily: 'LXGW WenKai', opacity: 0.72}}>有问题，评论区问</div>
       ) : null}
 
       {DSL.audioTracks.masterVoiceover ? (
