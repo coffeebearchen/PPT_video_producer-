@@ -62,7 +62,7 @@ const media = (p) => p ? ('/' + String(p).replace(/^\/+/, '')) : '';
 const statusLabel = (s) => STATUS_LABELS[s] || s || '—';
 const statusChip = (s) => `<span class="status status-${esc(s)}">${esc(statusLabel(s))}</span>`;
 const engineLabel = (e) => e === 'vibemotion' ? 'VibeMotion' : '模板';
-const modeLabel = (m) => (m === 'fixed' ? '固定页式' : (m === 'manual' ? '人工' : '讲解式'));
+const modeLabel = (m) => (m === 'fixed' ? '固定页式' : m === 'courseware' ? '课件式' : (m === 'manual' ? '人工' : '讲解式'));
 const libStatusChip = (r) => r.engine === 'vibemotion' ? statusChip(r.status) : statusChip(r.brief_status);
 const fmtDate = (iso) => {
   if (!iso) return '—';
@@ -200,6 +200,7 @@ function parseRoute() {
   if (parts[0] === 'channels') return { name: 'channels' };
   if (parts[0] === 'batch') return { name: 'batch' };
   if (parts[0] === 'autogen') return { name: 'autogen' };
+  if (parts[0] === 'courseware' && parts[1]) return { name: 'courseware', id: parts[1] };
   if (parts[0] === 'knowledge') return { name: 'knowledge' };
   if (parts[0] === 'analogies') return { name: 'analogies' };
   if (parts[0] === 'soul') return { name: 'soul' };
@@ -211,6 +212,8 @@ async function route() {
   clearPolls();
   state.route = parseRoute();
   refreshBadges();
+  const cwBack = document.getElementById('cw-back-btn');
+  if (cwBack) cwBack.hidden = state.route.name !== 'courseware';
   try {
     if (state.route.name === 'dashboard') return await renderDashboard();
     if (state.route.name === 'create') return await renderCreate();
@@ -230,6 +233,7 @@ async function route() {
     if (state.route.name === 'batch') return await renderBatch();
     if (state.route.name === 'workbench') return await renderWorkbench();
     if (state.route.name === 'autogen') return await renderAutogen();
+    if (state.route.name === 'courseware') return await renderCoursewareEditor(state.route.id);
     if (state.route.name === 'knowledge') return await renderKnowledge();
     if (state.route.name === 'analogies') return await renderAnalogies();
     if (state.route.name === 'soul') return await renderSoul();
@@ -1574,7 +1578,7 @@ async function renderAutogen() {
   const listHtml = tasks.length ? tasks.map(autogenTaskRow).join('') : '<div class="empty"><h3>还没有任务</h3><p>在下面填好题材，点「自动生成」。</p></div>';
   $('#view').innerHTML = `
     <div class="page-head">
-      <div><p class="eyebrow">WORKBENCH / 视频工作台</p><h1 class="page-title">一条视频，一个界面。</h1><p class="page-sub">默认全自动；需要时让 AI 帮写文案，人也能随时改。</p></div>
+      <div><p class="eyebrow">WORKBENCH / 视频工作台</p><h1 class="page-title">一条视频，一个界面。</h1><p class="page-sub">默认全自动；需要时让 AI 帮写文案，人也能随时改。 <span class="tag lime">v233 · 课件式已接入</span></p></div>
     </div>
     <div class="card">
       <div class="card-head"><div><h2 class="section-title">新建视频</h2><p class="section-sub">填好题材点生成，或先让 AI 帮你写文案。</p></div></div>
@@ -1594,7 +1598,7 @@ async function renderAutogen() {
             </div>
             <div class="field"><label>结构</label><select name="structure_type"><option value="causal">因果 / 流程</option><option value="contrast">对照</option><option value="misconception">误区修正</option><option value="checklist">清单</option><option value="timeline">时间演进</option></select></div>
             <div class="field"><label>时长（秒）</label><input name="duration_sec" type="number" value="30" min="5" max="60"></div>
-            <div class="field"><label>模式</label><select name="mode"><option value="auto">自动：直接出片</option><option value="manual">人工：先确认分镜</option></select></div>
+            <div class="field"><label>模式</label><select name="mode"><option value="auto">自动：直接出片</option><option value="manual">人工：先确认分镜</option><option value="courseware">课件式（截图+标注+流程）</option></select><p class="muted tiny" style="margin-top:4px">选「课件式」会建草稿并跳到课件编辑器</p></div>
             <div class="field"><label>批量</label><label class="check-row"><input type="checkbox" name="batch_styles"> 同文案出 3 种风格</label></div>
             <div class="field"><label>口播头像</label><label class="check-row"><input type="checkbox" name="avatar"> 加数字人口播（可选）</label></div>
           </div>
@@ -1620,6 +1624,14 @@ async function renderAutogen() {
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const fd = new FormData(form);
+    const mode = fd.get('mode') || 'auto';
+    if (mode === 'courseware') {
+      try {
+        const d = await post('/api/courseware/auto', { topic: fd.get('title') || '未命名课件', style: fd.get('style') || 'industrial' });
+        toast(`已生成课件：${d.slides} 页 / ${d.totalDurationSeconds}s`); location.hash = '#/courseware/' + d.taskId;
+      } catch (err) { toast(err.message, 'error'); }
+      return;
+    }
     const body = {
       title: fd.get('title'),
       script: fd.get('script'),
@@ -1627,7 +1639,7 @@ async function renderAutogen() {
       style: fd.get('style') || 'industrial',
       duration_ms: (Number(fd.get('duration_sec')) || 30) * 1000,
       engine: 'vibemotion',
-      mode: fd.get('mode') || 'auto',
+      mode,
       avatar: fd.get('avatar') ? true : false
     };
     if (!body.title && !body.script) { toast('至少填标题或文案', 'error'); return; }
@@ -1647,6 +1659,400 @@ async function renderAutogen() {
     } catch {}
   }, 3000);
   state.pollTimers.push(timer);
+}
+
+// ---------- 课件编辑器 ----------
+async function renderCoursewareEditor(taskId) {
+  setNav('autogen'); setCrumb('工作台 / 课件编辑器');
+  const data = await api(`/api/courseware/drafts/${encodeURIComponent(taskId)}`);
+  const project = data.project || {};
+  const board = project.storyboard || { title: '', style: 'industrial', slides: [] };
+  // 恢复本地未保存草稿（服务端为空时）
+  try {
+    const raw = localStorage.getItem('cw_draft_' + taskId);
+    if (raw) {
+      const local = JSON.parse(raw);
+      if (local?.storyboard?.slides?.length && !board.slides.length) {
+        board.slides = local.storyboard.slides;
+        toast('已恢复本地未保存的草稿');
+      }
+    }
+  } catch {}
+  const assets = (await api(`/api/courseware/drafts/${encodeURIComponent(taskId)}/assets`)).assets || [];
+  const imgAssets = assets.filter(a => a.kind === 'image');
+  const kinds = [['title','标题页'],['screenshot','截图页'],['flow','流程页'],['bullet','要点页'],['quote','金句页']];
+  const assetOpts = imgAssets.map(a => `<option value="${esc(a.id)}">${esc(a.name || a.id)}</option>`).join('');
+
+  const slideCard = (s, i) => {
+    const kindOpts = kinds.map(([k, n]) => `<option value="${k}" ${s.kind === k ? 'selected' : ''}>${n}</option>`).join('');
+    let extra = '';
+    if (s.kind === 'screenshot') {
+      const a = imgAssets.find(x => x.id === s.assetId) || imgAssets[0];
+      const hx = s.highlight?.x ?? 0.07, hy = s.highlight?.y ?? 0.38, hw = s.highlight?.w ?? 0.79, hh = s.highlight?.h ?? 0.10;
+      extra = `<div class="form-grid">
+        <div class="field"><label>截图</label><select data-f="assetId">${assetOpts}</select></div>
+        <div class="field"><label>高亮 x / y / w / h</label>
+          <div class="flex" style="gap:6px">
+            <input data-f="hx" type="number" step="0.01" value="${hx}">
+            <input data-f="hy" type="number" step="0.01" value="${hy}">
+            <input data-f="hw" type="number" step="0.01" value="${hw}">
+            <input data-f="hh" type="number" step="0.01" value="${hh}">
+          </div>
+        </div>
+        <div class="field"><label>标注</label><select data-f="annotation">${['arrow','circle','highlight','underline','bubble'].map(v => `<option value="${v}" ${s.annotation === v ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+        <div class="field full"><label>AI 找位置（填一句要圈的目标）</label>
+          <div class="flex" style="gap:6px">
+            <input data-f="detect" placeholder="如：第一行的「通过」按钮" style="flex:1">
+            <button class="btn btn-sm" data-action="cw-detect">AI 找位置</button>
+          </div>
+        </div>
+        <div class="field full"><label>拖动框选高亮（在图上拉框）</label>
+          <div class="cw-shot-box" style="position:relative;width:240px;cursor:crosshair;border:1px solid #D8CFBE;border-radius:8px;overflow:hidden">
+            ${a ? `<img src="/media/courseware/${taskId}/assets/${a.fileName}" style="width:240px;height:auto;display:block">` : '<div style="padding:24px;color:#6E685C;font-size:12px">先上传截图</div>'}
+            <div class="cw-sel" style="position:absolute;left:${(hx * 100).toFixed(1)}%;top:${(hy * 100).toFixed(1)}%;width:${(hw * 100).toFixed(1)}%;height:${(hh * 100).toFixed(1)}%;border:2px dashed #C73520;border-radius:4px;background:rgba(199,53,32,.08);pointer-events:none"></div>
+          </div>
+        </div>
+      </div>`;
+    }
+    if (s.kind === 'flow') {
+      extra = `<div class="field"><label>流程节点（每行一个，2–4 个）</label><textarea data-f="nodes" rows="3">${esc((s.nodes || []).map(n => n.label).join('\n'))}</textarea></div>`;
+    }
+    if (s.kind === 'bullet') {
+      extra = `<div class="field"><label>要点（每行一条，1–5 条）</label><textarea data-f="bullets" rows="3">${esc((s.bullets || []).join('\n'))}</textarea></div>`;
+    }
+    return `<div class="card" data-slide="${i}" data-id="${esc(s.id || '')}">
+      <div class="card-head">
+        <div><h3 class="section-title" style="font-size:16px">第 ${i + 1} 页</h3></div>
+        <div class="flex" style="gap:8px"><select data-f="kind">${kindOpts}</select><button class="btn btn-sm" data-action="cw-preview">预览</button><button class="btn btn-sm" data-action="cw-remove">删除</button></div>
+      </div>
+      <div class="card-body">
+        <div class="field"><label>标题（≤40 字）</label><input data-f="text" value="${esc(s.text || '')}"></div>
+        <div class="field"><label>副标题</label><input data-f="body" value="${esc(s.body || '')}"></div>
+        <div class="field"><label>字幕 caption</label><input data-f="caption" value="${esc(s.caption || '')}"></div>
+        <div class="field"><label>旁白（TTS）</label><input data-f="narration" value="${esc(s.narration?.text || '')}"></div>
+        ${extra}
+      </div>
+    </div>`;
+  };
+
+  $('#view').innerHTML = `
+    <div id="cw-root">
+    <div class="page-head">
+      <div><p class="eyebrow">COURSEWARE / 课件编辑器</p><h1 class="page-title">${esc(board.title || '未命名课件')}</h1><p class="page-sub">本主题素材 + 五类页；保存后生成。</p></div>
+      <div class="head-actions"><span class="muted tiny" id="cw-save-status" style="margin-right:8px"></span> <button class="btn" data-action="cw-back">返回</button></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><h2 class="section-title">本主题素材</h2><p class="section-sub">只服务这一条内容，不进共用库。</p></div></div>
+      <div class="card-body">
+        <div class="flex" style="gap:10px;flex-wrap:wrap">
+          <label class="btn" style="cursor:pointer">+ 上传图片<input type="file" accept="image/*" data-action="cw-upload" data-kind="image" multiple hidden></label>
+          <label class="btn" style="cursor:pointer">+ 上传视频<input type="file" accept="video/*" data-action="cw-upload" data-kind="video" multiple hidden></label>
+          <label class="btn" style="cursor:pointer">+ 上传配音<input type="file" accept="audio/*" data-action="cw-upload" data-kind="audio" multiple hidden></label>
+        </div>
+        <div class="flex" style="gap:8px;flex-wrap:wrap;margin-top:12px">
+          ${assets.map(a => `<span class="tag cw-asset" data-asset-id="${esc(a.id)}" data-kind="${esc(a.kind)}" data-file="${esc(a.fileName)}" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding-right:4px">
+            ${a.kind === 'image' ? `<img src="/media/courseware/${taskId}/assets/${a.fileName}" style="width:24px;height:24px;object-fit:cover;border-radius:4px">` : `<span style="font-size:10px;color:#8A8578">${esc(a.kind)}</span>`}
+            <span>${esc(a.name || a.id)}</span>
+            <button data-action="cw-asset-del" data-asset-id="${esc(a.id)}" title="删除" style="border:0;background:transparent;cursor:pointer;color:#C73520;font-weight:700;font-size:15px;line-height:1;padding:0 2px">×</button>
+          </span>`).join('') || '<span class="muted tiny">暂无素材</span>'}
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><h2 class="section-title">文案分镜</h2><p class="section-sub">写一段展示思路，AI 自动拆镜头、对截图、圈重点。</p></div></div>
+      <div class="card-body">
+        <div class="field"><label>展示思路（一段话）</label>
+          <textarea id="cw-script" rows="3" placeholder="例：先讲审批页点通过；再讲发布页点生成发布包；最后讲模式选课件式"></textarea>
+        </div>
+        <div class="flex" style="gap:10px">
+          <button class="btn btn-primary" data-action="cw-compose">按文案生成分镜</button>
+          <span class="muted tiny" style="align-self:center">会用已传的截图</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><h2 class="section-title">页面（<span id="cw-count">${board.slides.length}</span>）</h2></div><div><button class="btn" data-action="cw-add">+ 添加页</button></div></div>
+      <div class="card-body" id="cw-slides">${board.slides.map(slideCard).join('') || '<div class="empty"><p>还没有页，点「+ 添加页」。</p></div>'}</div>
+    </div>
+    <div class="flex" style="gap:10px;margin-top:16px">
+      <button class="btn btn-primary" data-action="cw-save">保存草稿</button>
+      <button class="btn" data-action="cw-generate">生成课件</button>
+    </div>
+    </div>
+  `;
+
+  // 拖框：在截图预览上拖动，自动回填 highlight
+  document.querySelectorAll('#cw-slides [data-slide]').forEach((card) => {
+    const box = card.querySelector('.cw-shot-box');
+    const img = box?.querySelector('img');
+    const sel = box?.querySelector('.cw-sel');
+    if (!img || !sel) return;
+    const inputs = ['hx', 'hy', 'hw', 'hh'].map((f) => card.querySelector(`[data-f="${f}"]`));
+    if (inputs.some((x) => !x)) return;
+    const [hx, hy, hw, hh] = inputs;
+    const pos = (ev) => {
+      const r = img.getBoundingClientRect();
+      return { x: Math.min(1, Math.max(0, (ev.clientX - r.left) / r.width)), y: Math.min(1, Math.max(0, (ev.clientY - r.top) / r.height)) };
+    };
+    const draw = (x, y, w, h) => {
+      sel.style.left = (x * 100) + '%';
+      sel.style.top = (y * 100) + '%';
+      sel.style.width = (w * 100) + '%';
+      sel.style.height = (h * 100) + '%';
+    };
+    let start = null;
+    const onMove = (ev) => {
+      if (!start) return;
+      const p = pos(ev);
+      draw(Math.min(start.x, p.x), Math.min(start.y, p.y), Math.abs(p.x - start.x), Math.abs(p.y - start.y));
+    };
+    const onUp = (ev) => {
+      if (!start) return;
+      const p = pos(ev);
+      const x = Math.min(start.x, p.x), y = Math.min(start.y, p.y);
+      const w = Math.abs(p.x - start.x), h = Math.abs(p.y - start.y);
+      start = null;
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      if (w > 0.01 && h > 0.01) {
+        hx.value = x.toFixed(4); hy.value = y.toFixed(4);
+        hw.value = w.toFixed(4); hh.value = h.toFixed(4);
+        draw(x, y, w, h);
+      }
+    };
+    box.addEventListener('mousedown', (ev) => {
+      start = pos(ev);
+      draw(start.x, start.y, 0, 0);
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+      ev.preventDefault();
+    });
+  });
+
+  // 素材：点击预览
+  document.querySelectorAll('.cw-asset').forEach((chip) => {
+    chip.addEventListener('click', (ev) => {
+      if (ev.target.closest('[data-action="cw-asset-del"]')) return;
+      const kind = chip.dataset.kind;
+      const file = chip.dataset.file;
+      const src = `/media/courseware/${taskId}/assets/${file}`;
+      let body = '';
+      if (kind === 'image') body = `<img src="${src}" style="max-width:100%;border-radius:8px">`;
+      else if (kind === 'video') body = `<video src="${src}" controls style="max-width:100%;border-radius:8px"></video>`;
+      else body = `<audio src="${src}" controls style="width:100%"></audio>`;
+      openModal({ title: '素材预览', body });
+    });
+  });
+
+  const collectSlides = () => [...document.querySelectorAll('#cw-slides [data-slide]')].map((card) => {
+    const v = (f) => card.querySelector(`[data-f="${f}"]`)?.value ?? '';
+    const kind = v('kind');
+    const slide = {
+      id: card.dataset.id || ('s_' + Math.random().toString(36).slice(2, 8)),
+      kind,
+      text: String(v('text') || '').trim(),
+      body: String(v('body') || '').trim() || undefined,
+      caption: String(v('caption') || '').trim() || undefined,
+      narration: String(v('narration') || '').trim() ? { mode: 'tts', text: String(v('narration')).trim() } : { mode: 'none' }
+    };
+    if (kind === 'screenshot') {
+      slide.assetId = v('assetId');
+      slide.highlight = { x: Number(v('hx')) || 0, y: Number(v('hy')) || 0, w: Number(v('hw')) || 1, h: Number(v('hh')) || 0.1 };
+      slide.annotation = v('annotation') || 'arrow';
+    }
+    if (kind === 'flow') {
+      const labels = String(v('nodes') || '').split('\n').map((x) => x.trim()).filter(Boolean).slice(0, 4);
+      slide.nodes = labels.map((label, idx) => ({ id: 'n' + idx, label }));
+    }
+    if (kind === 'bullet') {
+      slide.bullets = String(v('bullets') || '').split('\n').map((x) => x.trim()).filter(Boolean).slice(0, 5);
+    }
+    return slide;
+  }).filter((s) => s.text);
+
+  let autoSaveTimer = null;
+  let saveChain = Promise.resolve();
+  async function realSave(silent) {
+    const slides = collectSlides();
+    if (!slides.length) { if (!silent) toast('至少加一页再保存', 'error'); return false; }
+    const status = $('#cw-save-status');
+    if (status) status.textContent = '保存中…';
+    const doPut = () => put(`/api/courseware/drafts/${encodeURIComponent(taskId)}`, {
+      storyboard: { title: board.title, style: board.style, slides },
+      draftRevision: project.draftRevision
+    });
+    try {
+      let r;
+      try {
+        r = await doPut();
+      } catch (err) {
+        const msg = String(err.message || '');
+        if (msg.includes('版本冲突') || msg.includes('409')) {
+          const d = await api(`/api/courseware/drafts/${encodeURIComponent(taskId)}`);
+          project.draftRevision = d.project.draftRevision;
+          r = await doPut();
+        } else {
+          throw err;
+        }
+      }
+      project.draftRevision = r.draftRevision;
+      if (status) status.textContent = '已自动保存';
+      return true;
+    } catch (err) {
+      if (status) status.textContent = '保存失败';
+      if (!silent) toast(err.message, 'error');
+      return false;
+    }
+  }
+  function doSave(silent = false) {
+    saveChain = saveChain.then(() => realSave(silent));
+    return saveChain;
+  }
+  window.__cwFlushSave = () => doSave(true);
+  const scheduleSave = () => { clearTimeout(autoSaveTimer); autoSaveTimer = setTimeout(() => doSave(true), 700); };
+  const backupLocal = () => {
+    try { localStorage.setItem('cw_draft_' + taskId, JSON.stringify({ storyboard: { title: board.title, style: board.style, slides: collectSlides() }, at: Date.now() })); } catch {}
+  };
+  $('#cw-root').addEventListener('input', () => { backupLocal(); scheduleSave(); });
+  $('#cw-root').addEventListener('change', () => { backupLocal(); scheduleSave(); });
+
+  function cwPreview(card) {
+    const v = (f) => card.querySelector(`[data-f="${f}"]`)?.value ?? '';
+    const kind = v('kind');
+    const text = v('text'), body = v('body'), caption = v('caption');
+    const a = imgAssets.find((x) => x.id === v('assetId')) || imgAssets[0];
+    let content = '';
+    if (kind === 'screenshot' && a) {
+      const x = Number(v('hx')) || 0, y = Number(v('hy')) || 0, w = Number(v('hw')) || 1, h = Number(v('hh')) || 0.1;
+      content = `<div style="position:relative;width:100%;border-radius:8px;overflow:hidden;border:1px solid #3a3a3a">
+        <img src="/media/courseware/${taskId}/assets/${a.fileName}" style="width:100%;display:block">
+        <div style="position:absolute;left:${(x * 100).toFixed(1)}%;top:${(y * 100).toFixed(1)}%;width:${(w * 100).toFixed(1)}%;height:${(h * 100).toFixed(1)}%;border:2px dashed #C73520;background:rgba(199,53,32,.10)"></div>
+      </div>`;
+    } else if (kind === 'flow') {
+      const labels = String(v('nodes') || '').split('\n').map((s) => s.trim()).filter(Boolean);
+      content = `<div style="display:flex;flex-direction:column;gap:6px">${labels.map((l) => `<div style="padding:8px 12px;border:1px solid #3a3a3a;border-radius:8px;font-size:13px">${esc(l)}</div>`).join('')}</div>`;
+    } else if (kind === 'bullet') {
+      const items = String(v('bullets') || '').split('\n').map((s) => s.trim()).filter(Boolean);
+      content = `<ul style="padding-left:18px;font-size:13px;line-height:1.7">${items.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>`;
+    } else if (body) {
+      content = `<div style="font-size:13px;color:#B8B2A4;line-height:1.6">${esc(body)}</div>`;
+    }
+    openModal({
+      title: '页面预览（布局示意，非最终渲染）',
+      body: `<div style="width:270px;height:480px;margin:0 auto;background:#0E1310;border-radius:16px;padding:20px;color:#EDE9DD;overflow:hidden;display:flex;flex-direction:column;gap:12px">
+        <div style="font-size:11px;color:#9A968A;letter-spacing:.1em">固定地址</div>
+        <div style="font-size:18px;font-weight:700;line-height:1.3;white-space:pre-wrap">${esc(text) || '（标题）'}</div>
+        <div style="flex:1;min-height:0;overflow:hidden">${content}</div>
+        ${caption ? `<div style="font-size:11px;color:#9A968A;line-height:1.5">${esc(caption)}</div>` : ''}
+      </div>`
+    });
+  }
+
+  function setBusy(btn) {
+    const html = btn.innerHTML;
+    const disabled = btn.disabled;
+    btn.classList.add('is-busy');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="btn-spinner"></span>处理中…';
+    return () => { btn.classList.remove('is-busy'); btn.disabled = disabled; btn.innerHTML = html; };
+  }
+
+  $('#cw-root').addEventListener('click', async (e) => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const act = btn.dataset.action;
+    const release = ['cw-save', 'cw-generate', 'cw-compose', 'cw-detect', 'cw-asset-del'].includes(act) ? setBusy(btn) : () => {};
+    try {
+    if (act === 'cw-asset-del') {
+      e.stopPropagation();
+      if (!confirm('删除这个素材？删除后不可恢复。')) return;
+      try { await post(`/api/courseware/drafts/${encodeURIComponent(taskId)}/assets/${encodeURIComponent(btn.dataset.assetId)}/delete`, {}); toast('已删除'); renderCoursewareEditor(taskId); }
+      catch (err) { toast(err.message, 'error'); }
+      return;
+    }
+    if (act === 'cw-detect') {
+      const card = btn.closest('[data-slide]');
+      const desc = card?.querySelector('[data-f="detect"]')?.value?.trim();
+      const assetId = card?.querySelector('[data-f="assetId"]')?.value;
+      if (!desc) { toast('先填要圈的目标', 'error'); return; }
+      if (!assetId) { toast('先选一张截图', 'error'); return; }
+      btn.disabled = true; btn.textContent = '识别中…';
+      try {
+        const r = await post(`/api/courseware/drafts/${encodeURIComponent(taskId)}/assets/${encodeURIComponent(assetId)}/detect`, { description: desc });
+        if (!r.ok) throw new Error(r.error || '未找到目标');
+        const b = r.box;
+        card.querySelector('[data-f="hx"]').value = b.x.toFixed(4);
+        card.querySelector('[data-f="hy"]').value = b.y.toFixed(4);
+        card.querySelector('[data-f="hw"]').value = b.w.toFixed(4);
+        card.querySelector('[data-f="hh"]').value = b.h.toFixed(4);
+        const sel = card.querySelector('.cw-sel');
+        if (sel) {
+          sel.style.left = (b.x * 100) + '%'; sel.style.top = (b.y * 100) + '%';
+          sel.style.width = (b.w * 100) + '%'; sel.style.height = (b.h * 100) + '%';
+        }
+        toast(`AI 找到位置（置信度 ${r.confidence ?? '-'}），请拖框微调`);
+      } catch (err) { toast(err.message, 'error'); }
+      finally { btn.disabled = false; btn.textContent = 'AI 找位置'; }
+      return;
+    }
+    if (act === 'cw-compose') {
+      const script = document.getElementById('cw-script')?.value?.trim();
+      if (!script) { toast('先写一段展示思路', 'error'); return; }
+      btn.disabled = true; btn.textContent = '分镜中…';
+      try {
+        const r = await post(`/api/courseware/drafts/${encodeURIComponent(taskId)}/compose`, { script });
+        toast(`已生成分镜：${r.slides} 页 / ${r.totalDurationSeconds}s`);
+        renderCoursewareEditor(taskId);
+      } catch (err) { toast(err.message, 'error'); }
+      finally { btn.disabled = false; btn.textContent = '按文案生成分镜'; }
+      return;
+    }
+    if (act === 'cw-add') {
+      const list = $('#cw-slides');
+      list.querySelector('.empty')?.remove();
+      const slide = { id: 's_' + Math.random().toString(36).slice(2, 8), kind: 'title', text: '新页面', narration: { mode: 'none' } };
+      list.insertAdjacentHTML('beforeend', slideCard(slide, list.querySelectorAll('[data-slide]').length));
+      backupLocal();
+    } else if (act === 'cw-preview') {
+      const card = btn.closest('[data-slide]');
+      if (card) cwPreview(card);
+    } else if (act === 'cw-remove') {
+      btn.closest('[data-slide]')?.remove();
+      const list = $('#cw-slides');
+      if (!list.querySelector('[data-slide]')) list.innerHTML = '<div class="empty"><p>还没有页，点「+ 添加页」。</p></div>';
+      backupLocal();
+    } else if (act === 'cw-save') {
+      const ok = await doSave();
+      if (ok) toast('已保存');
+    } else if (act === 'cw-back') {
+      await doSave(true);
+      location.hash = '#/autogen';
+    } else if (act === 'cw-generate') {
+      try {
+        await doSave(true);
+        const r = await post(`/api/courseware/drafts/${encodeURIComponent(taskId)}/generate`, {});
+        toast(`已生成：${r.renderId}（${r.totalDurationSeconds}s）`);
+      } catch (err) { toast(err.message, 'error'); }
+    }
+    } finally { release(); }
+  });
+  $('#cw-root').addEventListener('change', async (e) => {
+    if (e.target.matches('[data-action="cw-upload"]')) {
+      const files = [...(e.target.files || [])];
+      if (!files.length) return;
+      const kind = e.target.dataset.kind;
+      let ok = 0;
+      for (const file of files) {
+        const data = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); });
+        try {
+          await post(`/api/courseware/drafts/${encodeURIComponent(taskId)}/assets`, { kind, data, mime: file.type, name: file.name });
+          ok++;
+        } catch (err) { toast(file.name + '：' + err.message, 'error'); }
+      }
+      if (ok) { toast(`已上传 ${ok} 个素材`); renderCoursewareEditor(taskId); }
+      e.target.value = '';
+    }
+  });
 }
 
 async function openEditVideoTask(id) {
@@ -1732,7 +2138,7 @@ function openAutogenNew() {
         <div class="field full"><label>标题</label><input name="title" placeholder="例如：为什么 AI 会一本正经地胡说八道" required></div>
         <div class="field full"><label>题材 / 口播稿</label><textarea name="script" rows="4" placeholder="给一句话或一段文案"></textarea></div>
         <div class="field"><label>结构</label><select name="structure_type"><option value="causal">因果 / 流程</option><option value="contrast">对照</option><option value="misconception">误区修正</option><option value="checklist">清单</option><option value="timeline">时间演进</option></select></div>
-        <div class="field"><label>生成模式</label><select name="mode"><option value="auto">讲解式：直接出片</option><option value="manual">讲解式：先确认分镜</option><option value="fixed">固定页式</option></select></div>
+        <div class="field"><label>生成模式</label><select name="mode"><option value="auto">讲解式：直接出片</option><option value="manual">讲解式：先确认分镜</option><option value="fixed">固定页式</option><option value="courseware">课件式</option></select></div>
         <div class="field"><label>主题（固定页式）</label><select name="theme"><option value="archive">Archive 奶油纸</option><option value="terminal">Terminal 终端</option><option value="editorial">Editorial 编辑</option><option value="noir">Noir 暗黑</option><option value="earth">Earth 大地</option></select></div>
         <div class="field"><label>页数（固定页式）</label><select name="page_count"><option value="4">4 页（20 秒）</option><option value="5">5 页（24 秒）</option><option value="6">6 页（28 秒）</option></select></div>
         <div class="field"><label>时长（秒）</label><input name="duration_sec" type="number" value="30" min="5" max="60"></div>
@@ -1745,6 +2151,13 @@ function openAutogenNew() {
         e.preventDefault();
         const fd = new FormData(form);
         const mode = fd.get('mode') || 'auto';
+        if (mode === 'courseware') {
+          try {
+            const d = await post('/api/courseware/auto', { topic: fd.get('title') || '未命名课件', style: 'industrial' });
+            toast(`已生成课件：${d.slides} 页`); closeModal(); location.hash = '#/courseware/' + d.taskId;
+          } catch (err) { toast(err.message, 'error'); }
+          return;
+        }
         const body = mode === 'fixed'
           ? { title: fd.get('title'), engine: 'vibemotion', mode: 'fixed', theme: fd.get('theme') || 'archive', page_count: Number(fd.get('page_count')) || 4 }
           : {
@@ -3139,6 +3552,12 @@ document.addEventListener('click', async (e) => {
   const el = e.target.closest('[data-action]');
   if (el) {
     const action = el.dataset.action;
+    if (action === 'cw-back') {
+      e.preventDefault();
+      await window.__cwFlushSave?.();
+      location.hash = '#/autogen';
+      return;
+    }
     if (action === 'new-brief') {
       e.preventDefault();
       const def = state.settings?.engine_default || 'vibemotion';

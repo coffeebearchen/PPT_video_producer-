@@ -1,12 +1,12 @@
 {
   "version": "1.0",
   "projectMeta": {
-    "title": "批量测试",
+    "title": "肥皂的用处",
     "width": 1080,
     "height": 1920,
     "fps": 30,
-    "durationMs": 8000,
-    "style": "dynamic",
+    "durationMs": 30000,
+    "style": "industrial",
     "themePalette": {
       "bg": "#F3EDE1",
       "ink": "#101112",
@@ -27,40 +27,43 @@
       }
     ],
     "masterVoiceover": {
-      "src": "audio/vtask_da078ee2.mp3"
+      "src": "audio/vtask_ab2e6bb7.mp3"
     }
   },
   "scenes": [
     {
       "sceneId": "s1",
       "startMs": 0,
-      "endMs": 5760,
+      "endMs": 21600,
       "transitionIn": "fade_blur",
       "componentName": "GraphicScene",
       "initialProps": {
         "family": "process",
         "kind": "causal",
-        "title": "批量测试",
-        "claim": "一个想法，多种讲法",
+        "title": "肥皂的用处",
+        "claim": "肥皂可不只是用来洗衣服的，它的用处多到你想不到",
         "labels": [
-          "一个想法，多种讲法"
+          "肥皂可不只是用来洗",
+          "因为肥皂里的表面活",
+          "比如厨房灶台的顽固",
+          "而且肥皂还能用来润"
         ],
         "source": "来源：AI 生成 · 示意数据",
         "progress": 0,
         "active": 0,
-        "style": "dynamic"
+        "style": "industrial"
       },
       "stateSteps": [
         {
           "stepId": "a",
-          "triggerMs": 2304,
+          "triggerMs": 8640,
           "propPatches": {
             "progress": 1
           }
         },
         {
           "stepId": "b",
-          "triggerMs": 4320,
+          "triggerMs": 16200,
           "propPatches": {
             "active": 1
           }
@@ -69,17 +72,19 @@
     },
     {
       "sceneId": "s2",
-      "startMs": 5760,
-      "endMs": 8000,
+      "startMs": 21600,
+      "endMs": 30000,
       "transitionIn": "fade_blur",
       "componentName": "GraphicScene",
       "initialProps": {
         "family": "chart",
         "kind": "ring",
-        "title": "批量测试",
-        "claim": "一个想法，多种讲法",
+        "title": "肥皂的用处",
+        "claim": "下次我告诉你肥皂怎么用能让家里香一整天，记得来看",
         "labels": [
-          "一个想法，多种讲法"
+          "肥皂可不只是用来洗",
+          "因为肥皂里的表面活",
+          "比如厨房灶台的顽固"
         ],
         "values": [
           65,
@@ -89,12 +94,12 @@
         "source": "来源：AI 生成 · 示意数据",
         "progress": 0,
         "active": 0,
-        "style": "dynamic"
+        "style": "industrial"
       },
       "stateSteps": [
         {
           "stepId": "a",
-          "triggerMs": 6656,
+          "triggerMs": 24960,
           "propPatches": {
             "progress": 1
           }
@@ -106,10 +111,10 @@
     {
       "id": "c1",
       "startMs": 0,
-      "endMs": 8000,
-      "text": "一个想法，多种讲法。",
+      "endMs": 30000,
+      "text": "肥皂可不只是用来洗衣服的，它的用处多到你想不到。因为肥皂里的表面活性剂能同时抓住水和油，所以它能轻松溶解各种油污。比如厨房灶台的顽固油渍、鞋子上的泥点、甚至镜子上的水垢，拿肥皂一擦就干净。而且肥皂还能用来润滑拉链、防止抽屉卡顿，甚至驱赶蚊虫。一块几块钱的肥皂，解决的都是生活里的小麻烦，这性价比你算算。下次我告诉你肥皂怎么用能让家里香一整天，记得来看。",
       "highlightKeywords": [
-        "批量测试"
+        "肥皂的用处"
       ]
     }
   ]

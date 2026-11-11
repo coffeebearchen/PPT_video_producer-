@@ -67,11 +67,11 @@ const send = (res, status, data, headers = {}) => {
   res.end(body);
 };
 const fail = (res, status, message, detail = '') => send(res, status, { error: message, detail });
-const readBody = async (req) => {
+const readBody = async (req, limit = 4_000_000) => {
   let body = '';
   for await (const chunk of req) {
     body += chunk;
-    if (body.length > 4_000_000) throw new Error('body too large');
+    if (body.length > limit) throw new Error('body too large');
   }
   if (!body) return {};
   try { return JSON.parse(body); } catch { throw new Error('invalid JSON'); }
@@ -433,9 +433,66 @@ function updateVideoTask(id, fields) {
   db.prepare(`UPDATE video_tasks SET ${sets.join(',')}, updated_at=? WHERE id=?`).run(...vals);
 }
 
+async function processCoursewareTask(task) {
+  const id = task.id;
+  updateVideoTask(id, { status: 'running', progress: 2, error: '' });
+  let propsPath = null;
+  try {
+    const proj = JSON.parse(task.timeline_json || '{}');
+    const cur = proj.currentRender;
+    if (cur && cur.renderId) {
+      const p = path.join(MEDIA_DIR, 'video-tasks', id, 'courseware', cur.renderId, 'resolved-props.json');
+      if (fs.existsSync(p)) propsPath = p;
+    }
+  } catch {}
+  if (!propsPath) {
+    updateVideoTask(id, { status: 'failed', progress: 0, error: '课件缺少已编译的 resolved-props（请先在编辑器点「生成课件」）' });
+    return;
+  }
+  const outRel = path.join('video-tasks', id);
+  const outDir = path.join(MEDIA_DIR, outRel);
+  try {
+    const { renderCourseware } = await import('./lib/courseware-render.mjs');
+    await renderCourseware(propsPath, outDir, (p) => {
+      updateVideoTask(id, { progress: p, error: '' });
+    });
+    updateVideoTask(id, {
+      status: 'done', progress: 100,
+      video_path: outRel.replaceAll('\\', '/') + '/video.mp4',
+      cover_path: outRel.replaceAll('\\', '/') + '/cover.png'
+    });
+  } catch (e) {
+    const cur = db.prepare('SELECT status FROM video_tasks WHERE id=?').get(id);
+    if (cur?.status === 'canceled') return;
+    updateVideoTask(id, { status: 'failed', progress: 0, error: String(e.message || e).slice(-900) });
+  }
+}
+
+// 课件：编译当前草稿 → 冻结 resolved-props → 入队渲染
+async function generateCoursewareTask(id) {
+  const task = db.prepare("SELECT * FROM video_tasks WHERE id=? AND mode='courseware'").get(id);
+  if (!task) throw new Error('课件不存在');
+  const project = JSON.parse(task.timeline_json || '{}');
+  const { validateStoryboard, compileStoryboard } = await import('./lib/courseware-compile.mjs');
+  validateStoryboard(project.storyboard || {});
+  const { newRenderId, stagingDirFor, snapshotDirFor, listAssets } = await import('./lib/courseware-project.mjs');
+  const renderId = newRenderId();
+  const stagingDir = stagingDirFor(id, renderId);
+  const snapshotDir = snapshotDirFor(id, renderId);
+  fs.mkdirSync(snapshotDir, { recursive: true });
+  const props = await compileStoryboard({ project, assets: listAssets(id), renderId, taskId: id, stagingDir });
+  fs.writeFileSync(path.join(snapshotDir, 'source-storyboard.json'), JSON.stringify(project.storyboard, null, 2), 'utf8');
+  fs.writeFileSync(path.join(snapshotDir, 'resolved-props.json'), JSON.stringify(props, null, 2), 'utf8');
+  project.currentRender = { renderId, draftRevision: project.draftRevision, status: 'compiled', at: now() };
+  db.prepare("UPDATE video_tasks SET timeline_json=?, status='queued', progress=0, error='', updated_at=? WHERE id=?").run(JSON.stringify(project), now(), id);
+  enqueueVideoTask(id);
+  return { renderId, totalDurationSeconds: props.totalDurationSeconds };
+}
+
 async function processVideoTask(id) {
   const task = db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id);
   if (!task || task.status === 'canceled') return;
+  if (task.mode === 'courseware') return processCoursewareTask(task);
   updateVideoTask(id, { status: 'running', progress: 2, error: '' });
   let script = task.script || '';
   if (!script && task.title) {
@@ -2212,6 +2269,200 @@ async function route(req, res) {
       updateVideoTask(id, { status: 'queued', progress: 25, error: '' });
       enqueueVideoTask(id);
       return send(res, 200, db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id));
+    }
+
+    // ---------- 课件模式（courseware/1） ----------
+    if (method === 'POST' && p === '/api/courseware/drafts') {
+      const body = await readBody(req);
+      const title = String(body.title || '未命名课件').slice(0, 60);
+      const style = ['industrial', 'clean', 'dynamic'].includes(body.style) ? body.style : 'industrial';
+      const id = newId('vtask');
+      const t = now();
+      const project = {
+        schemaVersion: 'courseware/1',
+        taskId: id,
+        draftRevision: 0,
+        assetManifestRevision: 0,
+        storyboard: { title, style, canvas: { width: 1080, height: 1920, fps: 30 }, slides: [] },
+        currentRender: null
+      };
+      db.prepare(`INSERT INTO video_tasks
+        (id,title,engine,mode,template,style,avatar,structure_type,structure_name,script,voice_path,voice_provider,timeline_json,palette,duration_ms,status,progress,video_path,cover_path,error,retry_count,user_id,source,created_at,updated_at)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(
+        id, title, 'vibemotion', 'courseware', '', style, 0, 'causal', '', '', '', '',
+        JSON.stringify(project), 'cream', 30000, 'draft', 0, '', '', '', 0, '', 'courseware', t, t
+      );
+      event('courseware_draft', id, 'created', title);
+      return send(res, 201, { taskId: id, draftRevision: 0, project });
+    }
+
+    // 一键生成课件：主题 → AI 排页 → 保存 → 编译 → 入队渲染
+    if (method === 'POST' && p === '/api/courseware/auto') {
+      const body = await readBody(req);
+      const topic = String(body.topic || '').trim();
+      if (!topic) return fail(res, 400, '请填写主题');
+      const style = ['industrial', 'clean', 'dynamic'].includes(body.style) ? body.style : 'industrial';
+      let gen;
+      try {
+        const { draftCoursewareStoryboard } = await import('./lib/generator.mjs');
+        gen = await draftCoursewareStoryboard(topic, style);
+      } catch (e) {
+        return fail(res, 400, '一键编排失败：' + e.message);
+      }
+      const slides = (gen.slides || []).map((s, i) => {
+        const sid = 's' + i;
+        const narration = String(s.narration || s.text || '').trim();
+        const base = { id: sid, caption: narration || undefined, narration: narration ? { mode: 'tts', text: narration } : { mode: 'none' } };
+        if (s.kind === 'flow') {
+          const labels = (s.nodes || []).filter(Boolean).slice(0, 4);
+          return { ...base, kind: 'flow', text: String(s.text || ''), nodes: labels.map((l, j) => ({ id: 'n' + j, label: String(l) })), edgePolicy: 'sequential' };
+        }
+        if (s.kind === 'bullet') {
+          return { ...base, kind: 'bullet', text: String(s.text || ''), bullets: (s.bullets || []).filter(Boolean).slice(0, 5) };
+        }
+        if (s.kind === 'quote') return { ...base, kind: 'quote', text: String(s.text || ''), body: s.body ? String(s.body) : undefined };
+        return { ...base, kind: 'title', text: String(s.text || ''), body: s.body ? String(s.body) : undefined };
+      });
+      const assetId = String(body.assetId || '');
+      if (assetId) {
+        slides.splice(1, 0, { id: 'shot', kind: 'screenshot', text: '看这里', assetId, highlight: { x: 0.1, y: 0.3, w: 0.8, h: 0.15 }, annotation: 'arrow', dim: 0.35, caption: '在界面上圈出这一步。', narration: { mode: 'tts', text: '在界面上圈出这一步。' } });
+      }
+      const title = String(gen.title || topic).slice(0, 60);
+      const id = newId('vtask');
+      const t = now();
+      const project = {
+        schemaVersion: 'courseware/1', taskId: id, draftRevision: 1, assetManifestRevision: 0,
+        storyboard: { title, style, canvas: { width: 1080, height: 1920, fps: 30 }, slides },
+        currentRender: null
+      };
+      db.prepare(`INSERT INTO video_tasks
+        (id,title,engine,mode,template,style,avatar,structure_type,structure_name,script,voice_path,voice_provider,timeline_json,palette,duration_ms,status,progress,video_path,cover_path,error,retry_count,user_id,source,created_at,updated_at)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(
+        id, title, 'vibemotion', 'courseware', '', style, 0, 'causal', '', '', '', '',
+        JSON.stringify(project), 'cream', 30000, 'draft', 0, '', '', '', 0, '', 'courseware', t, t
+      );
+      event('courseware_auto', id, 'created', title);
+      try {
+        const r = await generateCoursewareTask(id);
+        return send(res, 201, { taskId: id, slides: slides.length, ...r });
+      } catch (e) {
+        return fail(res, 400, '编译失败：' + e.message);
+      }
+    }
+
+    // 文案分镜：一段展示思路 + 已传截图 → 自动拆镜头 + 定位 + 生成
+    if (method === 'POST' && /^\/api\/courseware\/drafts\/[A-Za-z0-9_-]+\/compose$/.test(p)) {
+      const id = p.split('/')[4];
+      const task = db.prepare("SELECT * FROM video_tasks WHERE id=? AND mode='courseware'").get(id);
+      if (!task) return fail(res, 404, '课件不存在');
+      const body = await readBody(req);
+      const script = String(body.script || '').trim();
+      if (!script) return fail(res, 400, '请写一段展示思路');
+      const { listAssets } = await import('./lib/courseware-project.mjs');
+      const assets = listAssets(id).filter(a => a.kind === 'image' || a.kind === 'video');
+      if (!assets.length) return fail(res, 400, '先上传至少一张截图或一段视频');
+      const images = assets.map(a => ({ id: a.id, path: path.join(MEDIA_DIR, 'courseware', id, 'assets', a.fileName) }));
+      const { composeStoryboard } = await import('./lib/courseware-compose.mjs');
+      let storyboard;
+      try {
+        storyboard = await composeStoryboard({ script, images, style: task.style || 'industrial' });
+      } catch (e) {
+        return fail(res, 400, '文案分镜失败：' + e.message);
+      }
+      if (!storyboard.slides?.length) return fail(res, 400, '分镜为空，请补充展示思路');
+      const project = JSON.parse(task.timeline_json || '{}');
+      project.storyboard = storyboard;
+      project.draftRevision = (project.draftRevision || 0) + 1;
+      db.prepare('UPDATE video_tasks SET title=?, timeline_json=?, updated_at=? WHERE id=?').run(String(storyboard.title || task.title).slice(0, 60), JSON.stringify(project), now(), id);
+      try {
+        const r = await generateCoursewareTask(id);
+        return send(res, 201, { taskId: id, slides: storyboard.slides.length, ...r });
+      } catch (e) {
+        return fail(res, 400, '编译失败：' + e.message);
+      }
+    }
+
+    if (method === 'GET' && /^\/api\/courseware\/drafts\/[A-Za-z0-9_-]+$/.test(p)) {
+      const id = p.split('/').pop();
+      const task = db.prepare("SELECT * FROM video_tasks WHERE id=? AND mode='courseware'").get(id);
+      if (!task) return fail(res, 404, '课件不存在');
+      let project = null;
+      try { project = JSON.parse(task.timeline_json || ''); } catch {}
+      if (!project) return fail(res, 500, '课件数据损坏');
+      return send(res, 200, { taskId: id, project, status: task.status });
+    }
+
+    if (method === 'PUT' && /^\/api\/courseware\/drafts\/[A-Za-z0-9_-]+$/.test(p)) {
+      const id = p.split('/').pop();
+      const task = db.prepare("SELECT * FROM video_tasks WHERE id=? AND mode='courseware'").get(id);
+      if (!task) return fail(res, 404, '课件不存在');
+      let project = null;
+      try { project = JSON.parse(task.timeline_json || ''); } catch {}
+      if (!project) return fail(res, 500, '课件数据损坏');
+      const body = await readBody(req);
+      if (!body.storyboard) return fail(res, 400, '缺少 storyboard');
+      const expected = Number(body.draftRevision);
+      if (Number.isFinite(expected) && expected !== project.draftRevision) return fail(res, 409, `版本冲突：当前 draftRevision=${project.draftRevision}`);
+      const { validateStoryboard } = await import('./lib/courseware-compile.mjs');
+      validateStoryboard(body.storyboard);
+      project.storyboard = body.storyboard;
+      project.draftRevision = (project.draftRevision || 0) + 1;
+      db.prepare('UPDATE video_tasks SET timeline_json=?, updated_at=? WHERE id=?').run(JSON.stringify(project), now(), id);
+      return send(res, 200, { taskId: id, draftRevision: project.draftRevision, project });
+    }
+
+    if (method === 'POST' && /^\/api\/courseware\/drafts\/[A-Za-z0-9_-]+\/assets$/.test(p)) {
+      const id = p.split('/')[4];
+      const task = db.prepare("SELECT * FROM video_tasks WHERE id=? AND mode='courseware'").get(id);
+      if (!task) return fail(res, 404, '课件不存在');
+      const body = await readBody(req, 80_000_000);
+      if (!body.data) return fail(res, 400, '缺少素材数据');
+      const { addAsset } = await import('./lib/courseware-project.mjs');
+      const asset = addAsset(id, { kind: String(body.kind || 'image'), data: body.data, mime: String(body.mime || 'image/png'), name: String(body.name || '') });
+      return send(res, 201, { asset });
+    }
+
+    if (method === 'GET' && /^\/api\/courseware\/drafts\/[A-Za-z0-9_-]+\/assets$/.test(p)) {
+      const id = p.split('/')[4];
+      const { listAssets } = await import('./lib/courseware-project.mjs');
+      return send(res, 200, { assets: listAssets(id) });
+    }
+
+    if (method === 'POST' && /^\/api\/courseware\/drafts\/[A-Za-z0-9_-]+\/assets\/[A-Za-z0-9_-]+\/delete$/.test(p)) {
+      const parts = p.split('/');
+      const id = parts[4], assetId = parts[6];
+      const { removeAsset } = await import('./lib/courseware-project.mjs');
+      try { removeAsset(id, assetId); return send(res, 200, { ok: true }); }
+      catch (e) { return fail(res, 404, e.message); }
+    }
+
+    if (method === 'POST' && /^\/api\/courseware\/drafts\/[A-Za-z0-9_-]+\/assets\/[A-Za-z0-9_-]+\/detect$/.test(p)) {
+      const parts = p.split('/');
+      const id = parts[4], assetId = parts[6];
+      const task = db.prepare("SELECT * FROM video_tasks WHERE id=? AND mode='courseware'").get(id);
+      if (!task) return fail(res, 404, '课件不存在');
+      const body = await readBody(req);
+      const desc = String(body.description || '').trim();
+      if (!desc) return fail(res, 400, '请填写要圈的目标');
+      const { listAssets } = await import('./lib/courseware-project.mjs');
+      const asset = listAssets(id).find(a => a.id === assetId);
+      if (!asset) return fail(res, 404, '素材不存在');
+      const file = path.join(MEDIA_DIR, 'courseware', id, 'assets', asset.fileName);
+      if (!fs.existsSync(file)) return fail(res, 404, '素材文件不存在');
+      const { detectHighlightRegion } = await import('./lib/courseware-detect.mjs');
+      const r = await detectHighlightRegion(file, desc);
+      if (!r.ok) return fail(res, 422, r.error || '未找到目标');
+      return send(res, 200, r);
+    }
+
+    if (method === 'POST' && /^\/api\/courseware\/drafts\/[A-Za-z0-9_-]+\/generate$/.test(p)) {
+      const id = p.split('/')[4];
+      try {
+        const r = await generateCoursewareTask(id);
+        return send(res, 201, r);
+      } catch (e) {
+        return fail(res, 400, e.message);
+      }
     }
 
     if (method === 'GET' && p === '/api/element-catalog') return send(res, 200, { elements: ELEMENT_CATALOG, palettes: PALETTES, fonts: FONT_PAIRS, templates: TEMPLATES });

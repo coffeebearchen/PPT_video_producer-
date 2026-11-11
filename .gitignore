@@ -33,3 +33,8 @@ renderer/**/.chrome-profile*/
 **/.chrome-profile/
 **/*.pma
 engines/vibemotion/renderer/public/audio/*.mp3
+
+# 课件生成物（staging / 样本 / 临时配音）
+engines/vibemotion/renderer/public/courseware/
+engines/vibemotion/renderer/public/courseware-voice/
+TARGET-SAMPLES/fixed-pages-3/
