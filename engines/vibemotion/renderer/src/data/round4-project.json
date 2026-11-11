@@ -1,0 +1,245 @@
+{
+  "version": "1.0",
+  "style": "industrial",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "durationMs": 28767,
+  "scenes": [
+    {
+      "sceneId": "round4-0",
+      "startMs": 0,
+      "endMs": 3000,
+      "title": "一个想法，要经过检验",
+      "claim": "先提出方案，再运行、观察和改进",
+      "family": "process",
+      "kind": "cycle",
+      "labels": [
+        "提出方案",
+        "执行尝试",
+        "观察结果",
+        "调整方案"
+      ],
+      "values": [
+        65,
+        82,
+        54,
+        91,
+        72
+      ],
+      "source": "来源：自制流程演示；数值均为示意数据",
+      "illustration": "assets/sampleA-chalk/reading-green.svg"
+    },
+    {
+      "sceneId": "round4-1",
+      "startMs": 3000,
+      "endMs": 6300,
+      "title": "把执行与观察分开记录",
+      "claim": "让不同动作承担清晰的责任",
+      "family": "process",
+      "kind": "swimlane",
+      "labels": [
+        "提出方案",
+        "执行尝试",
+        "记录结果",
+        "调整方案"
+      ],
+      "values": [
+        65,
+        82,
+        54,
+        91,
+        72
+      ],
+      "source": "来源：自制流程演示；数值均为示意数据",
+      "illustration": "assets/sampleA-chalk/reading-green.svg"
+    },
+    {
+      "sceneId": "round4-2",
+      "startMs": 6300,
+      "endMs": 9800,
+      "title": "把改变与影响连接起来",
+      "claim": "观察变化，才知道下一步怎么改",
+      "family": "process",
+      "kind": "causal",
+      "labels": [
+        "原有方案",
+        "改变条件",
+        "观察结果",
+        "决定改法"
+      ],
+      "values": [
+        65,
+        82,
+        54,
+        91,
+        72
+      ],
+      "source": "来源：自制流程演示；数值均为示意数据",
+      "illustration": "assets/sampleA-chalk/reading-green.svg"
+    },
+    {
+      "sceneId": "round4-3",
+      "startMs": 9800,
+      "endMs": 13400,
+      "title": "每轮结果，都能回看",
+      "claim": "保留条件、改动和观察记录",
+      "family": "chart",
+      "kind": "heatmap",
+      "labels": [
+        "条件甲",
+        "条件乙",
+        "条件丙",
+        "条件丁",
+        "条件戊"
+      ],
+      "values": [
+        65,
+        82,
+        54,
+        91,
+        72
+      ],
+      "source": "来源：自制流程演示；数值均为示意数据",
+      "illustration": "assets/sampleA-chalk/reading-green.svg"
+    },
+    {
+      "sceneId": "round4-4",
+      "startMs": 13400,
+      "endMs": 17200,
+      "title": "停滞时，分出不同尝试",
+      "claim": "保留原方案，让两条路径可以比较",
+      "family": "process",
+      "kind": "tree",
+      "labels": [
+        "原有方案",
+        "尝试甲",
+        "尝试乙",
+        "观察甲",
+        "观察乙"
+      ],
+      "values": [
+        65,
+        82,
+        54,
+        91,
+        72
+      ],
+      "source": "来源：自制流程演示；数值均为示意数据",
+      "illustration": "assets/sampleA-chalk/reading-green.svg"
+    },
+    {
+      "sceneId": "round4-5",
+      "startMs": 17200,
+      "endMs": 20700,
+      "title": "先确定比较的标准",
+      "claim": "使用同一组维度，观察不同方案",
+      "family": "chart",
+      "kind": "radar",
+      "labels": [
+        "清晰度",
+        "可检查",
+        "可重复",
+        "可回退",
+        "可继续"
+      ],
+      "values": [
+        65,
+        82,
+        54,
+        91,
+        72
+      ],
+      "source": "来源：自制流程演示；数值均为示意数据",
+      "illustration": "assets/sampleA-chalk/reading-green.svg"
+    },
+    {
+      "sceneId": "round4-6",
+      "startMs": 20700,
+      "endMs": 24900,
+      "title": "保留方案，再筛选路径",
+      "claim": "逐步排除不适合的尝试",
+      "family": "chart",
+      "kind": "funnel",
+      "labels": [
+        "全部尝试",
+        "符合条件",
+        "可以复核",
+        "继续验证"
+      ],
+      "values": [
+        100,
+        78,
+        52,
+        30
+      ],
+      "source": "来源：自制流程演示；数值均为示意数据",
+      "illustration": "assets/sampleA-chalk/reading-green.svg"
+    },
+    {
+      "sceneId": "round4-7",
+      "startMs": 24900,
+      "endMs": 28767,
+      "title": "让判断，回到同一标准",
+      "claim": "数值仅作示意，不代表真实统计",
+      "family": "chart",
+      "kind": "gauge",
+      "labels": [
+        "示意完成度"
+      ],
+      "values": [
+        65,
+        82,
+        54,
+        91,
+        72
+      ],
+      "source": "来源：自制流程演示；数值均为示意数据",
+      "illustration": "assets/sampleA-chalk/reading-green.svg"
+    }
+  ],
+  "subtitles": [
+    {
+      "id": "caption-0",
+      "startMs": 60,
+      "endMs": 4664,
+      "text": "一个想法听起来不错，并不代表它已经可靠。",
+      "highlightKeywords": []
+    },
+    {
+      "id": "caption-1",
+      "startMs": 4993,
+      "endMs": 11723,
+      "text": "我们可以先提出方案，再运行一次，观察结果，然后决定怎么改。",
+      "highlightKeywords": []
+    },
+    {
+      "id": "caption-2",
+      "startMs": 12026,
+      "endMs": 15274,
+      "text": "关键是，每一轮都留下记录。",
+      "highlightKeywords": []
+    },
+    {
+      "id": "caption-3",
+      "startMs": 15593,
+      "endMs": 20350,
+      "text": "如果结果没有改善，不要只重复同一种做法。",
+      "highlightKeywords": []
+    },
+    {
+      "id": "caption-4",
+      "startMs": 20660,
+      "endMs": 25506,
+      "text": "把原来的方案保留下来，分出两条不同的尝试，",
+      "highlightKeywords": []
+    },
+    {
+      "id": "caption-5",
+      "startMs": 25827,
+      "endMs": 28509,
+      "text": "用相同的标准比较它们。",
+      "highlightKeywords": []
+    }
+  ]
+}

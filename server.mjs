@@ -1952,13 +1952,15 @@ async function route(req, res) {
       if (task.status !== 'done') return fail(res, 400, '只有完成的视频才能发布');
       const body = await readBody(req);
       const channel = String(body.channel || 'wechat_channels');
-      const kitDir = path.join(KITS_DIR, `vtask-${id}-${channel}`);
+      if (!['wechat_channels', 'wechat_article'].includes(channel)) return fail(res, 400, '非法渠道');
+      const safe = channel === 'wechat_article' ? 'wechat_article' : 'wechat_channels';
+      const kitDir = path.join(KITS_DIR, `vtask-${id}-${safe}`);
       fs.mkdirSync(kitDir, { recursive: true });
       const videoSrc = path.join(MEDIA_DIR, task.video_path);
       const coverSrc = path.join(MEDIA_DIR, task.cover_path);
       if (fs.existsSync(videoSrc)) fs.copyFileSync(videoSrc, path.join(kitDir, 'video.mp4'));
       if (fs.existsSync(coverSrc)) fs.copyFileSync(coverSrc, path.join(kitDir, 'cover.png'));
-      const channelName = channel === 'wechat_article' ? '公众号（文章草稿）' : '视频号（手动上传）';
+      const channelName = safe === 'wechat_article' ? '公众号（文章草稿）' : '视频号（手动上传）';
       fs.writeFileSync(path.join(kitDir, 'copy.txt'), `标题：${task.title}\n\n文案：\n${task.script || ''}\n\n结构：${task.structure_type || ''}\n风格：${task.style || ''}\n`, 'utf8');
       fs.writeFileSync(path.join(kitDir, 'README.txt'), [
         `发布渠道：${channelName}`,
@@ -1969,7 +1971,7 @@ async function route(req, res) {
         '发布前请再次检查：标题 / 文案 / 封面 / 合规。'
       ].join('\n'), 'utf8');
       updateVideoTask(id, { publish_status: 'packaged' });
-      return send(res, 200, { ok: true, kit: `kits/vtask-${id}-${channel}` });
+      return send(res, 200, { ok: true, kit: `kits/vtask-${id}-${safe}` });
     }
 
     if (method === 'POST' && /^\/api\/video-tasks\/[^/]+\/publish-ready$/.test(p)) {

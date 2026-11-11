@@ -1,0 +1,116 @@
+{
+  "version": "1.0",
+  "projectMeta": {
+    "title": "口播测试",
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "durationMs": 10000,
+    "style": "clean",
+    "themePalette": {
+      "bg": "#F3EDE1",
+      "ink": "#101112",
+      "gold": "#C73520",
+      "sage": "#6F8F6F",
+      "coral": "#C73520",
+      "amber": "#D9A24E",
+      "muted": "#7B7468"
+    }
+  },
+  "avatar": true,
+  "audioTracks": {
+    "sfxEvents": [
+      {
+        "atMs": 600,
+        "sfxType": "pop",
+        "volume": 0.4
+      }
+    ],
+    "masterVoiceover": {
+      "src": "audio/vtask_e3bbc483.mp3"
+    }
+  },
+  "scenes": [
+    {
+      "sceneId": "s1",
+      "startMs": 0,
+      "endMs": 7200,
+      "transitionIn": "fade_blur",
+      "componentName": "GraphicScene",
+      "initialProps": {
+        "family": "process",
+        "kind": "causal",
+        "title": "口播测试",
+        "claim": "一个想法，只有跑起来才可靠",
+        "labels": [
+          "一个想法，只有跑起"
+        ],
+        "source": "来源：AI 生成 · 示意数据",
+        "progress": 0,
+        "active": 0,
+        "style": "clean"
+      },
+      "stateSteps": [
+        {
+          "stepId": "a",
+          "triggerMs": 2880,
+          "propPatches": {
+            "progress": 1
+          }
+        },
+        {
+          "stepId": "b",
+          "triggerMs": 5400,
+          "propPatches": {
+            "active": 1
+          }
+        }
+      ]
+    },
+    {
+      "sceneId": "s2",
+      "startMs": 7200,
+      "endMs": 10000,
+      "transitionIn": "fade_blur",
+      "componentName": "GraphicScene",
+      "initialProps": {
+        "family": "chart",
+        "kind": "ring",
+        "title": "口播测试",
+        "claim": "一个想法，只有跑起来才可靠",
+        "labels": [
+          "一个想法，只有跑起"
+        ],
+        "values": [
+          65,
+          82,
+          54
+        ],
+        "source": "来源：AI 生成 · 示意数据",
+        "progress": 0,
+        "active": 0,
+        "style": "clean"
+      },
+      "stateSteps": [
+        {
+          "stepId": "a",
+          "triggerMs": 8320,
+          "propPatches": {
+            "progress": 1
+          }
+        }
+      ]
+    }
+  ],
+  "subtitles": [
+    {
+      "id": "c1",
+      "startMs": 0,
+      "endMs": 10000,
+      "text": "一个想法，只有跑起来才可靠。",
+      "highlightKeywords": [
+        "口播测试"
+      ]
+    }
+  ]
+}

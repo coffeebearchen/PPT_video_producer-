@@ -29,9 +29,7 @@ new-brief/
 *.jpeg
 renderer/**/frames/
 renderer/**/.chrome-profile*/
-data/
+/data/
 **/.chrome-profile/
 **/*.pma
-engines/vibemotion/renderer/src/data/timeline_dsl.json
-engines/vibemotion/renderer/style.settings.json
 engines/vibemotion/renderer/public/audio/*.mp3

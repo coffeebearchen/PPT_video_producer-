@@ -1,0 +1,62 @@
+{
+  "version": "1.0",
+  "durationMs": 12000,
+  "fps": 30,
+  "width": 1080,
+  "height": 1920,
+  "style": "industrial",
+  "avatar": {
+    "enabled": true,
+    "position": "bottom-right",
+    "energySrc": "audio/round5/energy.json"
+  },
+  "audioSrc": "audio/round5/narration.wav",
+  "scenes": [
+    {
+      "startMs": 0,
+      "endMs": 4933,
+      "title": "一个想法，要经过检验",
+      "claim": "听起来可行，还需要一次尝试",
+      "kind": "cycle",
+      "labels": [
+        "提出方案",
+        "执行尝试",
+        "观察结果",
+        "调整方案"
+      ]
+    },
+    {
+      "startMs": 4933,
+      "endMs": 12000,
+      "title": "运行之后，才知道怎么改",
+      "claim": "记录执行与观察，找到下一步",
+      "kind": "swimlane",
+      "labels": [
+        "提出方案",
+        "执行尝试",
+        "记录结果",
+        "调整方案"
+      ]
+    }
+  ],
+  "subtitles": [
+    {
+      "id": "caption-0",
+      "startMs": 60,
+      "endMs": 4664,
+      "text": "一个想法听起来不错，并不代表它已经可靠。",
+      "highlightKeywords": [],
+      "timestampMs": null,
+      "confidence": 1
+    },
+    {
+      "id": "caption-1",
+      "startMs": 4993,
+      "endMs": 11723,
+      "text": "我们可以先提出方案，再运行一次，观察结果，然后决定怎么改。",
+      "highlightKeywords": [],
+      "timestampMs": null,
+      "confidence": 1
+    }
+  ]
+}

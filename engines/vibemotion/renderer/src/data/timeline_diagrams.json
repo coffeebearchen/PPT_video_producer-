@@ -1,0 +1,1033 @@
+{
+  "version": "1.0",
+  "projectMeta": {
+    "title": "图模板库演示",
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "durationMs": 50000,
+    "themePalette": {
+      "bgCanvas": "#282828",
+      "primaryHuman": "#E2BE5C",
+      "secondaryAi": "#8A918B",
+      "accentWarning": "#D9A24E",
+      "dangerStrike": "#EA3E4A",
+      "highlightGold": "#E2BE5C"
+    }
+  },
+  "audioTracks": {
+    "backgroundMusic": {
+      "src": "audio/bg_pad.wav",
+      "baseVolume": 0.08
+    },
+    "sfxEvents": [
+      {
+        "atMs": 0,
+        "sfxType": "whoosh",
+        "volume": 0.22
+      },
+      {
+        "atMs": 6000,
+        "sfxType": "whoosh",
+        "volume": 0.22
+      },
+      {
+        "atMs": 12000,
+        "sfxType": "whoosh",
+        "volume": 0.22
+      },
+      {
+        "atMs": 18000,
+        "sfxType": "whoosh",
+        "volume": 0.22
+      },
+      {
+        "atMs": 26000,
+        "sfxType": "whoosh",
+        "volume": 0.22
+      },
+      {
+        "atMs": 34000,
+        "sfxType": "whoosh",
+        "volume": 0.22
+      },
+      {
+        "atMs": 40000,
+        "sfxType": "whoosh",
+        "volume": 0.22
+      },
+      {
+        "atMs": 46000,
+        "sfxType": "whoosh",
+        "volume": 0.22
+      }
+    ]
+  },
+  "scenes": [
+    {
+      "sceneId": "d1",
+      "startMs": 0,
+      "endMs": 6000,
+      "transitionIn": "fade_blur",
+      "componentName": "Diagram",
+      "initialProps": {
+        "title": "横向流程：一条线走完",
+        "kicker": "模 板 ①  ·  流 程 图",
+        "layout": "flow",
+        "nodes": [
+          {
+            "id": "a",
+            "label": "需求"
+          },
+          {
+            "id": "b",
+            "label": "设计"
+          },
+          {
+            "id": "c",
+            "label": "生成"
+          },
+          {
+            "id": "d",
+            "label": "渲染"
+          },
+          {
+            "id": "e",
+            "label": "发布"
+          }
+        ],
+        "edges": [
+          {
+            "from": "a",
+            "to": "b"
+          },
+          {
+            "from": "b",
+            "to": "c"
+          },
+          {
+            "from": "c",
+            "to": "d"
+          },
+          {
+            "from": "d",
+            "to": "e"
+          }
+        ],
+        "activeStep": 0,
+        "decor": [
+          {
+            "type": "star",
+            "x": 0.13,
+            "y": 0.26,
+            "size": 64,
+            "tone": "gold",
+            "anim": "twinkle"
+          },
+          {
+            "type": "arrow",
+            "x": 0.86,
+            "y": 0.34,
+            "size": 90,
+            "tone": "sage",
+            "anim": "bob"
+          },
+          {
+            "type": "sparkle",
+            "x": 0.5,
+            "y": 0.86,
+            "size": 44,
+            "tone": "gold",
+            "anim": "twinkle"
+          },
+          {
+            "type": "image",
+            "src": "assets/_test_star.png",
+            "x": 0.5,
+            "y": 0.16,
+            "size": 180,
+            "anim": "bob"
+          }
+        ]
+      },
+      "stateSteps": [
+        {
+          "stepId": "s1",
+          "triggerMs": 1200,
+          "propPatches": {
+            "activeStep": 0.2
+          }
+        },
+        {
+          "stepId": "s2",
+          "triggerMs": 2400,
+          "propPatches": {
+            "activeStep": 1.2
+          }
+        },
+        {
+          "stepId": "s3",
+          "triggerMs": 3600,
+          "propPatches": {
+            "activeStep": 2.2
+          }
+        },
+        {
+          "stepId": "s4",
+          "triggerMs": 4800,
+          "propPatches": {
+            "activeStep": 3.2
+          }
+        },
+        {
+          "stepId": "s5",
+          "triggerMs": 5400,
+          "propPatches": {
+            "activeStep": 4.2
+          }
+        }
+      ]
+    },
+    {
+      "sceneId": "d2",
+      "startMs": 6000,
+      "endMs": 12000,
+      "transitionIn": "fade_blur",
+      "componentName": "Diagram",
+      "initialProps": {
+        "title": "环形循环：转起来",
+        "kicker": "模 板 ②  ·  环 形 图",
+        "layout": "cycle",
+        "nodes": [
+          {
+            "id": "a",
+            "label": "计划"
+          },
+          {
+            "id": "b",
+            "label": "执行"
+          },
+          {
+            "id": "c",
+            "label": "自检"
+          },
+          {
+            "id": "d",
+            "label": "回滚"
+          }
+        ],
+        "edges": [
+          {
+            "from": "a",
+            "to": "b",
+            "style": "curve"
+          },
+          {
+            "from": "b",
+            "to": "c",
+            "style": "curve"
+          },
+          {
+            "from": "c",
+            "to": "d",
+            "style": "curve"
+          },
+          {
+            "from": "d",
+            "to": "a",
+            "style": "curve"
+          }
+        ],
+        "centerLabel": "跑一轮",
+        "centerSub": "四步闭环",
+        "activeStep": 0,
+        "decor": [
+          {
+            "type": "sparkle",
+            "x": 0.15,
+            "y": 0.3,
+            "size": 50,
+            "tone": "gold",
+            "anim": "twinkle"
+          },
+          {
+            "type": "bulb",
+            "x": 0.85,
+            "y": 0.3,
+            "size": 70,
+            "tone": "gold",
+            "anim": "bob"
+          },
+          {
+            "type": "arrow",
+            "x": 0.5,
+            "y": 0.88,
+            "size": 90,
+            "tone": "sage",
+            "anim": "bob"
+          }
+        ]
+      },
+      "stateSteps": [
+        {
+          "stepId": "s1",
+          "triggerMs": 7200,
+          "propPatches": {
+            "activeStep": 0.2
+          }
+        },
+        {
+          "stepId": "s2",
+          "triggerMs": 8400,
+          "propPatches": {
+            "activeStep": 1.2
+          }
+        },
+        {
+          "stepId": "s3",
+          "triggerMs": 9600,
+          "propPatches": {
+            "activeStep": 2.2
+          }
+        },
+        {
+          "stepId": "s4",
+          "triggerMs": 10800,
+          "propPatches": {
+            "activeStep": 3.2
+          }
+        }
+      ]
+    },
+    {
+      "sceneId": "d3",
+      "startMs": 12000,
+      "endMs": 18000,
+      "transitionIn": "fade_blur",
+      "componentName": "Diagram",
+      "initialProps": {
+        "title": "分支树：一个起点分三路",
+        "kicker": "模 板 ③  ·  分 支 图",
+        "layout": "tree",
+        "nodes": [
+          {
+            "id": "root",
+            "label": "做 AI 视频"
+          },
+          {
+            "id": "a",
+            "label": "堆画质",
+            "tone": "coral"
+          },
+          {
+            "id": "b",
+            "label": "堆时长",
+            "tone": "coral"
+          },
+          {
+            "id": "c",
+            "label": "建模时间",
+            "tone": "gold"
+          }
+        ],
+        "edges": [
+          {
+            "from": "root",
+            "to": "a",
+            "style": "straight"
+          },
+          {
+            "from": "root",
+            "to": "b",
+            "style": "straight"
+          },
+          {
+            "from": "root",
+            "to": "c",
+            "style": "straight"
+          }
+        ],
+        "activeStep": 0,
+        "decor": [
+          {
+            "type": "cross",
+            "x": 0.14,
+            "y": 0.55,
+            "size": 46,
+            "tone": "coral",
+            "anim": "wiggle"
+          },
+          {
+            "type": "check",
+            "x": 0.86,
+            "y": 0.55,
+            "size": 50,
+            "tone": "gold",
+            "anim": "pulse"
+          },
+          {
+            "type": "star",
+            "x": 0.5,
+            "y": 0.24,
+            "size": 56,
+            "tone": "gold",
+            "anim": "twinkle"
+          }
+        ]
+      },
+      "stateSteps": [
+        {
+          "stepId": "s1",
+          "triggerMs": 13200,
+          "propPatches": {
+            "activeStep": 0.2
+          }
+        },
+        {
+          "stepId": "s2",
+          "triggerMs": 14400,
+          "propPatches": {
+            "activeStep": 1.2
+          }
+        },
+        {
+          "stepId": "s3",
+          "triggerMs": 15600,
+          "propPatches": {
+            "activeStep": 2.2
+          }
+        },
+        {
+          "stepId": "s4",
+          "triggerMs": 16800,
+          "propPatches": {
+            "activeStep": 3.2
+          }
+        }
+      ]
+    },
+    {
+      "sceneId": "d4",
+      "startMs": 18000,
+      "endMs": 26000,
+      "transitionIn": "fade_blur",
+      "componentName": "Diagram",
+      "initialProps": {
+        "title": "关系网：谁连谁",
+        "kicker": "模 板 ④  ·  网 络 图",
+        "layout": "network",
+        "nodes": [
+          {
+            "id": "m",
+            "label": "模型"
+          },
+          {
+            "id": "d",
+            "label": "数据"
+          },
+          {
+            "id": "c",
+            "label": "算力"
+          },
+          {
+            "id": "t",
+            "label": "工具"
+          },
+          {
+            "id": "e",
+            "label": "评测"
+          },
+          {
+            "id": "u",
+            "label": "用户"
+          }
+        ],
+        "edges": [
+          {
+            "from": "d",
+            "to": "m",
+            "style": "curve"
+          },
+          {
+            "from": "c",
+            "to": "m",
+            "style": "curve"
+          },
+          {
+            "from": "m",
+            "to": "t",
+            "style": "curve"
+          },
+          {
+            "from": "t",
+            "to": "u",
+            "style": "curve"
+          },
+          {
+            "from": "e",
+            "to": "m",
+            "style": "dashed"
+          },
+          {
+            "from": "u",
+            "to": "e",
+            "style": "curve"
+          },
+          {
+            "from": "d",
+            "to": "e",
+            "style": "dashed"
+          }
+        ],
+        "activeStep": 0,
+        "decor": [
+          {
+            "type": "hatchedDot",
+            "x": 0.12,
+            "y": 0.3,
+            "size": 40,
+            "tone": "gold",
+            "anim": "bob"
+          },
+          {
+            "type": "hatchedDot",
+            "x": 0.9,
+            "y": 0.6,
+            "size": 36,
+            "tone": "coral",
+            "anim": "bob"
+          },
+          {
+            "type": "wave",
+            "x": 0.5,
+            "y": 0.86,
+            "size": 120,
+            "tone": "sage",
+            "anim": "static"
+          }
+        ]
+      },
+      "stateSteps": [
+        {
+          "stepId": "s1",
+          "triggerMs": 19200,
+          "propPatches": {
+            "activeStep": 0.2
+          }
+        },
+        {
+          "stepId": "s2",
+          "triggerMs": 20400,
+          "propPatches": {
+            "activeStep": 1.2
+          }
+        },
+        {
+          "stepId": "s3",
+          "triggerMs": 21600,
+          "propPatches": {
+            "activeStep": 2.2
+          }
+        },
+        {
+          "stepId": "s4",
+          "triggerMs": 22800,
+          "propPatches": {
+            "activeStep": 3.2
+          }
+        },
+        {
+          "stepId": "s5",
+          "triggerMs": 24000,
+          "propPatches": {
+            "activeStep": 4.2
+          }
+        },
+        {
+          "stepId": "s6",
+          "triggerMs": 25200,
+          "propPatches": {
+            "activeStep": 5.2
+          }
+        }
+      ]
+    },
+    {
+      "sceneId": "d5",
+      "startMs": 26000,
+      "endMs": 34000,
+      "transitionIn": "fade_blur",
+      "componentName": "Diagram",
+      "initialProps": {
+        "title": "中心辐射：一个平台六个出口",
+        "kicker": "模 板 ⑤  ·  球 形 / 辐 射 图",
+        "layout": "hub",
+        "nodes": [
+          {
+            "id": "hub",
+            "label": "内容平台"
+          },
+          {
+            "id": "a",
+            "label": "选题"
+          },
+          {
+            "id": "b",
+            "label": "脚本"
+          },
+          {
+            "id": "c",
+            "label": "配音"
+          },
+          {
+            "id": "d",
+            "label": "画面"
+          },
+          {
+            "id": "e",
+            "label": "剪辑"
+          },
+          {
+            "id": "f",
+            "label": "发布"
+          }
+        ],
+        "edges": [
+          {
+            "from": "hub",
+            "to": "a",
+            "style": "straight"
+          },
+          {
+            "from": "hub",
+            "to": "b",
+            "style": "straight"
+          },
+          {
+            "from": "hub",
+            "to": "c",
+            "style": "straight"
+          },
+          {
+            "from": "hub",
+            "to": "d",
+            "style": "straight"
+          },
+          {
+            "from": "hub",
+            "to": "e",
+            "style": "straight"
+          },
+          {
+            "from": "hub",
+            "to": "f",
+            "style": "straight"
+          }
+        ],
+        "centerLabel": "AI",
+        "centerSub": "驱动",
+        "activeStep": 0,
+        "decor": [
+          {
+            "type": "star",
+            "x": 0.5,
+            "y": 0.2,
+            "size": 64,
+            "tone": "gold",
+            "anim": "twinkle"
+          },
+          {
+            "type": "sparkle",
+            "x": 0.16,
+            "y": 0.62,
+            "size": 44,
+            "tone": "gold",
+            "anim": "twinkle"
+          },
+          {
+            "type": "sparkle",
+            "x": 0.86,
+            "y": 0.42,
+            "size": 38,
+            "tone": "sage",
+            "anim": "twinkle"
+          }
+        ]
+      },
+      "stateSteps": [
+        {
+          "stepId": "s1",
+          "triggerMs": 27200,
+          "propPatches": {
+            "activeStep": 0.2
+          }
+        },
+        {
+          "stepId": "s2",
+          "triggerMs": 28400,
+          "propPatches": {
+            "activeStep": 1.2
+          }
+        },
+        {
+          "stepId": "s3",
+          "triggerMs": 29600,
+          "propPatches": {
+            "activeStep": 2.2
+          }
+        },
+        {
+          "stepId": "s4",
+          "triggerMs": 30800,
+          "propPatches": {
+            "activeStep": 3.2
+          }
+        },
+        {
+          "stepId": "s5",
+          "triggerMs": 32000,
+          "propPatches": {
+            "activeStep": 4.2
+          }
+        },
+        {
+          "stepId": "s6",
+          "triggerMs": 33200,
+          "propPatches": {
+            "activeStep": 5.2
+          }
+        },
+        {
+          "stepId": "s7",
+          "triggerMs": 33800,
+          "propPatches": {
+            "activeStep": 6.2
+          }
+        }
+      ]
+    },
+    {
+      "sceneId": "d6",
+      "startMs": 34000,
+      "endMs": 40000,
+      "transitionIn": "fade_blur",
+      "componentName": "Diagram",
+      "initialProps": {
+        "title": "分层架构：一层压一层",
+        "kicker": "模 板 ⑥  ·  层 级 图",
+        "layout": "layers",
+        "nodes": [
+          {
+            "id": "a",
+            "label": "表现层",
+            "sub": "画面 / 字幕 / 音效"
+          },
+          {
+            "id": "b",
+            "label": "编排层",
+            "sub": "分镜 / 时间轴"
+          },
+          {
+            "id": "c",
+            "label": "能力层",
+            "sub": "TTS / 生图 / 渲染"
+          },
+          {
+            "id": "d",
+            "label": "模型层",
+            "sub": "LLM / 视觉模型"
+          }
+        ],
+        "edges": [
+          {
+            "from": "a",
+            "to": "b"
+          },
+          {
+            "from": "b",
+            "to": "c"
+          },
+          {
+            "from": "c",
+            "to": "d"
+          }
+        ],
+        "activeStep": 0,
+        "decor": [
+          {
+            "type": "robot",
+            "x": 0.12,
+            "y": 0.42,
+            "size": 76,
+            "tone": "sage",
+            "anim": "bob"
+          },
+          {
+            "type": "arrow",
+            "x": 0.88,
+            "y": 0.36,
+            "size": 80,
+            "tone": "gold",
+            "anim": "bob"
+          }
+        ]
+      },
+      "stateSteps": [
+        {
+          "stepId": "s1",
+          "triggerMs": 35200,
+          "propPatches": {
+            "activeStep": 0.2
+          }
+        },
+        {
+          "stepId": "s2",
+          "triggerMs": 36400,
+          "propPatches": {
+            "activeStep": 1.2
+          }
+        },
+        {
+          "stepId": "s3",
+          "triggerMs": 37600,
+          "propPatches": {
+            "activeStep": 2.2
+          }
+        },
+        {
+          "stepId": "s4",
+          "triggerMs": 38800,
+          "propPatches": {
+            "activeStep": 3.2
+          }
+        }
+      ]
+    },
+    {
+      "sceneId": "d7",
+      "startMs": 40000,
+      "endMs": 46000,
+      "transitionIn": "fade_blur",
+      "componentName": "Diagram",
+      "initialProps": {
+        "title": "矩阵：九宫格能力表",
+        "kicker": "模 板 ⑦  ·  矩 阵 图",
+        "layout": "matrix",
+        "nodes": [
+          {
+            "id": "a",
+            "label": "选题"
+          },
+          {
+            "id": "b",
+            "label": "脚本"
+          },
+          {
+            "id": "c",
+            "label": "分镜"
+          },
+          {
+            "id": "d",
+            "label": "配音"
+          },
+          {
+            "id": "e",
+            "label": "画面"
+          },
+          {
+            "id": "f",
+            "label": "动效"
+          },
+          {
+            "id": "g",
+            "label": "字幕"
+          },
+          {
+            "id": "h",
+            "label": "配乐"
+          },
+          {
+            "id": "i",
+            "label": "发布"
+          }
+        ],
+        "edges": [],
+        "activeStep": 0,
+        "decor": [
+          {
+            "type": "underline",
+            "x": 0.5,
+            "y": 0.28,
+            "size": 200,
+            "tone": "gold",
+            "anim": "static"
+          },
+          {
+            "type": "sparkle",
+            "x": 0.12,
+            "y": 0.72,
+            "size": 40,
+            "tone": "gold",
+            "anim": "twinkle"
+          }
+        ]
+      },
+      "stateSteps": [
+        {
+          "stepId": "s1",
+          "triggerMs": 41200,
+          "propPatches": {
+            "activeStep": 0.2
+          }
+        },
+        {
+          "stepId": "s2",
+          "triggerMs": 42400,
+          "propPatches": {
+            "activeStep": 1.2
+          }
+        },
+        {
+          "stepId": "s3",
+          "triggerMs": 43600,
+          "propPatches": {
+            "activeStep": 2.2
+          }
+        },
+        {
+          "stepId": "s4",
+          "triggerMs": 44800,
+          "propPatches": {
+            "activeStep": 3.2
+          }
+        },
+        {
+          "stepId": "s5",
+          "triggerMs": 45400,
+          "propPatches": {
+            "activeStep": 5.2
+          }
+        }
+      ]
+    },
+    {
+      "sceneId": "d8",
+      "startMs": 46000,
+      "endMs": 50000,
+      "transitionIn": "fade_blur",
+      "componentName": "KineticTypography",
+      "initialProps": {
+        "lines": [
+          "图有模板，",
+          "皮有开关，",
+          "片子就有产能。"
+        ],
+        "highlightKeywords": [
+          "模板",
+          "开关"
+        ],
+        "decor": [
+          {
+            "type": "star",
+            "x": 0.14,
+            "y": 0.3,
+            "size": 60,
+            "tone": "gold",
+            "anim": "twinkle"
+          },
+          {
+            "type": "star",
+            "x": 0.86,
+            "y": 0.34,
+            "size": 44,
+            "tone": "gold",
+            "anim": "twinkle"
+          },
+          {
+            "type": "sparkle",
+            "x": 0.5,
+            "y": 0.82,
+            "size": 56,
+            "tone": "gold",
+            "anim": "twinkle"
+          }
+        ]
+      },
+      "stateSteps": []
+    }
+  ],
+  "subtitles": [
+    {
+      "id": "s1",
+      "startMs": 0,
+      "endMs": 6000,
+      "text": "模板①：横向流程图",
+      "highlightKeywords": [
+        "横向流程"
+      ]
+    },
+    {
+      "id": "s2",
+      "startMs": 6000,
+      "endMs": 12000,
+      "text": "模板②：环形循环图",
+      "highlightKeywords": [
+        "环形"
+      ]
+    },
+    {
+      "id": "s3",
+      "startMs": 12000,
+      "endMs": 18000,
+      "text": "模板③：分支树",
+      "highlightKeywords": [
+        "分支"
+      ]
+    },
+    {
+      "id": "s4",
+      "startMs": 18000,
+      "endMs": 26000,
+      "text": "模板④：关系网络图",
+      "highlightKeywords": [
+        "关系网络"
+      ]
+    },
+    {
+      "id": "s5",
+      "startMs": 26000,
+      "endMs": 34000,
+      "text": "模板⑤：中心辐射（球形）",
+      "highlightKeywords": [
+        "中心辐射"
+      ]
+    },
+    {
+      "id": "s6",
+      "startMs": 34000,
+      "endMs": 40000,
+      "text": "模板⑥：分层架构图",
+      "highlightKeywords": [
+        "分层"
+      ]
+    },
+    {
+      "id": "s7",
+      "startMs": 40000,
+      "endMs": 46000,
+      "text": "模板⑦：九宫格矩阵",
+      "highlightKeywords": [
+        "矩阵"
+      ]
+    },
+    {
+      "id": "s8",
+      "startMs": 46000,
+      "endMs": 50000,
+      "text": "图有模板，皮有开关",
+      "highlightKeywords": [
+        "模板"
+      ]
+    }
+  ]
+}
