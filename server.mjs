@@ -1918,6 +1918,7 @@ async function route(req, res) {
       const id = p.split('/')[3];
       const task = db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id);
       if (!task) return fail(res, 404, '任务不存在');
+      if (!['failed', 'blocked', 'canceled'].includes(task.status)) return fail(res, 400, '只有失败/拦截/取消的任务才能重试');
       updateVideoTask(id, { status: 'queued', progress: 0, error: '', retry_count: (task.retry_count || 0) + 1 });
       enqueueVideoTask(id);
       return send(res, 200, db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id));
