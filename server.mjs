@@ -1929,7 +1929,8 @@ async function route(req, res) {
         avatar: body.avatar !== undefined ? (body.avatar ? 1 : 0) : task.avatar,
         duration_ms: body.duration_ms !== undefined ? Number(body.duration_ms) : task.duration_ms,
         mode: body.mode !== undefined ? String(body.mode) : task.mode,
-        status: 'queued', progress: 0, error: '', timeline_json: '', video_path: '', cover_path: ''
+        status: 'queued', progress: 0, error: '', timeline_json: '', video_path: '', cover_path: '',
+        voice_path: '', publish_status: 'none', publish_receipt: ''
       });
       enqueueVideoTask(id);
       return send(res, 200, db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id));
