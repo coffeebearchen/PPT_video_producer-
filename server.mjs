@@ -193,11 +193,12 @@ function unifiedQueue() {
   const vtasks = db.prepare('SELECT * FROM video_tasks ORDER BY created_at DESC').all();
   for (const t of vtasks) {
     let bucket = 'todo';
+    const pubLabel = t.publish_status === 'ready' ? '待发布' : t.publish_status === 'draft_created' ? '草稿已建' : t.publish_status === 'packaged' ? '发布包已生成' : t.publish_status === 'published' ? '已发布' : t.status;
     if (t.status === 'running') bucket = 'doing';
-    else if (t.status === 'done') bucket = (t.publish_status === 'published') ? 'done' : (t.publish_status === 'ready' ? 'publish' : 'done');
+    else if (t.status === 'done') bucket = (t.publish_status === 'published') ? 'done' : (['ready', 'draft_created', 'packaged'].includes(t.publish_status) ? 'publish' : 'done');
     else if (['failed', 'blocked'].includes(t.status)) bucket = 'error';
     else if (t.status === 'canceled') bucket = 'done';
-    rows.push({ id: t.id, kind: 'vtask', title: t.title, engine: t.engine, style: t.style, bucket, created_at: t.created_at, video_path: t.video_path, cover_path: t.cover_path, brief_status: t.publish_status === 'ready' ? '待发布' : t.status });
+    rows.push({ id: t.id, kind: 'vtask', title: t.title, engine: t.engine, style: t.style, bucket, created_at: t.created_at, video_path: t.video_path, cover_path: t.cover_path, brief_status: pubLabel });
   }
   const briefs = db.prepare('SELECT * FROM briefs ORDER BY created_at DESC').all();
   for (const b of briefs) {
@@ -1937,9 +1938,11 @@ async function route(req, res) {
       const id = p.split('/')[3];
       const task = db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id);
       if (!task) return fail(res, 404, '任务不存在');
+      const body = await readBody(req);
+      const accountId = String(body.account_id || '');
       try {
-        const r = await publishVtaskWechat(task);
-        updateVideoTask(id, { publish_status: r.dry_run ? 'ready' : 'published' });
+        const r = await publishVtaskWechat(task, { accountId });
+        updateVideoTask(id, { publish_status: r.dry_run ? 'ready' : 'draft_created' });
         return send(res, 200, r);
       } catch (e) {
         return fail(res, 500, e.message);
