@@ -61,6 +61,9 @@ const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<'
 const media = (p) => p ? ('/' + String(p).replace(/^\/+/, '')) : '';
 const statusLabel = (s) => STATUS_LABELS[s] || s || '—';
 const statusChip = (s) => `<span class="status status-${esc(s)}">${esc(statusLabel(s))}</span>`;
+const engineLabel = (e) => e === 'vibemotion' ? 'VibeMotion' : '模板';
+const modeLabel = (m) => (m === 'fixed' ? '固定页式' : (m === 'manual' ? '人工' : '讲解式'));
+const libStatusChip = (r) => r.engine === 'vibemotion' ? statusChip(r.status) : statusChip(r.brief_status);
 const fmtDate = (iso) => {
   if (!iso) return '—';
   const d = new Date(iso);

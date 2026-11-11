@@ -200,7 +200,7 @@ function unifiedQueue() {
     else if (t.status === 'done') bucket = (t.publish_status === 'published') ? 'done' : (['ready', 'draft_created', 'packaged'].includes(t.publish_status) ? 'publish' : 'done');
     else if (['failed', 'blocked', 'interrupted'].includes(t.status)) bucket = 'error';
     else if (t.status === 'canceled') bucket = 'done';
-    rows.push({ id: t.id, kind: 'vtask', title: t.title, engine: t.engine, style: t.style, bucket, created_at: t.created_at, video_path: t.video_path, cover_path: t.cover_path, brief_status: pubLabel });
+    rows.push({ id: t.id, kind: 'vtask', title: t.title, engine: t.engine, mode: t.mode || 'auto', review_state: t.review_state || '', style: t.style, bucket, created_at: t.created_at, video_path: t.video_path, cover_path: t.cover_path, brief_status: pubLabel });
   }
   const briefs = db.prepare('SELECT * FROM briefs ORDER BY created_at DESC').all();
   for (const b of briefs) {
@@ -218,6 +218,147 @@ function unifiedQueue() {
   const counts = { todo: 0, doing: 0, review: 0, publish: 0, done: 0, error: 0 };
   rows.forEach(r => { counts[r.bucket] = (counts[r.bucket] || 0) + 1; });
   return { rows: rows.sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))), counts };
+}
+
+// ---------- 阶段3 · 统一读模型（两引擎同一工作项 / 成片库·审批·发布覆盖两引擎） ----------
+// 引擎A（本地模板）成片路径相对 data/（形如 media/xxx/video.mp4），前端直接加 "/"；
+// 引擎B（VibeMotion）成片路径相对 data/media/，前端加 "/media/"。
+const templateMediaUrl = (p) => p ? '/' + String(p).replace(/^\/+/, '') : '';
+const vibemotionMediaUrl = (p) => p ? '/media/' + String(p).replace(/^\/+/, '') : '';
+
+// 统一工件 DTO：content_id / engine / mode / revision / artifact_id / review_state / publication_id
+function unifiedArtifacts() {
+  const rows = [];
+  // 引擎 A：renders（成片），补 brief/spec 上下文
+  const renders = db.prepare(`
+    SELECT r.*, b.title AS brief_title, b.topic AS brief_topic, b.status AS brief_status, s.version AS spec_version
+    FROM renders r JOIN briefs b ON b.id=r.brief_id JOIN specs s ON s.id=r.spec_id
+    ORDER BY r.created_at DESC
+  `).all();
+  for (const r of renders) {
+    const review = latestReview(r.id);
+    const pub = db.prepare('SELECT id FROM publications WHERE render_id=? ORDER BY created_at DESC LIMIT 1').get(r.id);
+    rows.push({
+      id: r.id,
+      kind: 'render',
+      content_id: r.brief_id,
+      engine: 'template',
+      mode: 'fixed',
+      revision: r.spec_version || 1,
+      artifact_id: r.id,
+      review_state: review ? review.decision : '',
+      publication_id: pub ? pub.id : '',
+      title: r.brief_title || '',
+      brief_id: r.brief_id,
+      brief_title: r.brief_title || '',
+      topic: r.brief_topic || '',
+      brief_topic: r.brief_topic || '',
+      duration: r.duration,
+      status: r.status,
+      brief_status: r.brief_status || '',
+      spec_version: r.spec_version,
+      video_path: r.video_path || '',
+      cover_path: r.cover_path || '',
+      media_video: templateMediaUrl(r.video_path),
+      media_cover: templateMediaUrl(r.cover_path),
+      created_at: r.created_at,
+      updated_at: r.updated_at
+    });
+  }
+  // 引擎 B：video_tasks（成片）
+  const vtasks = db.prepare("SELECT * FROM video_tasks WHERE status='done' ORDER BY created_at DESC").all();
+  for (const t of vtasks) {
+    // 把引擎 B 状态映射到引擎 A 成片库的筛选词汇（rendered/approved/changes_requested/published）
+    const mappedStatus = t.publish_status === 'published' ? 'published'
+      : (t.review_state === 'approved') ? 'approved'
+      : (['changes_requested', 'rejected'].includes(t.review_state)) ? 'changes_requested'
+      : 'rendered';
+    rows.push({
+      id: t.id,
+      kind: 'vtask',
+      content_id: t.id,
+      engine: 'vibemotion',
+      mode: t.mode || 'auto',
+      revision: (t.retry_count || 0) + 1,
+      artifact_id: t.id,
+      review_state: t.review_state || '',
+      publication_id: '',
+      title: t.title || '',
+      brief_id: '',
+      brief_title: t.title || '',
+      topic: '',
+      brief_topic: '',
+      duration: Math.round((t.duration_ms || 0) / 1000),
+      status: mappedStatus,
+      raw_status: t.status,
+      brief_status: t.publish_status || '',
+      style: t.style || '',
+      structure_type: t.structure_type || '',
+      script: t.script || '',
+      video_path: t.video_path || '',
+      cover_path: t.cover_path || '',
+      media_video: vibemotionMediaUrl(t.video_path),
+      media_cover: vibemotionMediaUrl(t.cover_path),
+      created_at: t.created_at,
+      updated_at: t.updated_at
+    });
+  }
+  return rows.sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+}
+
+function unifiedPublishQueue() {
+  const rows = [];
+  // 引擎 A：publications
+  const pubs = db.prepare(`
+    SELECT p.*, r.video_path, r.cover_path, r.sha256, b.title, b.id AS brief_id
+    FROM publications p JOIN renders r ON r.id=p.render_id JOIN briefs b ON b.id=r.brief_id
+    ORDER BY p.created_at DESC
+  `).all();
+  for (const p of pubs) {
+    rows.push({
+      ...p,
+      kind: 'pub',
+      engine: 'template',
+      mode: 'fixed',
+      content_id: p.brief_id || '',
+      kit_video: `/kits/${p.render_id}-${p.channel}/video.mp4`,
+      media_video: templateMediaUrl(p.video_path),
+      media_cover: templateMediaUrl(p.cover_path)
+    });
+  }
+  // 引擎 B：video_tasks 处于发布相关状态
+  const vtasks = db.prepare("SELECT * FROM video_tasks WHERE publish_status IN ('ready','packaged','draft_created','published') ORDER BY updated_at DESC").all();
+  for (const t of vtasks) {
+    let receipt = {};
+    try { receipt = jsonParse(t.publish_receipt, {}); } catch {}
+    const channel = receipt.channel || 'wechat_channels';
+    // 把引擎 B 发布状态映射到引擎 A 发布队列词汇
+    const pubStatus = t.publish_status === 'published' ? 'published'
+      : t.publish_status === 'draft_created' ? 'draft_created'
+      : 'ready_for_manual';
+    rows.push({
+      id: t.id,
+      kind: 'vtask_pub',
+      engine: 'vibemotion',
+      mode: t.mode || 'auto',
+      content_id: t.id,
+      channel,
+      status: pubStatus,
+      raw_status: t.publish_status,
+      render_id: '',
+      account_id: receipt.account_id || '',
+      title: t.title || '',
+      video_path: t.video_path || '',
+      cover_path: t.cover_path || '',
+      sha256: '',
+      kit_video: `/kits/vtask-${t.id}-${channel}/video.mp4`,
+      media_video: vibemotionMediaUrl(t.video_path),
+      media_cover: vibemotionMediaUrl(t.cover_path),
+      created_at: t.created_at,
+      updated_at: t.updated_at
+    });
+  }
+  return rows.sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
 }
 
 function dashboard() {
@@ -1408,27 +1549,11 @@ async function route(req, res) {
     }
 
     if (method === 'GET' && p === '/api/library') {
-      const rows = db.prepare(`
-        SELECT r.*, b.title AS brief_title, b.topic AS brief_topic, b.must_include AS brief_must_include, b.status AS brief_status, s.version AS spec_version, s.spec_json
-        FROM renders r JOIN briefs b ON b.id=r.brief_id JOIN specs s ON s.id=r.spec_id
-        ORDER BY r.created_at DESC
-      `).all();
-      return send(res, 200, rows.map(r => ({
-        ...parseRender(r),
-        brief_title: r.brief_title,
-        brief_status: r.brief_status,
-        spec_version: r.spec_version,
-        spec: jsonParse(r.spec_json, {})
-      })));
+      return send(res, 200, unifiedArtifacts());
     }
 
     if (method === 'GET' && p === '/api/publish/queue') {
-      const rows = db.prepare(`
-        SELECT p.*, r.video_path, r.cover_path, r.sha256, b.title, b.id AS brief_id
-        FROM publications p JOIN renders r ON r.id=p.render_id JOIN briefs b ON b.id=r.brief_id
-        ORDER BY p.created_at DESC
-      `).all();
-      return send(res, 200, rows);
+      return send(res, 200, unifiedPublishQueue());
     }
     if (method === 'POST' && /^\/api\/renders\/[^/]+\/publish-kit$/.test(p)) {
       const renderId = p.split('/')[3];
@@ -1925,6 +2050,22 @@ async function route(req, res) {
       enqueueVideoTask(id);
       return send(res, 200, db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id));
     }
+    if (method === 'POST' && /^\/api\/video-tasks\/[^/]+\/review$/.test(p)) {
+      const id = p.split('/')[3];
+      const task = db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id);
+      if (!task) return fail(res, 404, '任务不存在');
+      if (task.status !== 'done') return fail(res, 400, '只有完成的视频才能审批');
+      const body = await readBody(req);
+      const decision = String(body.decision || '');
+      if (!['approved', 'changes_requested', 'rejected'].includes(decision)) return fail(res, 400, 'decision 不合法');
+      updateVideoTask(id, {
+        review_state: decision,
+        review_comment: String(body.comment || ''),
+        reviewed_at: now()
+      });
+      event('review', id, decision, String(body.comment || ''));
+      return send(res, 201, db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id));
+    }
     if (method === 'PUT' && /^\/api\/video-tasks\/[^/]+$/.test(p)) {
       const id = p.split('/').pop();
       const task = db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id);
@@ -1939,7 +2080,7 @@ async function route(req, res) {
         duration_ms: body.duration_ms !== undefined ? Number(body.duration_ms) : task.duration_ms,
         mode: body.mode !== undefined ? String(body.mode) : task.mode,
         status: 'queued', progress: 0, error: '', timeline_json: '', video_path: '', cover_path: '',
-        voice_path: '', publish_status: 'none', publish_receipt: ''
+        voice_path: '', publish_status: 'none', publish_receipt: '', review_state: '', review_comment: '', reviewed_at: ''
       });
       enqueueVideoTask(id);
       return send(res, 200, db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id));
