@@ -472,6 +472,7 @@ async function processCoursewareTask(task) {
 async function generateCoursewareTask(id) {
   const task = db.prepare("SELECT * FROM video_tasks WHERE id=? AND mode='courseware'").get(id);
   if (!task) throw new Error('课件不存在');
+  if (['queued', 'running'].includes(task.status)) throw new Error('正在生成中，请稍候再试');
   const project = JSON.parse(task.timeline_json || '{}');
   const { validateStoryboard, compileStoryboard } = await import('./lib/courseware-compile.mjs');
   validateStoryboard(project.storyboard || {});
