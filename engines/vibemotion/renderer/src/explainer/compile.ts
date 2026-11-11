@@ -3,8 +3,8 @@ import type {Scene, TimelineDSL} from '../types';
 type Style = NonNullable<TimelineDSL['projectMeta']['style']>;
 export type RelationKind = 'sequence' | 'contrast' | 'choice' | 'cause' | 'checklist' | 'cycle' | 'point';
 export type Relation = {kind: RelationKind; labels: string[]; heading?: string};
-type Cue = {text: string; startMs: number; endMs: number};
-type ExplainerInput = {
+export type Cue = {text: string; startMs: number; endMs: number};
+export type ExplainerInput = {
   title: string;
   script: string;
   style?: Style;
@@ -25,9 +25,9 @@ export async function resolveNarration(
   input: {title: string; script?: string},
   writeScript?: (title: string) => Promise<string>,
 ): Promise<string> {
-  const script = input.script?.trim();
-  if (script) return script;
   const title = input.title.trim();
+  const script = input.script?.trim();
+  if (script && script !== title) return script;
   if (!title || !writeScript) throw new Error('请提供文案，或为标题配置写稿函数。');
   const draft = (await writeScript(title)).trim();
   if (!draft || draft === title) throw new Error('自动写稿未返回完整文案。');
@@ -68,7 +68,8 @@ export function selectRelation(sentence: string): Relation {
     const labels = list(keyItems[2]).flatMap((part) => part.split(/和/u)).map(clean).filter(Boolean);
     if (labels.length >= 2 && labels.length <= 4) return {kind: 'point', labels};
   }
-  return {kind: 'point', labels: [line]};
+  const clauses = list(line);
+  return {kind: 'point', labels: clauses.length <= 4 ? clauses : [line]};
 }
 
 export function compileExplainer(input: ExplainerInput): ExplainerTimeline {
@@ -85,32 +86,38 @@ export function compileExplainer(input: ExplainerInput): ExplainerTimeline {
     }
   });
 
-  const groups = cues.map((cue) => ({first: cue, last: cue, relation: selectRelation(cue.text)}));
+  const groups = cues.map((cue) => ({cues: [cue], relation: selectRelation(cue.text)}));
   while (groups.length > 12) {
     let joinAt = 1;
     let best = Infinity;
     for (let index = 1; index < groups.length - 2; index++) {
       const left = groups[index];
       const right = groups[index + 1];
-      const score = right.last.endMs - left.first.startMs + (left.relation.kind === right.relation.kind ? 0 : 1500);
+      const score = right.cues[right.cues.length - 1].endMs - left.cues[0].startMs
+        + (left.relation.kind === right.relation.kind ? 0 : 1500);
       if (score < best) { best = score; joinAt = index; }
     }
     const left = groups[joinAt];
     const right = groups[joinAt + 1];
     groups.splice(joinAt, 2, {
-      first: left.first, last: right.last,
-      relation: left.relation.kind === 'point' ? right.relation : left.relation,
+      cues: [...left.cues, ...right.cues], relation: left.relation,
     });
   }
 
-  const scenes: ExplainerScene[] = groups.map(({first, relation}, index) => ({
+  const scenes: ExplainerScene[] = groups.map(({cues: groupCues, relation}, index) => ({
     sceneId: `explainer-${index + 1}`,
-    startMs: index === 0 ? 0 : first.startMs,
-    endMs: groups[index + 1]?.first.startMs ?? durationMs,
+    startMs: index === 0 ? 0 : groupCues[0].startMs,
+    endMs: groups[index + 1]?.cues[0].startMs ?? durationMs,
     componentName: 'ExplainerBoard',
     transitionIn: 'fade_blur',
     initialProps: relation,
-    stateSteps: [],
+    stateSteps: groupCues.slice(1).map((cue, cueIndex) => {
+      const nextRelation = selectRelation(cue.text);
+      return {
+        stepId: `sentence-change-${cueIndex + 1}`, triggerMs: cue.startMs,
+        propPatches: {...nextRelation, heading: nextRelation.heading ?? ''},
+      };
+    }),
   }));
 
   return {

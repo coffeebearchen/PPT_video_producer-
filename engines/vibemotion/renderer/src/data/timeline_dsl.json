@@ -6,7 +6,7 @@
     "height": 1920,
     "fps": 30,
     "durationMs": 8000,
-    "style": "clean",
+    "style": "dynamic",
     "themePalette": {
       "bg": "#F3EDE1",
       "ink": "#101112",
@@ -27,7 +27,7 @@
       }
     ],
     "masterVoiceover": {
-      "src": "audio/vtask_ffa1b28f.mp3"
+      "src": "audio/vtask_da078ee2.mp3"
     }
   },
   "scenes": [
@@ -48,7 +48,7 @@
         "source": "来源：AI 生成 · 示意数据",
         "progress": 0,
         "active": 0,
-        "style": "clean"
+        "style": "dynamic"
       },
       "stateSteps": [
         {
@@ -89,7 +89,7 @@
         "source": "来源：AI 生成 · 示意数据",
         "progress": 0,
         "active": 0,
-        "style": "clean"
+        "style": "dynamic"
       },
       "stateSteps": [
         {

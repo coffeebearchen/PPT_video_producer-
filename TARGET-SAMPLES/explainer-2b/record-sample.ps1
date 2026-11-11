@@ -1,7 +1,8 @@
+param([string]$InputName = 'script.json', [string]$OutputName = 'out')
 $ErrorActionPreference = 'Stop'
-$sample = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'script.json') -Encoding UTF8 -Raw | ConvertFrom-Json
+$sample = Get-Content -LiteralPath (Join-Path $PSScriptRoot $InputName) -Encoding UTF8 -Raw | ConvertFrom-Json
 $sentences = @($sample.script -split '\r?\n' | Where-Object { $_.Trim() })
-$outDir = Join-Path $PSScriptRoot 'out'
+$outDir = Join-Path $PSScriptRoot $OutputName
 $partsDir = Join-Path $outDir 'voice-parts'
 $audioDir = Join-Path $outDir 'public\audio'
 New-Item -ItemType Directory -Force -Path $partsDir, $audioDir | Out-Null

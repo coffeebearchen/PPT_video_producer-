@@ -11,10 +11,10 @@ void Promise.all(Object.entries(fontManifest).map(async ([family, file]) => {
 })).then(() => continueRender(handle), cancelRender);
 
 const Root = () => {
-  const {timeline} = getInputProps() as {timeline?: ExplainerTimeline};
+  const {timeline, audit = false} = getInputProps() as {timeline?: ExplainerTimeline; audit?: boolean};
   if (!timeline?.scenes.length) throw new Error('请用 --props 传入由编排器生成的项目 JSON。');
   const {durationMs, fps, width, height} = timeline.projectMeta;
-  const props = {timeline};
+  const props = {timeline, audit};
   return <>
     <Composition id="Explainer2B" component={ExplainerVideo} width={width} height={height} fps={fps} durationInFrames={Math.round(durationMs * fps / 1000)} defaultProps={props} />
     <Still id="Explainer2BCover" component={ExplainerCover} width={1080} height={1920} defaultProps={props} />
