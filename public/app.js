@@ -1040,23 +1040,26 @@ async function renderLibrary() {
       <div class="head-actions"><button class="btn btn-primary" data-action="new-brief">+ 新建选题</button></div>
     </div>
     <div class="filter-tabs">${filters.map(([k, l]) => `<button class="${state.libraryFilter === k ? 'active' : ''}" data-filter-library="${k}">${l}</button>`).join('')}</div>
-    ${filtered.length ? `<div class="library-grid">${filtered.map(r => `
+    ${filtered.length ? `<div class="library-grid">${filtered.map(r => {
+      const isVibe = r.engine === 'vibemotion';
+      const foot = isVibe
+        ? `<a class="btn btn-sm" href="${esc(r.media_video)}" target="_blank" rel="noreferrer">播放</a>${r.review_state === 'approved' ? '' : `<button class="btn btn-sm ${r.review_state ? '' : 'btn-primary'}" data-action="vtask-review" data-id="${esc(r.id)}" data-decision="approved">通过</button><button class="btn btn-sm" data-action="vtask-review" data-id="${esc(r.id)}" data-decision="changes_requested">退回</button>`}`
+        : `<a class="btn btn-sm" href="#/brief/${esc(r.brief_id)}">详情</a>${r.video_path ? `<a class="btn btn-sm ${r.status === 'rendered' ? 'btn-primary' : ''}" href="#/review/${esc(r.id)}">${r.status === 'rendered' ? '审看' : '打开'}</a>` : ''}`;
+      return `
       <div class="card content-card">
         <div class="content-cover">
-          ${coverImg(r.cover_path, r.brief_title)}
-          <span class="cover-status">${statusChip(r.brief_status)}</span>
-          <span class="duration">${r.duration || 18}s · v${r.spec_version}</span>
+          ${coverImg(r.media_cover, r.brief_title)}
+          <span class="cover-status">${libStatusChip(r)}</span>
+          <span class="duration">${r.duration || 18}s · ${isVibe ? modeLabel(r.mode) : 'v' + r.spec_version}</span>
         </div>
         <div class="content-body">
           <div class="content-title">${esc(r.brief_title)}</div>
-          <div class="content-desc">${esc(truncate(r.brief_topic || '', 64))}</div>
+          <div class="content-desc">${esc(truncate(r.brief_topic || '', 64))}${isVibe ? `<span class="tag">${esc(engineLabel(r.engine))} · ${esc(modeLabel(r.mode))}</span>` : ''}</div>
           <div class="content-meta"><span>${fmtDate(r.updated_at)}</span><span>${r.video_path ? 'MP4' : '无成片'}</span></div>
-          <div class="content-foot">
-            <a class="btn btn-sm" href="#/brief/${esc(r.brief_id)}">详情</a>
-            ${r.video_path ? `<a class="btn btn-sm ${r.status === 'rendered' ? 'btn-primary' : ''}" href="#/review/${esc(r.id)}">${r.status === 'rendered' ? '审看' : '打开'}</a>` : ''}
-          </div>
+          <div class="content-foot">${foot}</div>
         </div>
-      </div>`).join('')}</div>` : `<div class="empty"><div class="empty-icon"><svg><use href="#i-library"></use></svg></div><h3>这个筛选下还没有内容</h3><p>从选题开始，先生成一条 18 秒的三页视频。</p><button class="btn btn-primary btn-sm" data-action="new-brief">新建选题</button></div>`}`;
+      </div>`;
+    }).join('')}</div>` : `<div class="empty"><div class="empty-icon"><svg><use href="#i-library"></use></svg></div><h3>这个筛选下还没有内容</h3><p>从选题开始，先生成一条 18 秒的三页视频。</p><button class="btn btn-primary btn-sm" data-action="new-brief">新建选题</button></div>`}`;
 }
 
 // ---------- review list ----------
@@ -1075,9 +1078,11 @@ async function renderReviewList() {
         <div class="card-body">
           ${pending.length ? `<div class="task-list">${pending.map(r => `
             <div class="task-row">
-              ${coverImg(r.cover_path, r.brief_title, 'task-cover')}
-              <div class="task-main"><div class="task-title">${esc(r.brief_title)}</div><div class="task-meta">v${r.spec_version} · ${fmtDate(r.updated_at)}</div></div>
-              <div class="task-actions"><a class="btn btn-sm btn-primary" href="#/review/${esc(r.id)}">审看</a></div>
+              ${coverImg(r.media_cover, r.brief_title, 'task-cover')}
+              <div class="task-main"><div class="task-title">${esc(r.brief_title)}</div><div class="task-meta">${r.engine === 'vibemotion' ? modeLabel(r.mode) : 'v' + r.spec_version} · ${fmtDate(r.updated_at)}</div></div>
+              <div class="task-actions">${r.engine === 'vibemotion'
+                ? `<button class="btn btn-sm btn-primary" data-action="vtask-review" data-id="${esc(r.id)}" data-decision="approved">通过</button><button class="btn btn-sm" data-action="vtask-review" data-id="${esc(r.id)}" data-decision="changes_requested">退回</button>`
+                : `<a class="btn btn-sm btn-primary" href="#/review/${esc(r.id)}">审看</a>`}</div>
             </div>`).join('')}</div>` : `<div class="empty"><div class="empty-icon">✓</div><h3>没有待审内容</h3><p>去选题里生成一条新视频，渲染完成后会出现在这里。</p><a class="btn btn-sm" href="#/briefs">去选题</a></div>`}
         </div>
       </div>
@@ -1086,7 +1091,7 @@ async function renderReviewList() {
         <div class="card-body">
           ${approved.length ? `<div class="task-list">${approved.slice(0, 6).map(r => `
             <div class="task-row">
-              ${coverImg(r.cover_path, r.brief_title, 'task-cover')}
+              ${coverImg(r.media_cover, r.brief_title, 'task-cover')}
               <div class="task-main"><div class="task-title">${esc(r.brief_title)}</div><div class="task-meta">已通过 · ${fmtDate(r.updated_at)}</div></div>
               <div class="task-actions"><a class="btn btn-sm" href="#/publish">发布</a></div>
             </div>`).join('')}</div>` : `<div class="empty"><h3>还没有通过的成片</h3><p>审批通过后会出现在这里。</p></div>`}
@@ -1250,7 +1255,7 @@ async function renderPublish() {
   const [library, queue] = await Promise.all([api('/api/library'), api('/api/publish/queue')]);
   const approved = library.filter(r => r.status === 'approved');
   const existingIds = new Set(queue.map(q => q.render_id));
-  const todo = approved.filter(r => !existingIds.has(r.id));
+  const todo = approved.filter(r => r.engine !== 'vibemotion' && !existingIds.has(r.id));
   const pendingQueue = queue.filter(q => !['published'].includes(q.status));
   const doneQueue = queue.filter(q => q.status === 'published');
   $('#view').innerHTML = `
@@ -1272,9 +1277,14 @@ async function renderPublish() {
       <div class="card">
         <div class="card-head"><div><h2 class="section-title">队列 <span class="muted tiny">${pendingQueue.length}</span></h2><p class="section-sub">公众号草稿 / 视频号人工发布。</p></div></div>
         <div class="card-body">
-          ${pendingQueue.length ? `<div class="pub-list">${pendingQueue.map(p => `
+          ${pendingQueue.length ? `<div class="pub-list">${pendingQueue.map(p => p.engine === 'vibemotion' ? `
             <div class="pub-row">
-              ${coverImg(p.cover_path, p.title, 'pub-cover')}
+              ${coverImg(p.media_cover, p.title, 'pub-cover')}
+              <div class="pub-main"><div class="pub-title">${esc(p.title)}</div><div class="pub-meta"><span class="channel-badge ${esc(p.channel)}">${p.channel === 'wechat_channels' ? '视频号' : '公众号'}</span><span class="tag">VibeMotion</span>${statusChip(p.status)}<span>${fmtDate(p.updated_at || p.created_at)}</span></div></div>
+              <div class="pub-actions"><a class="btn btn-sm" href="${esc(p.kit_video)}" target="_blank" rel="noreferrer">发布包</a></div>
+            </div>` : `
+            <div class="pub-row">
+              ${coverImg(p.media_cover, p.title, 'pub-cover')}
               <div class="pub-main"><div class="pub-title">${esc(p.title)}</div><div class="pub-meta"><span class="channel-badge ${p.channel}">${p.channel === 'wechat_channels' ? '视频号' : (p.channel === 'xiaohongshu' ? '小红书' : '公众号')}</span>${accountBadge(p)}${statusChip(p.status)}<span>${fmtDate(p.scheduled_at || p.created_at)}</span></div></div>
               <div class="pub-actions">
                 ${p.channel === 'wechat_article'
@@ -1292,7 +1302,12 @@ async function renderPublish() {
     <div class="card mt-16">
       <div class="card-head"><div><h2 class="section-title">已发布 <span class="muted tiny">${doneQueue.length}</span></h2><p class="section-sub">回执和链接都在这里。</p></div></div>
       <div class="card-body">
-        ${doneQueue.length ? `<div class="pub-list">${doneQueue.map(p => `
+        ${doneQueue.length ? `<div class="pub-list">${doneQueue.map(p => p.engine === 'vibemotion' ? `
+          <div class="pub-row">
+            ${coverImg(p.cover_path, p.title, 'pub-cover')}
+            <div class="pub-main"><div class="pub-title">${esc(p.title)}</div><div class="pub-meta"><span class="channel-badge ${esc(p.channel)}">${p.channel === 'wechat_channels' ? '视频号' : '公众号'}</span><span class="tag">VibeMotion</span>${statusChip('published')}<span>${fmtDate(p.updated_at || p.created_at)}</span></div></div>
+            <div class="pub-actions">${statusChip('published')}</div>
+          </div>` : `
           <div class="pub-row">
             ${coverImg(p.cover_path, p.title, 'pub-cover')}
             <div class="pub-main"><div class="pub-title">${esc(p.title)}</div><div class="pub-meta"><span class="channel-badge ${p.channel}">${p.channel === 'wechat_channels' ? '视频号' : (p.channel === 'xiaohongshu' ? '小红书' : '公众号')}</span>${accountBadge(p)}<span>${fmtDate(p.updated_at)}</span>${p.url ? `<a href="${esc(p.url)}" target="_blank" rel="noreferrer">打开链接</a>` : ''}</div></div>
@@ -3214,6 +3229,13 @@ document.addEventListener('click', async (e) => {
     if (action === 'confirm-video-task') {
       e.preventDefault();
       try { await post(`/api/video-tasks/${encodeURIComponent(el.dataset.id)}/confirm`, {}); toast('已确认，开始生成'); renderAutogen(); }
+      catch (err) { toast(err.message, 'error'); }
+      return;
+    }
+    if (action === 'vtask-review') {
+      e.preventDefault();
+      const decision = el.dataset.decision || 'approved';
+      try { await post(`/api/video-tasks/${encodeURIComponent(el.dataset.id)}/review`, { decision }); toast(decision === 'changes_requested' ? '已退回' : '已通过'); route(); }
       catch (err) { toast(err.message, 'error'); }
       return;
     }
