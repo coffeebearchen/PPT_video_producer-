@@ -124,6 +124,8 @@ function migrateLegacyMusicPages() {
 migrateLegacyMusicPages();
 // A server restart kills any in-flight renderer; do not leave the UI polling forever.
 db.prepare("UPDATE renders SET status='canceled', progress=0, error='服务重启，任务中断' WHERE status IN ('preview_queued','preview_rendering','render_queued','rendering')").run();
+// video_tasks: running → interrupted (recoverable), queued → stays queued (re-enqueued below)
+db.prepare("UPDATE video_tasks SET status='interrupted', progress=0, error='服务重启，任务中断' WHERE status='running'").run();
 
 async function ensureSpecElements(spec, brief) {
   const custom = () => db.prepare("SELECT * FROM elements WHERE status='active'").all()
@@ -196,7 +198,7 @@ function unifiedQueue() {
     const pubLabel = t.publish_status === 'ready' ? '待发布' : t.publish_status === 'draft_created' ? '草稿已建' : t.publish_status === 'packaged' ? '发布包已生成' : t.publish_status === 'published' ? '已发布' : t.status;
     if (t.status === 'running') bucket = 'doing';
     else if (t.status === 'done') bucket = (t.publish_status === 'published') ? 'done' : (['ready', 'draft_created', 'packaged'].includes(t.publish_status) ? 'publish' : 'done');
-    else if (['failed', 'blocked'].includes(t.status)) bucket = 'error';
+    else if (['failed', 'blocked', 'interrupted'].includes(t.status)) bucket = 'error';
     else if (t.status === 'canceled') bucket = 'done';
     rows.push({ id: t.id, kind: 'vtask', title: t.title, engine: t.engine, style: t.style, bucket, created_at: t.created_at, video_path: t.video_path, cover_path: t.cover_path, brief_status: pubLabel });
   }
@@ -1918,7 +1920,7 @@ async function route(req, res) {
       const id = p.split('/')[3];
       const task = db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id);
       if (!task) return fail(res, 404, '任务不存在');
-      if (!['failed', 'blocked', 'canceled'].includes(task.status)) return fail(res, 400, '只有失败/拦截/取消的任务才能重试');
+      if (!['failed', 'blocked', 'canceled', 'interrupted'].includes(task.status)) return fail(res, 400, '只有失败/拦截/取消/中断的任务才能重试');
       updateVideoTask(id, { status: 'queued', progress: 0, error: '', retry_count: (task.retry_count || 0) + 1 });
       enqueueVideoTask(id);
       return send(res, 200, db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id));
@@ -2215,6 +2217,9 @@ const server = http.createServer((req, res) => {
 server.listen(PORT, HOST, () => {
   console.log(`[studio] http://${HOST}:${PORT}`);
   console.log(`[studio] data: ${DATA_DIR}`);
+  // Re-enqueue tasks that were queued before a restart.
+  const queued = db.prepare("SELECT id FROM video_tasks WHERE status='queued'").all();
+  for (const q of queued) enqueueVideoTask(q.id);
 });
 
 

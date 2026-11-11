@@ -1,11 +1,11 @@
 {
   "version": "1.0",
   "projectMeta": {
-    "title": "口播测试",
+    "title": "批量测试",
     "width": 1080,
     "height": 1920,
     "fps": 30,
-    "durationMs": 10000,
+    "durationMs": 8000,
     "style": "clean",
     "themePalette": {
       "bg": "#F3EDE1",
@@ -17,7 +17,7 @@
       "muted": "#7B7468"
     }
   },
-  "avatar": true,
+  "avatar": false,
   "audioTracks": {
     "sfxEvents": [
       {
@@ -27,23 +27,23 @@
       }
     ],
     "masterVoiceover": {
-      "src": "audio/vtask_e3bbc483.mp3"
+      "src": "audio/vtask_ffa1b28f.mp3"
     }
   },
   "scenes": [
     {
       "sceneId": "s1",
       "startMs": 0,
-      "endMs": 7200,
+      "endMs": 5760,
       "transitionIn": "fade_blur",
       "componentName": "GraphicScene",
       "initialProps": {
         "family": "process",
         "kind": "causal",
-        "title": "口播测试",
-        "claim": "一个想法，只有跑起来才可靠",
+        "title": "批量测试",
+        "claim": "一个想法，多种讲法",
         "labels": [
-          "一个想法，只有跑起"
+          "一个想法，多种讲法"
         ],
         "source": "来源：AI 生成 · 示意数据",
         "progress": 0,
@@ -53,14 +53,14 @@
       "stateSteps": [
         {
           "stepId": "a",
-          "triggerMs": 2880,
+          "triggerMs": 2304,
           "propPatches": {
             "progress": 1
           }
         },
         {
           "stepId": "b",
-          "triggerMs": 5400,
+          "triggerMs": 4320,
           "propPatches": {
             "active": 1
           }
@@ -69,17 +69,17 @@
     },
     {
       "sceneId": "s2",
-      "startMs": 7200,
-      "endMs": 10000,
+      "startMs": 5760,
+      "endMs": 8000,
       "transitionIn": "fade_blur",
       "componentName": "GraphicScene",
       "initialProps": {
         "family": "chart",
         "kind": "ring",
-        "title": "口播测试",
-        "claim": "一个想法，只有跑起来才可靠",
+        "title": "批量测试",
+        "claim": "一个想法，多种讲法",
         "labels": [
-          "一个想法，只有跑起"
+          "一个想法，多种讲法"
         ],
         "values": [
           65,
@@ -94,7 +94,7 @@
       "stateSteps": [
         {
           "stepId": "a",
-          "triggerMs": 8320,
+          "triggerMs": 6656,
           "propPatches": {
             "progress": 1
           }
@@ -106,10 +106,10 @@
     {
       "id": "c1",
       "startMs": 0,
-      "endMs": 10000,
-      "text": "一个想法，只有跑起来才可靠。",
+      "endMs": 8000,
+      "text": "一个想法，多种讲法。",
       "highlightKeywords": [
-        "口播测试"
+        "批量测试"
       ]
     }
   ]
