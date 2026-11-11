@@ -11,7 +11,7 @@ import {
 } from './lib/db.mjs';
 import { generateAngles, generateSpec, llmConfigured, testLLM, draftBriefFromDirection, draftAnalogyFromNote, draftSoulFromDirection, diagnoseStructures, checkDirection, checkStructure, draftQuoteCandidates, draftElementSvg, draftAutoScript } from './lib/generator.mjs';
 import { publishWechat, testWechat, publishVtaskWechat } from './lib/wechat.mjs';
-import { renderVibeMotion, buildTimeline, renderExplainer, ensureSilentVoice, ENGINE_DIR, activeVibeChildren } from './lib/vibemotion.mjs';
+import { renderVibeMotion, buildTimeline, renderExplainer, renderFixedPages, ensureSilentVoice, ENGINE_DIR, activeVibeChildren } from './lib/vibemotion.mjs';
 import { synthesizeSpeech, ttsConfigured } from './lib/tts.mjs';
 import { compileExplainer, estimateCues, splitNarration } from './lib/explainer.mjs';
 import { ELEMENT_CATALOG, PALETTES, FONT_PAIRS, TEMPLATES } from './lib/element-catalog.mjs';
@@ -472,9 +472,22 @@ async function processVideoTask(id) {
     updateVideoTask(id, { status: 'pending_confirm', progress: 25, timeline_json: JSON.stringify(timeline), error: '' });
     return;
   }
+  // 固定页式：mode='fixed'，spec 存 timeline_json（含 spec 或直接是 spec）。
+  let fixedSpec = null;
+  if (task.mode === 'fixed') {
+    try {
+      const raw = JSON.parse(task.timeline_json || '{}');
+      fixedSpec = raw.spec || raw;
+    } catch {}
+    if (!fixedSpec || !fixedSpec.page_count || !fixedSpec.theme) {
+      updateVideoTask(id, { status: 'failed', progress: 0, error: '固定页式缺少 spec（timeline_json 需含 spec 或 {spec}）' });
+      return;
+    }
+  }
+
   // 讲解式自动编排：非人工模式且文案 ≥ 8 句时，走 2B 的 compileExplainer + Explainer2B。
   let useExplainer = false;
-  if (!isManual && !timeline && splitNarration(script).length >= 8) {
+  if (!fixedSpec && !isManual && !timeline && splitNarration(script).length >= 8) {
     try {
       let vp = voicePath;
       if (!vp) {
@@ -493,7 +506,11 @@ async function processVideoTask(id) {
   const outRel = path.join('video-tasks', id);
   const outDir = path.join(MEDIA_DIR, outRel);
   try {
-    if (useExplainer) {
+    if (fixedSpec) {
+      await renderFixedPages(fixedSpec, outDir, (p) => {
+        updateVideoTask(id, { progress: p, error: '' });
+      });
+    } else if (useExplainer) {
       await renderExplainer(timeline, outDir, (p) => {
         updateVideoTask(id, { progress: p, error: '' });
       });
