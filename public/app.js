@@ -2654,6 +2654,7 @@ async function renderSettings() {
                 <div class="field"><label>标题字体</label><select name="font_heading">${fontOpts(s.font_heading || 'ZCOOL KuaiLe')}</select></div>
                 <div class="field"><label>正文字体</label><select name="font_body">${fontOpts(s.font_body || 'LXGW WenKai')}</select></div>
                 <div class="field"><label>渲染服务地址</label><input name="render_service_url" value="${esc(s.render_service_url || 'http://127.0.0.1:5001')}"></div>
+                <div class="field"><label>默认引擎</label><select name="engine_default"><option value="vibemotion" ${(s.engine_default || 'vibemotion') === 'vibemotion' ? 'selected' : ''}>VibeMotion（讲解式 / 固定页式）</option><option value="template" ${s.engine_default === 'template' ? 'selected' : ''}>旧模板（4/5/6 页）</option></select></div>
                 <div class="field"><label>默认生成模式</label><select name="engine_default_mode"><option value="auto" ${(s.engine_default_mode || 'auto') === 'auto' ? 'selected' : ''}>自动：直接出片</option><option value="manual" ${s.engine_default_mode === 'manual' ? 'selected' : ''}>人工：先确认分镜</option></select></div>
                 <div class="field"><label>TTS 供应商</label><select name="tts_provider"><option value="none" ${(s.tts_provider || 'none') === 'none' ? 'selected' : ''}>暂未接入（字幕版）</option><option value="mock" ${s.tts_provider === 'mock' ? 'selected' : ''}>测试语音（静音）</option><option value="openai_compat" ${s.tts_provider === 'openai_compat' ? 'selected' : ''}>OpenAI 兼容</option><option value="volcano" ${s.tts_provider === 'volcano' ? 'selected' : ''}>火山引擎 · 声音克隆</option><option value="minimax" ${s.tts_provider === 'minimax' ? 'selected' : ''}>MiniMax</option><option value="iflytek" ${s.tts_provider === 'iflytek' ? 'selected' : ''}>讯飞</option><option value="siliconflow" ${s.tts_provider === 'siliconflow' ? 'selected' : ''}>硅基流动</option></select></div>
                 <div class="field"><label>TTS Base URL</label><input name="tts_base_url" value="${esc(s.tts_base_url || '')}" placeholder="OpenAI 兼容时填"></div>
@@ -3122,7 +3123,12 @@ document.addEventListener('click', async (e) => {
   const el = e.target.closest('[data-action]');
   if (el) {
     const action = el.dataset.action;
-    if (action === 'new-brief') { e.preventDefault(); navigate('/create'); return; }
+    if (action === 'new-brief') {
+      e.preventDefault();
+      const def = state.settings?.engine_default || 'vibemotion';
+      navigate(def === 'template' ? '/create' : '/autogen');
+      return;
+    }
     if (action === 'edit-video-task') { e.preventDefault(); openEditVideoTask(el.dataset.id); return; }
     if (action === 'open-vtask-publish') { e.preventDefault(); openVtaskPublish(el.dataset.id); return; }
     if (action === 'publish-video-task') {
@@ -3919,6 +3925,7 @@ document.addEventListener('submit', async (e) => {
     const fd = new FormData(form);
     const body = {
       render_service_url: fd.get('render_service_url'),
+      engine_default: fd.get('engine_default'),
       engine_default_mode: fd.get('engine_default_mode'),
       tts_provider: fd.get('tts_provider'),
       tts_base_url: fd.get('tts_base_url'),
