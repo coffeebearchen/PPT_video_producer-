@@ -71,7 +71,7 @@ function Audit({surface, name, cover}: {surface: React.RefObject<HTMLDivElement 
         issues.push('末页 CTA 须位于安全区右下角');
       }
       if (name !== 'quote' && ask) issues.push('CTA 只能出现在末页');
-      console.info(`FIXED_PAGE_AUDIT ${JSON.stringify({page: name, cover, checked, issues})}`);
+      console.info(`FIXED_PAGE_AUDIT ${JSON.stringify({page: name, cover, width: canvas.width, height: canvas.height, checked, issues})}`);
       if (issues.length) cancelRender(new Error(issues.join('\n')));
       else continueRender(handle);
     }).catch(cancelRender);
@@ -100,7 +100,7 @@ type PageName = 'cover' | 'context' | 'compare' | 'quote';
 
 function FixedPage({spec, name, audit = false, cover = false}: FixedPageProps & {name: PageName; cover?: boolean}) {
   const local = useCurrentFrame();
-  const {fps, height} = useVideoConfig();
+  const {fps, width, height} = useVideoConfig();
   const surface = useRef<HTMLDivElement>(null);
   const dark = name === 'compare' || name === 'quote';
   const emphasis = cover ? 1 : interpolate(local, [0.38 * fps, 1.08 * fps], [0, 1], {
@@ -109,6 +109,7 @@ function FixedPage({spec, name, audit = false, cover = false}: FixedPageProps & 
   const p1 = spec.page1;
   const p2 = spec.page2;
   const q = spec.quote;
+  const contextTitle = spec.context.title.replace(/，(?=.{4,}$)/u, '，\n');
   const leftSetup = p2.left_thin || p2.left_line1_rest;
   const leftAnswer = p2.left_thin ? p2.left_line1_rest : p2.left_line2;
   const leftNote = p2.left_thin ? p2.left_line2 : p2.left_stamp;
@@ -117,7 +118,7 @@ function FixedPage({spec, name, audit = false, cover = false}: FixedPageProps & 
   const quoteParts = q.highlight ? q.line2.split(q.highlight) : [q.line2];
   const highlightQuote = quoteParts.length === 2;
 
-  return <AbsoluteFill ref={surface} style={{background: dark ? '#171B18' : paper, color: dark ? '#FAF3DC' : ink, fontFamily: body, textAlign: 'center'}}>
+  return <AbsoluteFill ref={surface} style={{width, height, background: dark ? '#171B18' : paper, color: dark ? '#FAF3DC' : ink, fontFamily: body, textAlign: 'center'}}>
     <AbsoluteFill aria-hidden style={{
       backgroundImage: dark
         ? 'radial-gradient(ellipse at 75% 25%, #35402F 0%, transparent 57%), repeating-linear-gradient(0deg, #FFFFFF06 0 1px, transparent 1px 5px)'
@@ -138,7 +139,7 @@ function FixedPage({spec, name, audit = false, cover = false}: FixedPageProps & 
       </div>}
       {name === 'context' && <div style={{...stack, flex: 1, width: '100%', justifyContent: 'center', gap: 44}}>
         {spec.context.subtitle && <Copy size={30} minimum={28} style={{color: vermilion}}>{spec.context.subtitle}</Copy>}
-        <Copy size={70} style={{...titleStyle, maxWidth: 780}}>{spec.context.title}</Copy>
+        <Copy size={70} style={{...titleStyle, maxWidth: 780, whiteSpace: 'pre-line', textWrap: 'balance'}}>{contextTitle}</Copy>
         <Copy size={37} minimum={28} style={{maxWidth: 740, color: mutedPaper}}>{spec.context.note}</Copy>
         <div data-audit-box="index card"><PaperIndex /></div>
         <Copy size={38} style={{color: vermilion, opacity: 0.5 + 0.5 * emphasis}}>{spec.context.bottom}</Copy>

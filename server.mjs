@@ -1938,11 +1938,15 @@ async function route(req, res) {
       const id = p.split('/')[3];
       const task = db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id);
       if (!task) return fail(res, 404, '任务不存在');
+      if (['draft_created', 'published'].includes(task.publish_status)) return fail(res, 400, '该视频已创建草稿或已发布，勿重复操作');
       const body = await readBody(req);
       const accountId = String(body.account_id || '');
       try {
         const r = await publishVtaskWechat(task, { accountId });
-        updateVideoTask(id, { publish_status: r.dry_run ? 'ready' : 'draft_created' });
+        updateVideoTask(id, {
+          publish_status: r.dry_run ? 'ready' : 'draft_created',
+          publish_receipt: JSON.stringify({ media_id: r.media_id || '', account_id: accountId, channel: 'wechat_article', dry_run: r.dry_run, at: now() })
+        });
         return send(res, 200, r);
       } catch (e) {
         return fail(res, 500, e.message);
