@@ -24,6 +24,63 @@
 
 不是静态原型，所有页面和数据都在本地跑通。零 npm 依赖，只用 Node 24 内置的 `node:sqlite`、`fetch` 和系统里的 Chrome + ffmpeg。
 
+## 课件式（Courseware）· 新增
+
+把「PPT 式课件」做成竖屏视频：**真实截图 + 圈重点 + 推镜头 + 流程 + 旁白**。
+
+### 三种用法
+
+1. **一键生成**：给一个主题 → AI 排 5 页 → 出片
+   ```http
+   POST /api/courseware/auto { "topic": "如何自动发布公众号" }
+   ```
+2. **文案分镜**：一段话 + 截图/视频 → AI 拆镜头 + 找位置 + 选效果
+   ```http
+   POST /api/courseware/drafts/{id}/compose { "script": "先讲审批页点通过；再讲发布页点生成发布包" }
+   ```
+3. **手动编辑**：浏览器打开 `#/autogen` → 模式选「课件式」→ 加页/传素材/拖框/填旁白
+
+### 页面类型
+
+| kind | 用途 |
+|---|---|
+| `title` | 开场 |
+| `screenshot` | 真实截图 + 高亮框 + 推镜头 |
+| `video` | 真实视频片段（`trim` / `muted` / `fit`）|
+| `flow` | 流程节点图 |
+| `bullet` | 要点 |
+| `quote` | 收尾金句 |
+
+### 19 种效果（A–H）
+
+镜头 `zoom/pan/follow` · 出现 `stagger/typewriter/fade` · 标注 `draw/arrow/bubblePop` · 强调 `pulse/magnifier` · 转场 `fade/slide/push/wipe` · 声音 `bgm/sfx` · 结构 `hook/progress/chapter` · 质感 `grain/gradient/lightSweep/tilt`
+
+完整调用说明：`engines/vibemotion/renderer/src/courseware/CALLING.md`、`VIDEO-CALLING.md`、`BRAND-CALLING.md`。
+
+### 品牌 + AI 标识（白标/合规）
+
+```json
+{ "brand": { "text": "固定地址", "show": true }, "aiLabel": { "text": "AI 生成", "show": true } }
+```
+
+### 素材与 AI 找位置
+
+- 本主题素材：`data/media/courseware/{taskId}/`（图/视频/音频，按任务隔离）
+- 上传：`POST /api/courseware/drafts/{id}/assets`
+- AI 找位置：`POST /api/courseware/drafts/{id}/assets/{aid}/detect { "description": "第一行的通过按钮" }`
+
+### 实现位置
+
+| 模块 | 文件 |
+|---|---|
+| 渲染器 | `engines/vibemotion/renderer/src/courseware/` |
+| 编译 | `lib/courseware-compile.mjs` |
+| 分镜（LLM+VLM）| `lib/courseware-compose.mjs` |
+| 视觉找位置 | `lib/courseware-detect.mjs` |
+| 渲染封装 | `lib/courseware-render.mjs` |
+| 项目/素材 | `lib/courseware-project.mjs` |
+| API | `server.mjs`（`/api/courseware/*`）|
+
 ## 快速开始
 
 ```powershell
