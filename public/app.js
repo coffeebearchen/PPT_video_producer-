@@ -194,6 +194,7 @@ function parseRoute() {
   if (parts[0] === 'review') return { name: 'review' };
   if (parts[0] === 'publish') return { name: 'publish' };
   if (parts[0] === 'wechat') return { name: 'wechat', id: parts[1] || '' };
+  if (parts[0] === 'channels') return { name: 'channels' };
   if (parts[0] === 'batch') return { name: 'batch' };
   if (parts[0] === 'autogen') return { name: 'autogen' };
   if (parts[0] === 'knowledge') return { name: 'knowledge' };
@@ -222,6 +223,7 @@ async function route() {
     if (state.route.name === 'review-detail') return await renderReviewDetail(state.route.id);
     if (state.route.name === 'publish') return await renderPublish();
     if (state.route.name === 'wechat') return await renderAccountGroupWorkspace(state.route.id);
+    if (state.route.name === 'channels') return await renderChannels();
     if (state.route.name === 'batch') return await renderBatch();
     if (state.route.name === 'workbench') return await renderWorkbench();
     if (state.route.name === 'autogen') return await renderAutogen();
@@ -1843,6 +1845,51 @@ function openVoiceUpload() {
   });
 }
 
+async function renderChannels() {
+  setNav('channels'); setCrumb('工作台 / 发布 / 渠道');
+  const data = await api('/api/channels').catch(() => ({ channels: [] }));
+  const channels = data.channels || [];
+  const modeLabel = m => m === 'api' ? '官方/自动' : '手动';
+  const typeLabel = t => ({ video: '视频', article: '图文', image: '图片' }[t] || t);
+  const list = channels.length ? channels.map(c => `
+    <div class="voice-row">
+      <div class="voice-main">
+        <div class="voice-name">${esc(c.name)} ${c.enabled ? '' : '<span class="tag">已停用</span>'}</div>
+        <div class="autogen-meta"><span class="badge">${typeLabel(c.content_type)}</span><span class="badge">${modeLabel(c.publish_mode)}</span><span style="color:var(--muted);font-size:11px">${esc(c.note || '')}</span></div>
+      </div>
+      <div class="flex" style="gap:6px"><button class="btn btn-sm" data-action="toggle-channel" data-id="${esc(c.id)}">${c.enabled ? '停用' : '启用'}</button><button class="btn btn-sm" data-action="delete-channel" data-id="${esc(c.id)}">删除</button></div>
+    </div>`).join('') : '<div class="empty"><h3>还没有渠道</h3></div>';
+  $('#view').innerHTML = `
+    <div class="page-head">
+      <div><p class="eyebrow">CHANNELS / 渠道</p><h1 class="page-title">发布渠道库。</h1><p class="page-sub">自己加渠道；平台按渠道生成标题/描述/标签/封面发布包，人手动发。</p></div>
+      <div class="head-actions"><button class="btn btn-primary" data-action="open-channel-add">+ 加渠道</button></div>
+    </div>
+    <div class="card mt-16"><div class="card-body">${list}</div></div>
+  `;
+}
+
+function openChannelAdd() {
+  openModal({
+    title: '加渠道',
+    body: `<form id="channel-form">
+      <div class="field"><label>渠道名</label><input name="name" placeholder="例如：小红书 / 知乎 / 西瓜视频" required></div>
+      <div class="field"><label>内容形态</label><select name="content_type"><option value="video">视频</option><option value="article">图文</option><option value="image">图片</option></select></div>
+      <div class="field"><label>发布方式</label><select name="publish_mode"><option value="manual">手动发布包（推荐）</option><option value="api">官方/自动 API</option></select></div>
+      <div class="field"><label>说明（可选）</label><input name="note" placeholder="例如：封面图 + 标题≤20字 + 标签"></div>
+    </form>`,
+    foot: `<button class="btn" data-action="close-modal">取消</button><button class="btn btn-primary" type="submit" form="channel-form">添加</button>`,
+    onMount: () => {
+      const form = $('#channel-form');
+      form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(form);
+        try { await post('/api/channels', { name: fd.get('name'), content_type: fd.get('content_type'), publish_mode: fd.get('publish_mode'), note: fd.get('note') }); toast('已添加'); closeModal(); renderChannels(); }
+        catch (err) { toast(err.message, 'error'); }
+      });
+    }
+  });
+}
+
 async function renderKnowledge(q = '') {
   setNav('knowledge'); setCrumb('工作台 / 知识库');
   const data = await api('/api/knowledge');
@@ -3090,6 +3137,20 @@ document.addEventListener('click', async (e) => {
       renderAssets({ archived: !state.assetArchived }); return;
     }
     if (action === 'open-voice-upload') { e.preventDefault(); openVoiceUpload(); return; }
+    if (action === 'open-channel-add') { e.preventDefault(); openChannelAdd(); return; }
+    if (action === 'toggle-channel') {
+      e.preventDefault();
+      try { await post(`/api/channels/${encodeURIComponent(el.dataset.id)}/toggle`, {}); renderChannels(); }
+      catch (err) { toast(err.message, 'error'); }
+      return;
+    }
+    if (action === 'delete-channel') {
+      e.preventDefault();
+      if (!confirm('删除这个渠道？')) return;
+      try { await post(`/api/channels/${encodeURIComponent(el.dataset.id)}/delete`, {}); toast('已删除'); renderChannels(); }
+      catch (err) { toast(err.message, 'error'); }
+      return;
+    }
     if (action === 'archive-voice') {
       e.preventDefault();
       try { await post(`/api/voice-assets/${encodeURIComponent(el.dataset.id)}/archive`, {}); renderVoices(); }

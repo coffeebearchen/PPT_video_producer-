@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#EDE5D6;font-family:"Microsoft YaHei",sans-serif;color:#101112}
+  .screen{width:1440px;height:920px;background:#F3EDE1;border-bottom:3px solid #101112;padding:20px 26px;position:relative;overflow:hidden}
+  .head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+  h2{font-family:"Noto Serif SC",serif;font-size:24px;margin:2px 0 2px}
+  .eyebrow{font-size:10px;letter-spacing:.2em;color:#7B7468}
+  .sub{color:#7B7468;font-size:12px;margin:0}
+  .card{background:#fff;border:1px solid #E2DACB;border-radius:12px;padding:15px;margin-bottom:12px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  label{display:block;font-size:11px;color:#7B7468;margin:8px 0 4px}
+  input,select,textarea{width:100%;background:#FDFCF8;border:1px solid #D8CFBE;border-radius:6px;padding:8px 9px;font-size:12px;color:#101112}
+  .btn{display:inline-block;background:#101112;color:#F3EDE1;border-radius:6px;padding:8px 13px;font-size:12px;font-weight:700;border:0}
+  .btn.lime{background:#D9FF57;color:#101112}
+  .btn.ghost{background:transparent;border:1px solid #CFC4B2;color:#101112}
+  .seg{display:flex;gap:7px;flex-wrap:wrap}
+  .seg label{display:flex;align-items:center;gap:6px;border:1px solid #E2DACB;border-radius:8px;padding:7px 10px;font-size:12px;margin:0;cursor:pointer}
+  .seg label.sel{border:2px solid #101112;background:#F7F4EC}
+  .style-card{border:2px solid #E2DACB;border-radius:9px;padding:5px;text-align:center;cursor:pointer}
+  .style-card.sel{border-color:#101112}
+  .style-card input{display:none}
+  .ph{height:66px;border-radius:6px;display:grid;place-items:center;color:#fff;font-size:10px;font-weight:700;margin-bottom:3px}
+  .tabs{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0}
+  .tabs b{background:#fff;border:1px solid #E2DACB;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700}
+  .tabs b.on{background:#101112;color:#D9FF57}
+  .row{display:flex;align-items:center;gap:11px;padding:10px 0;border-top:1px solid #EDE5D6}
+  .badge{font-size:10px;padding:2px 8px;border-radius:10px;background:#F2EEE3;border:1px solid #D8CFBE}
+  .badge.engine{background:#D9FF57;border:0;font-weight:800}
+  .badge.warn{background:#FFF3E0;border-color:#E8A33C;color:#9A6B00}
+  .thumb{background:#111;border-radius:8px;display:grid;place-items:center;color:#D9FF57;font-size:10px}
+  .pages{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .page{background:#FBF8F1;border:1px solid #E2DACB;border-radius:9px;padding:8px}
+  .page .pv{background:#111;border-radius:7px;height:180px;display:grid;place-items:center;color:#D9FF57;font-size:9px}
+  .dry{color:#B3261E;font-size:10px}
+  .kicker{position:absolute;top:14px;right:26px;font-size:10px;color:#A49B8C}
+</style>
+</head>
+<body>
+
+<!-- 1 工作台 -->
+<div class="screen">
+  <span class="kicker">01 · 工作台</span>
+  <div class="head"><div><div class="eyebrow">WORKBENCH</div><h2>一个内容，一个工作项</h2><p class="sub">编排 → 生成 → 成片 → 审批 → 发布，全在一页。</p></div><button class="btn lime">+ 新建视频</button></div>
+  <div class="tabs"><b class="on">待办 13</b><b>生成中 1</b><b>待审批 36</b><b>待发布 6</b><b>已完成 15</b><b>异常 2</b></div>
+  <div class="card">
+    <div class="row"><div style="flex:1"><b>AI 幻觉避坑</b><br><span class="badge engine">讲解式</span> <span class="badge engine">严谨工业</span> <span class="badge">成片已生成</span></div><button class="btn ghost">播放</button><button class="btn ghost">编辑</button><button class="btn">准备发布</button></div>
+    <div class="row"><div style="flex:1"><b>设备采购三步法</b><br><span class="badge">固定页式</span> <span class="badge">简洁</span> <span class="badge">待审批</span></div><button class="btn ghost">预览</button><button class="btn ghost">编辑</button><button class="btn lime">审批</button></div>
+    <div class="row"><div style="flex:1"><b>Token 计费</b><br><span class="badge engine">讲解式</span> <span class="badge">活泼动感</span> <span class="badge">已完成</span></div><button class="btn ghost">播放</button><button class="btn ghost">看回执</button></div>
+  </div>
+  <div class="card">
+    <div class="eyebrow">详情面板（点开一条）</div>
+    <div class="grid2" style="margin-top:8px">
+      <div class="thumb" style="height:200px">候选成片<br>+ 1080×1920 / 1080×1440</div>
+      <div>
+        <b>发布（默认 dry-run）<span class="dry">DRY-RUN</span></b>
+        <div class="seg" style="margin:8px 0"><label class="sel">视频号 · 手动包</label><label>公众号 · 建草稿</label></div>
+        <div style="font-size:11px;color:#7B7468;margin-bottom:8px">账号：固定地址（视频号 + 公众号）</div>
+        <button class="btn">生成发布包 / 草稿</button>
+        <div style="margin-top:10px"><span class="badge warn">历史：v1 已发 · v2 草稿 · v3 当前候选</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 2 新建视频 -->
+<div class="screen">
+  <span class="kicker">02 · 新建视频</span>
+  <div class="head"><div><div class="eyebrow">CREATE</div><h2>新建内容</h2><p class="sub">三个维度分开选：编排方式 / 生成确认 / 视觉风格。</p></div></div>
+  <div class="card">
+    <div class="grid2">
+      <div>
+        <label>编排方式</label>
+        <div class="seg"><label class="sel">讲解式（旁白+图解）</label><label>固定页式（4/5/6页）</label></div>
+        <label>生成确认</label>
+        <div class="seg"><label class="sel">自动直接出片</label><label>人工先确认分镜</label></div>
+        <label>配音</label>
+        <select><option>火山 TTS · 我的声音</option><option>导入配音</option><option>本机语音</option></select>
+      </div>
+      <div>
+        <label>视觉风格</label>
+        <div class="grid3">
+          <label class="style-card sel"><input type="radio" name="s"><div class="ph" style="background:#0B1210">工业</div><b>严谨工业</b></label>
+          <label class="style-card"><input type="radio" name="s"><div class="ph" style="background:#F4F1E9;color:#253B34">简洁</div><b>简洁</b></label>
+          <label class="style-card"><input type="radio" name="s"><div class="ph" style="background:#122C2B">动感</div><b>活泼动感</b></label>
+        </div>
+        <label>可选</label>
+        <div class="seg"><label><input type="checkbox"> 加数字人口播</label><label><input type="checkbox"> 同文案出 3 种风格（批量）</label></div>
+      </div>
+    </div>
+    <div class="grid2" style="margin-top:8px">
+      <div><label>标题</label><input value="为什么 AI 会一本正经地胡说八道"></div>
+      <div><label>时长</label><input value="45 秒"></div>
+    </div>
+    <label>文案</label><textarea rows="3">AI 不是有意骗你，它只是被训练成必须给一个答案……</textarea>
+    <div class="seg" style="margin-top:10px"><button class="btn lime">✨ AI 写文案</button><button class="btn">自动生成</button><button class="btn ghost">存草稿</button></div>
+  </div>
+</div>
+
+<!-- 3 成片详情 + 审批 -->
+<div class="screen">
+  <span class="kicker">03 · 成片详情 + 审批</span>
+  <div class="head"><div><div class="eyebrow">REVIEW</div><h2>成片审批</h2><p class="sub">同屏看：候选成片 vs 上次已审版，预检结论一目了然。</p></div></div>
+  <div class="card">
+    <div class="grid3">
+      <div><label>当前候选（v3）</label><div class="thumb" style="height:200px">v3 预览</div></div>
+      <div><label>上次已审（v1）</label><div class="thumb" style="height:200px">v1 预览</div></div>
+      <div>
+        <label>预检结果</label>
+        <div style="font-size:11px;line-height:1.7">
+          <span class="badge warn">字幕 1 句超长，建议断句</span><br><br>
+          <span class="badge">中间 80% ✅</span>
+          <span class="badge">正文 ≥24px ✅</span><br><br>
+          <span class="badge">封面 2 尺寸 ✅</span>
+          <span class="badge">末页 CTA ✅</span>
+        </div>
+      </div>
+    </div>
+    <div class="seg" style="margin-top:12px"><button class="btn ghost">修改文案/分镜</button><button class="btn ghost">保留原片 v1</button><button class="btn lime">批准 v3</button></div>
+  </div>
+</div>
+
+<!-- 4 发布 -->
+<div class="screen">
+  <span class="kicker">04 · 发布</span>
+  <div class="head"><div><div class="eyebrow">PUBLISH</div><h2>发布（默认 dry-run）</h2><p class="sub">账号 + 渠道 + 动作 + 版本，都要明确；人最后确认。</p></div></div>
+  <div class="card">
+    <div class="grid2">
+      <div>
+        <label>渠道</label>
+        <div class="seg"><label class="sel">视频号 · 手动上传包</label><label>公众号 · 建草稿</label></div>
+        <label>账号</label>
+        <select><option>固定地址（视频号）</option><option>固定地址（公众号）</option></select>
+        <label>动作</label>
+        <div class="seg"><label class="sel">仅生成包/草稿</label><label>生成后立即提交（需二次确认）</label></div>
+      </div>
+      <div>
+        <label>内容摘要</label>
+        <div style="font-size:11px;color:#7B7468;line-height:1.7">
+          标题：AI 幻觉避坑<br>版本：v3（候选）<br>封面：2 张 ✅<br>素材：插画×2 + 音乐×1<br>AI 标识：已生成内容
+        </div>
+        <div style="margin-top:8px"><span class="badge warn">DRY-RUN：不会真实发送</span></div>
+      </div>
+    </div>
+    <button class="btn" style="margin-top:10px">生成发布包 / 草稿</button>
+  </div>
+  <div class="card">
+    <div class="eyebrow">历史回执</div>
+    <div class="row"><span class="badge">v1</span><span>公众号草稿 media_xxx</span><span>已发 · 链接已回填</span></div>
+    <div class="row"><span class="badge">v2</span><span>视频号手动包</span><span>待人工上传</span></div>
+  </div>
+</div>
+
+<!-- 5 固定页式编辑器 -->
+<div class="screen">
+  <span class="kicker">05 · 固定页式编辑器</span>
+  <div class="head"><div><div class="eyebrow">FIXED-PAGE EDITOR</div><h2>固定页式 · 逐页编辑</h2><p class="sub">4/5/6 页，逐页预览、改字段、定位问题。</p></div></div>
+  <div class="card">
+    <div class="pages">
+      <div class="page"><div class="pv">P1 封面</div><b>封面主句</b><input value="AI 为什么胡说"></div>
+      <div class="page"><div class="pv">P2 对照</div><b>左</b><input value="你以为它懂"><b>右</b><input value="其实它接词"></div>
+      <div class="page"><div class="pv">P3 证据</div><b>证据</b><textarea rows="2">训练目标不是查证</textarea></div>
+      <div class="page"><div class="pv">P4 收束</div><b>金句</b><input value="答得越顺越要警惕"></div>
+    </div>
+    <div class="seg" style="margin-top:10px"><button class="btn ghost">换主题预览</button><button class="btn lime">按这页重渲</button><button class="btn ghost">导出</button></div>
+  </div>
+</div>
+
+<!-- 6 素材库 -->
+<div class="screen">
+  <span class="kicker">06 · 素材库</span>
+  <div class="head"><div><div class="eyebrow">ASSETS</div><h2>图片素材 · 分组 / 标签 / 归档</h2><p class="sub">常用靠前，旧的归档，需要时能找回。</p></div><button class="btn lime">+ 上传图片</button></div>
+  <div class="card">
+    <div class="seg" style="margin-bottom:10px">
+      <input placeholder="搜索名字 / 标签" style="max-width:200px">
+      <button class="btn ghost">搜索</button>
+      <label class="sel">全部</label><label>咖啡主题</label><label>产品A</label><label>春节专题</label><button class="btn ghost">查看归档</button>
+    </div>
+    <div class="grid3">
+      <div class="page"><div class="pv">图 1</div><b>咖啡封面</b><span class="badge">咖啡主题</span></div>
+      <div class="page"><div class="pv">图 2</div><b>插画·跑步</b><span class="badge">插画</span></div>
+      <div class="page"><div class="pv">图 3</div><b>图标·时间</b><span class="badge">图标</span></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

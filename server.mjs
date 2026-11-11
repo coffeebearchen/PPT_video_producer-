@@ -2096,6 +2096,30 @@ async function route(req, res) {
       return send(res, 200, { ok: true });
     }
 
+    if (method === 'GET' && p === '/api/channels') {
+      return send(res, 200, { channels: db.prepare('SELECT * FROM channels ORDER BY created_at').all() });
+    }
+    if (method === 'POST' && p === '/api/channels') {
+      const body = await readBody(req);
+      if (!body.name) return fail(res, 400, '渠道名必填');
+      const id = newId('ch');
+      db.prepare('INSERT INTO channels (id,name,content_type,publish_mode,note,enabled,created_at) VALUES (?,?,?,?,?,?,?)')
+        .run(id, String(body.name), String(body.content_type || 'video'), String(body.publish_mode || 'manual'), String(body.note || ''), body.enabled === false ? 0 : 1, now());
+      return send(res, 201, db.prepare('SELECT * FROM channels WHERE id=?').get(id));
+    }
+    if (method === 'POST' && /^\/api\/channels\/[^/]+\/delete$/.test(p)) {
+      const id = p.split('/')[3];
+      db.prepare('DELETE FROM channels WHERE id=?').run(id);
+      return send(res, 200, { ok: true });
+    }
+    if (method === 'POST' && /^\/api\/channels\/[^/]+\/toggle$/.test(p)) {
+      const id = p.split('/')[3];
+      const ch = db.prepare('SELECT * FROM channels WHERE id=?').get(id);
+      if (!ch) return fail(res, 404, '渠道不存在');
+      db.prepare('UPDATE channels SET enabled=? WHERE id=?').run(ch.enabled ? 0 : 1, id);
+      return send(res, 200, db.prepare('SELECT * FROM channels WHERE id=?').get(id));
+    }
+
     return fail(res, 404, 'API 不存在');
   }
 

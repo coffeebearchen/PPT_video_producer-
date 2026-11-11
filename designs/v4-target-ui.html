@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#EDE5D6;font-family:"Microsoft YaHei",sans-serif;color:#101112}
+  .app{display:grid;grid-template-columns:230px 1fr;height:1050px}
+  .side{background:#101112;color:#F1EBDD;padding:20px 14px}
+  .brand{display:flex;gap:10px;align-items:center;margin-bottom:22px}
+  .mark{width:30px;height:30px;border-radius:7px;background:#D9FF57;color:#101112;display:grid;place-items:center;font-weight:900}
+  .label{font-size:10px;letter-spacing:.18em;color:#8A918B;margin:16px 0 8px}
+  .side a{display:flex;gap:9px;align-items:center;padding:8px 10px;color:#CFC8BC;text-decoration:none;border-radius:6px;font-size:13px}
+  .side a.on{background:#D9FF57;color:#101112;font-weight:800}
+  .main{background:#F3EDE1;padding:22px 28px;overflow:auto}
+  h1{font-family:"Noto Serif SC",serif;font-size:28px;margin:6px 0 2px}
+  .sub{color:#7B7468;font-size:13px;margin:0 0 16px}
+  .card{background:#fff;border:1px solid #E2DACB;border-radius:12px;padding:16px;margin-bottom:14px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  label{display:block;font-size:11px;color:#7B7468;margin:8px 0 4px}
+  input,select,textarea{width:100%;background:#FDFCF8;border:1px solid #D8CFBE;border-radius:6px;padding:9px 10px;font-size:13px;color:#101112}
+  .btn{display:inline-block;background:#101112;color:#F3EDE1;border-radius:6px;padding:8px 13px;font-size:12px;font-weight:700;border:0;cursor:pointer}
+  .btn.lime{background:#D9FF57;color:#101112}
+  .btn.ghost{background:transparent;border:1px solid #CFC4B2;color:#101112}
+  .seg{display:flex;gap:8px;flex-wrap:wrap}
+  .seg label{display:flex;align-items:center;gap:6px;border:1px solid #E2DACB;border-radius:8px;padding:8px 11px;font-size:13px;color:#101112;margin:0;cursor:pointer}
+  .seg label.sel{border:2px solid #101112;background:#F7F4EC}
+  .style-picker{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .style-card{border:2px solid #E2DACB;border-radius:10px;padding:6px;cursor:pointer;text-align:center}
+  .style-card.sel{border-color:#101112}
+  .style-card input{display:none}
+  .style-card .ph{height:86px;border-radius:6px;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:700}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+  .tabs button{background:#fff;border:1px solid #E2DACB;border-radius:8px;padding:7px 12px;font-size:12px;cursor:pointer}
+  .tabs button.on{background:#101112;color:#D9FF57}
+  .row{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid #EDE5D6}
+  .badge{font-size:10px;padding:2px 8px;border-radius:10px;background:#F2EEE3;border:1px solid #D8CFBE}
+  .badge.engine{background:#D9FF57;border:0;font-weight:800}
+  .badge.warn{background:#FFF3E0;border-color:#E8A33C;color:#9A6B00}
+  .detail{display:grid;grid-template-columns:180px 1fr;gap:14px;border:1px dashed #C9BEAB;border-radius:10px;padding:12px;background:#FBF8F1}
+  .detail .thumb{background:#111;border-radius:8px;height:240px;display:grid;place-items:center;color:#D9FF57;font-size:11px}
+  .dry{margin-left:6px;font-size:10px;color:#B3261E}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="side">
+    <div class="brand"><span class="mark">FA</span><span>固定地址<small style="display:block;font-size:9px;color:#8A918B">CONTENT STUDIO</small></span></div>
+    <div class="label">工作台</div>
+    <a class="on" href="#">工作台</a>
+    <a href="#">新建视频</a>
+    <div class="label">内容资产</div>
+    <a href="#">成片库</a><a href="#">图片素材</a><a href="#">音乐库</a><a href="#">声音</a><a href="#">知识库</a><a href="#">结构库</a><a href="#">模板库</a><a href="#">元素库</a>
+    <div class="label">发布</div>
+    <a href="#">审批</a><a href="#">发布</a><a href="#">账号</a>
+    <div class="label">系统</div>
+    <a href="#">设置</a>
+  </div>
+
+  <div class="main">
+    <h1>工作台</h1>
+    <p class="sub">一个内容，一个工作项：编排 → 生成 → 成片 → 审批 → 发布，全在这里。</p>
+
+    <div class="card">
+      <div class="grid2">
+        <div>
+          <label>编排方式（决定页面/时间怎么排）</label>
+          <div class="seg">
+            <label class="sel"><span>○</span> 讲解式</label>
+            <label><span>○</span> 固定页式</label>
+          </div>
+          <label>生成确认</label>
+          <div class="seg">
+            <label class="sel"><span>○</span> 自动</label>
+            <label><span>○</span> 人工先确认</label>
+          </div>
+        </div>
+        <div>
+          <label>视觉风格（配色/字体）</label>
+          <div class="style-picker">
+            <label class="style-card sel"><input type="radio" name="s"><div class="ph" style="background:#0B1210">工业</div><b>严谨工业</b></label>
+            <label class="style-card"><input type="radio" name="s"><div class="ph" style="background:#F4F1E9;color:#253B34">简洁</div><b>简洁</b></label>
+            <label class="style-card"><input type="radio" name="s"><div class="ph" style="background:#122C2B">动感</div><b>活泼动感</b></label>
+          </div>
+        </div>
+        <div class="grid2" style="grid-column:1/-1">
+          <div><label>标题</label><input value="为什么 AI 会一本正经地胡说八道"></div>
+          <div><label>配音</label><select><option>火山 TTS · 我的声音（dry-run）</option><option>导入配音</option></select></div>
+        </div>
+        <div style="grid-column:1/-1"><label>文案</label><textarea rows="2">AI 不是有意骗你，它只是被训练成必须给一个答案……</textarea></div>
+      </div>
+      <div class="seg" style="margin-top:12px"><button class="btn lime">✨ AI 写文案</button><button class="btn">自动生成</button><button class="btn ghost">存草稿</button></div>
+    </div>
+
+    <div class="tabs">
+      <button class="on">待办 13</button><button>生成中 1</button><button>待审批 36</button><button>待发布 6</button><button>已完成 15</button><button>异常 2</button>
+    </div>
+
+    <div class="card">
+      <div class="row"><div style="flex:1"><b>AI 幻觉避坑</b><br><span class="badge engine">讲解式</span> <span class="badge engine">严谨工业</span> <span class="badge">成片已生成</span></div><button class="btn ghost">播放</button><button class="btn ghost">编辑</button><button class="btn">准备发布</button></div>
+      <div class="detail" style="margin-top:10px">
+        <div class="thumb">候选成片<br>+ 双封面</div>
+        <div>
+          <b>发布这一步（默认 dry-run，不真发）<span class="dry">DRY-RUN</span></b>
+          <div class="seg" style="margin:8px 0">
+            <label class="sel"><span>○</span> 视频号 · 手动上传包</label>
+            <label><span>○</span> 公众号 · 建草稿</label>
+          </div>
+          <div style="font-size:12px;color:#7B7468;margin-bottom:8px">账号：固定地址（视频号）+ 固定地址（公众号）</div>
+          <button class="btn">生成发布包 / 草稿</button>
+          <span class="badge warn" style="margin-left:8px">历史版本：v1（已发） · v2（草稿）</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
