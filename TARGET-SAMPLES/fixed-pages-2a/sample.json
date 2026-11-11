@@ -1,0 +1,74 @@
+{
+    "source":  "data/regression/archive-4.json",
+    "spec":  {
+                 "page_count":  4,
+                 "brand":  "FIXED ADDRESS",
+                 "theme":  "archive",
+                 "page1":  {
+                               "kicker":  "书脊不是目录卡",
+                               "kicker_accent":  "",
+                               "lines":  [
+                                             "收藏只记住",
+                                             "资料叫什么",
+                                             "知识库要回答"
+                                         ],
+                               "quote_line2":  false,
+                               "addr_label":  "翻成一句话",
+                               "highlight":  "下次怎么找",
+                               "highlight_latin":  "",
+                               "en":  "A LIBRARY, NOT A PILE",
+                               "footnote":  "收藏是存货，知识库是路径。",
+                               "stamp_line1":  "路径",
+                               "stamp_line2":  "优先"
+                           },
+                 "context":  {
+                                 "title":  "小团队做内容，为什么越收藏越乱",
+                                 "subtitle":  "为什么这件事现在会发生",
+                                 "note":  "收藏只记住资料叫什么；知识库要回答：下次从哪个问题走进去。",
+                                 "bottom":  "先看问题，再看资料。"
+                             },
+                 "page2":  {
+                               "kicker":  "表面上是在整理资料，",
+                               "kicker_accent":  "底层是在设计路径",
+                               "left_tag":  "图书馆",
+                               "left_thin":  "",
+                               "left_line1_rest":  "看起来是",
+                               "left_line2":  "书脊上的书名",
+                               "left_stamp":  "卡住",
+                               "right_tag":  "知识库",
+                               "right_prefix":  "其实是",
+                               "right_highlight":  "目录卡",
+                               "right_badge":  "通了",
+                               "conclusion_small":  "所以",
+                               "conclusion_prefix":  "先把",
+                               "conclusion_highlight":  "检索路径",
+                               "footnote":  "收藏只记住资料叫什么，知识库要回答下次从哪个问题走进去。"
+                           },
+                 "quote":  {
+                               "line1":  "别问存了多少资料",
+                               "line2":  "先问下次怎么找",
+                               "highlight":  "下次怎么找",
+                               "note":  "收藏是存货，知识库是路径。",
+                               "cta":  "关注固定地址\u003cbr\u003e把你的资料变成路径",
+                               "stamp":  "路径优先"
+                           },
+                 "music":  "pulse",
+                 "motion":  {
+                                "preset":  "flow",
+                                "transition":  {
+                                                   "mode":  "slide",
+                                                   "duration":  0.9
+                                               },
+                                "envelope":  {
+                                                 "type":  "slideX",
+                                                 "start":  0.82,
+                                                 "duration":  2.35,
+                                                 "fromX":  -300,
+                                                 "toX":  0,
+                                                 "fromRot":  -7,
+                                                 "toRot":  0,
+                                                 "ease":  "outCubic"
+                                             }
+                            }
+             }
+}

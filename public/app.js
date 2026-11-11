@@ -1650,7 +1650,14 @@ async function openEditVideoTask(id) {
   });
 }
 
-function openVtaskPublish(id) {
+async function openVtaskPublish(id) {
+  const acc = await api('/api/wechat-accounts').catch(() => ({ accounts: [], default_id: '' }));
+  const accounts = acc.accounts || [];
+  const articleAccounts = accounts.filter(a => a.channel !== 'wechat_channels');
+  const videoAccounts = accounts.filter(a => a.channel === 'wechat_channels');
+  const opt = (list, label) => list.length
+    ? `<div class="field"><label>${label}</label><select name="${label === '公众号账号' ? 'article_account' : 'video_account'}">${list.map(a => `<option value="${esc(a.id)}">${esc(a.name || a.id)}</option>`).join('')}</select></div>`
+    : `<div class="field"><label>${label}</label><input disabled value="未配置"></div>`;
   openModal({
     title: '生成发布包',
     body: `<form id="vtask-publish-form">
@@ -1658,18 +1665,24 @@ function openVtaskPublish(id) {
         <label class="check-row"><input type="radio" name="channel" value="wechat_channels" checked> 视频号（手动上传）</label>
         <label class="check-row"><input type="radio" name="channel" value="wechat_article"> 公众号（文章草稿）</label>
       </div>
+      <div id="channel-account">${opt(videoAccounts, '视频号账号')}</div>
     </form>`,
     foot: `<button class="btn" data-action="close-modal">取消</button><button class="btn btn-primary" type="submit" form="vtask-publish-form">生成发布包</button>`,
     onMount: () => {
       const form = $('#vtask-publish-form');
+      const box = $('#channel-account');
+      form?.querySelectorAll('input[name="channel"]').forEach(r => r.addEventListener('change', () => {
+        box.innerHTML = r.value === 'wechat_article' ? opt(articleAccounts, '公众号账号') : opt(videoAccounts, '视频号账号');
+      }));
       form?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(form);
         try {
           const channel = fd.get('channel');
           if (channel === 'wechat_article') {
-            const r = await post(`/api/video-tasks/${encodeURIComponent(id)}/publish-wechat`, {});
-            toast(r.dry_run ? '公众号草稿（dry-run 已生成，未真调微信）' : '公众号草稿已创建');
+            const accountId = fd.get('article_account') || '';
+            const r = await post(`/api/video-tasks/${encodeURIComponent(id)}/publish-wechat`, { account_id: accountId });
+            toast(r.dry_run ? '公众号草稿（dry-run，未真调微信）' : '公众号草稿已创建');
           } else {
             const r = await post(`/api/video-tasks/${encodeURIComponent(id)}/publish`, { channel });
             toast('发布包已生成：' + r.kit);
