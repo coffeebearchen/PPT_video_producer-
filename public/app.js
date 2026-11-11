@@ -1721,7 +1721,9 @@ function openAutogenNew() {
         <div class="field full"><label>标题</label><input name="title" placeholder="例如：为什么 AI 会一本正经地胡说八道" required></div>
         <div class="field full"><label>题材 / 口播稿</label><textarea name="script" rows="4" placeholder="给一句话或一段文案"></textarea></div>
         <div class="field"><label>结构</label><select name="structure_type"><option value="causal">因果 / 流程</option><option value="contrast">对照</option><option value="misconception">误区修正</option><option value="checklist">清单</option><option value="timeline">时间演进</option></select></div>
-        <div class="field"><label>生成模式</label><select name="mode"><option value="auto">自动：直接出片</option><option value="manual">人工：先确认分镜</option></select></div>
+        <div class="field"><label>生成模式</label><select name="mode"><option value="auto">讲解式：直接出片</option><option value="manual">讲解式：先确认分镜</option><option value="fixed">固定页式</option></select></div>
+        <div class="field"><label>主题（固定页式）</label><select name="theme"><option value="archive">Archive 奶油纸</option><option value="terminal">Terminal 终端</option><option value="editorial">Editorial 编辑</option><option value="noir">Noir 暗黑</option><option value="earth">Earth 大地</option></select></div>
+        <div class="field"><label>页数（固定页式）</label><select name="page_count"><option value="4">4 页（20 秒）</option><option value="5">5 页（24 秒）</option><option value="6">6 页（28 秒）</option></select></div>
         <div class="field"><label>时长（秒）</label><input name="duration_sec" type="number" value="30" min="5" max="60"></div>
       </div>
     </form>`,
@@ -1731,14 +1733,17 @@ function openAutogenNew() {
       form?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(form);
-        const body = {
-          title: fd.get('title'),
-          script: fd.get('script'),
-          structure_type: fd.get('structure_type'),
-          duration_ms: (Number(fd.get('duration_sec')) || 30) * 1000,
-          engine: 'vibemotion',
-          mode: fd.get('mode') || 'auto'
-        };
+        const mode = fd.get('mode') || 'auto';
+        const body = mode === 'fixed'
+          ? { title: fd.get('title'), engine: 'vibemotion', mode: 'fixed', theme: fd.get('theme') || 'archive', page_count: Number(fd.get('page_count')) || 4 }
+          : {
+              title: fd.get('title'),
+              script: fd.get('script'),
+              structure_type: fd.get('structure_type'),
+              duration_ms: (Number(fd.get('duration_sec')) || 30) * 1000,
+              engine: 'vibemotion',
+              mode
+            };
         try {
           const task = await post('/api/video-tasks', body);
           toast('任务已创建，开始自动生成'); closeModal(); renderAutogen();

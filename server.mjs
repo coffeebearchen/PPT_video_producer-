@@ -2050,7 +2050,28 @@ async function route(req, res) {
     }
     if (method === 'POST' && p === '/api/video-tasks') {
       const body = await readBody(req);
-      if (!body.title && !body.script) return fail(res, 400, '标题或文案必填');
+      const mode = String(body.mode || 'auto');
+      let title = String(body.title || '');
+      let script = String(body.script || '');
+      let timelineJson = '';
+      let durationMs = Math.max(5000, Number(body.duration_ms) || 30000);
+
+      // 固定页式：从 data/regression 选「主题 + 页数」加载 spec。
+      if (mode === 'fixed') {
+        const theme = String(body.theme || 'archive');
+        const pageCount = Number(body.page_count) || 4;
+        if (!['archive', 'terminal', 'editorial', 'noir', 'earth'].includes(theme)) return fail(res, 400, '主题不合法');
+        if (![4, 5, 6].includes(pageCount)) return fail(res, 400, '页数须为 4/5/6');
+        const specFile = path.join(DATA_DIR, 'regression', `${theme}-${pageCount}.json`);
+        if (!fs.existsSync(specFile)) return fail(res, 404, `固定页式样本不存在：${theme}-${pageCount}`);
+        const spec = JSON.parse(fs.readFileSync(specFile, 'utf8').replace(/^\uFEFF/, ''));
+        timelineJson = JSON.stringify({ spec });
+        title = title || `固定页式 · ${theme} · ${pageCount} 页`;
+        if (!script) script = title;
+        durationMs = [20, 24, 28][pageCount - 4] * 1000;
+      }
+
+      if (!title && !script) return fail(res, 400, '标题或文案必填');
       const id = newId('vtask');
       const t = now();
       const structureType = String(body.structure_type || 'causal');
@@ -2058,10 +2079,10 @@ async function route(req, res) {
       db.prepare(`INSERT INTO video_tasks
         (id,title,engine,mode,template,style,avatar,structure_type,structure_name,script,voice_path,voice_provider,timeline_json,palette,duration_ms,status,progress,video_path,cover_path,error,retry_count,user_id,source,created_at,updated_at)
         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(
-        id, String(body.title || body.script.slice(0, 20)), String(body.engine || 'vibemotion'), String(body.mode || 'auto'),
-        String(body.template || ''), String(body.style || 'industrial'), body.avatar ? 1 : 0, structureType, structureName, String(body.script || body.title || ''), String(body.voice_path || ''),
-        String(body.voice_provider || ''), '', String(body.palette || 'cream'), Math.max(5000, Number(body.duration_ms) || 30000),
-        'queued', 0, '', '', '', 0, String(body.user_id || ''), String(body.source || 'autogen'), t, t
+        id, title, String(body.engine || 'vibemotion'), mode,
+        String(body.template || ''), String(body.style || 'industrial'), body.avatar ? 1 : 0, structureType, structureName, script, String(body.voice_path || ''),
+        String(body.voice_provider || ''), timelineJson, String(body.palette || 'cream'), durationMs,
+        'queued', 0, '', '', '', 0, String(body.user_id || ''), String(body.source || (mode === 'fixed' ? 'fixed-pages' : 'autogen')), t, t
       );
       event('video_task', id, 'created', body.title || '');
       enqueueVideoTask(id);
