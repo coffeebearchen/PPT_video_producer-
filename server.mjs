@@ -11,7 +11,9 @@ import {
 } from './lib/db.mjs';
 import { generateAngles, generateSpec, llmConfigured, testLLM, draftBriefFromDirection, draftAnalogyFromNote, draftSoulFromDirection, diagnoseStructures, checkDirection, checkStructure, draftQuoteCandidates, draftElementSvg, draftAutoScript } from './lib/generator.mjs';
 import { publishWechat, testWechat, publishVtaskWechat } from './lib/wechat.mjs';
-import { renderVibeMotion, buildTimeline, ENGINE_DIR, activeVibeChildren } from './lib/vibemotion.mjs';import { synthesizeSpeech, ttsConfigured } from './lib/tts.mjs';
+import { renderVibeMotion, buildTimeline, renderExplainer, ensureSilentVoice, ENGINE_DIR, activeVibeChildren } from './lib/vibemotion.mjs';
+import { synthesizeSpeech, ttsConfigured } from './lib/tts.mjs';
+import { compileExplainer, estimateCues, splitNarration } from './lib/explainer.mjs';
 import { ELEMENT_CATALOG, PALETTES, FONT_PAIRS, TEMPLATES } from './lib/element-catalog.mjs';
 import { listElementAssets } from './lib/element-assets.mjs';
 import { checkCompliance } from './lib/compliance.mjs';
@@ -470,16 +472,40 @@ async function processVideoTask(id) {
     updateVideoTask(id, { status: 'pending_confirm', progress: 25, timeline_json: JSON.stringify(timeline), error: '' });
     return;
   }
+  // 讲解式自动编排：非人工模式且文案 ≥ 8 句时，走 2B 的 compileExplainer + Explainer2B。
+  let useExplainer = false;
+  if (!isManual && !timeline && splitNarration(script).length >= 8) {
+    try {
+      let vp = voicePath;
+      if (!vp) {
+        vp = ensureSilentVoice(id, Number(taskWithVoice.duration_ms) || 30000);
+        updateVideoTask(id, { voice_path: vp });
+      }
+      const cues = estimateCues(script, Number(taskWithVoice.duration_ms) || 30000);
+      timeline = compileExplainer({ title: taskWithVoice.title || '讲解', script, style: taskWithVoice.style || 'industrial', cues, durationMs: Number(taskWithVoice.duration_ms) || 30000, voiceSrc: vp });
+      useExplainer = true;
+    } catch (e) {
+      console.warn('[explainer] 回退到旧编排:', e.message);
+      useExplainer = false;
+      timeline = null;
+    }
+  }
   const outRel = path.join('video-tasks', id);
   const outDir = path.join(MEDIA_DIR, outRel);
   try {
-    const tpl = TEMPLATES.find(t => t.templateId === task.template);
-    const st = getSettings();
-    const baseStyle = tpl ? (PALETTES[tpl.palette] || PALETTES['cream-paper']) : PALETTES['cream-paper'];
-    const style = { ...baseStyle, fonts: { heading: st.font_heading || 'ZCOOL KuaiLe', body: st.font_body || 'LXGW WenKai' } };
-    const res = await renderVibeMotion(taskWithVoice, outDir, (p, stage) => {
-      updateVideoTask(id, { progress: p, error: '' });
-    }, timeline, style);
+    if (useExplainer) {
+      await renderExplainer(timeline, outDir, (p) => {
+        updateVideoTask(id, { progress: p, error: '' });
+      });
+    } else {
+      const tpl = TEMPLATES.find(t => t.templateId === task.template);
+      const st = getSettings();
+      const baseStyle = tpl ? (PALETTES[tpl.palette] || PALETTES['cream-paper']) : PALETTES['cream-paper'];
+      const style = { ...baseStyle, fonts: { heading: st.font_heading || 'ZCOOL KuaiLe', body: st.font_body || 'LXGW WenKai' } };
+      await renderVibeMotion(taskWithVoice, outDir, (p) => {
+        updateVideoTask(id, { progress: p, error: '' });
+      }, timeline, style);
+    }
     updateVideoTask(id, {
       status: 'done', progress: 100,
       video_path: outRel.replaceAll('\\', '/') + '/video.mp4',
