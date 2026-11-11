@@ -61,3 +61,49 @@ Codex 只改：engines/vibemotion/renderer/src/** / TARGET-SAMPLES/** / docs/COD
   3. 遗留问题
   4. 是否需要 DSH 或用户决策
 ```
+
+## 七、心跳与握手（防沉睡，关键）
+
+```text
+问题：两个 agent 通过共享盘协作，没有推送，
+      必须靠“轮询 + 标记已读 + 心跳”。
+
+协议：
+1. 每个可写文件头部带「版本号 + 时间戳」，例如：
+   ---
+   VERSION: 3
+   UPDATED: 2026-11-11T09:40:00
+   ---
+
+2. 谁写完，就把版本号 +1。
+
+3. 谁读完并处理完，就在自己的 ACK 文件里写一行：
+   [时间] 已读 CODEX-PROGRESS V3 → 已处理 → 更新了 CODEX-TASK V4
+
+4. 心跳：DSH 每 15 分钟轮询一次；Codex 每次启动先读板再干活，
+   干完写进度+ACK，不等待、不停顿。
+```
+
+### 双方固定文件
+
+```text
+docs/COLLAB-BOARD.md     状态板（DSH 写，双方读）
+docs/CODEX-TASK.md       给 Codex 的任务（DSH 写，Codex 读）
+docs/CODEX-PROGRESS.md   Codex 进度（Codex 写，DSH 读）
+docs/HANDSHAKE.md        握手记录（双方各写自己的 ACK 行）
+```
+
+### 轮询节奏
+
+```text
+DSH：  每 15 分钟检查一次 CODEX-PROGRESS 和 HANDSHAKE
+Codex：每次启动先读 COLLAB-BOARD + CODEX-TASK，再干活
+```
+
+### 防沉睡规则
+
+```text
+- 谁都不能“读完不动”；
+- 读到了新版本必须处理，处理完必须写 ACK；
+- 没有新任务也要写心跳（时间 + 状态），证明还活着。
+```
