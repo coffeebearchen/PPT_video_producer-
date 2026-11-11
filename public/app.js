@@ -1254,8 +1254,8 @@ async function renderPublish() {
     : '';
   const [library, queue] = await Promise.all([api('/api/library'), api('/api/publish/queue')]);
   const approved = library.filter(r => r.status === 'approved');
-  const existingIds = new Set(queue.map(q => q.render_id));
-  const todo = approved.filter(r => r.engine !== 'vibemotion' && !existingIds.has(r.id));
+  const existingIds = new Set(queue.flatMap(q => [q.render_id, q.engine === 'vibemotion' ? q.id : null].filter(Boolean)));
+  const todo = approved.filter(r => !existingIds.has(r.id));
   const pendingQueue = queue.filter(q => !['published'].includes(q.status));
   const doneQueue = queue.filter(q => q.status === 'published');
   $('#view').innerHTML = `
@@ -1266,12 +1266,18 @@ async function renderPublish() {
       <div class="card">
         <div class="card-head"><div><h2 class="section-title">待创建任务 <span class="muted tiny">${todo.length}</span></h2><p class="section-sub">已通过审批，还没选渠道。</p></div></div>
         <div class="card-body">
-          ${todo.length ? `<div class="pub-list">${todo.map(r => `
+          ${todo.length ? `<div class="pub-list">${todo.map(r => {
+            const isVibe = r.engine === 'vibemotion';
+            const actions = isVibe
+              ? `<button class="btn btn-sm btn-primary" data-action="open-vtask-publish" data-id="${esc(r.id)}">生成发布包</button>`
+              : `<button class="btn btn-sm btn-primary" data-action="create-kit" data-render="${esc(r.id)}" data-channel="wechat_channels">视频号包</button><button class="btn btn-sm" data-action="create-kit" data-render="${esc(r.id)}" data-channel="xiaohongshu">小红书包</button><button class="btn btn-sm" data-action="create-kit" data-render="${esc(r.id)}" data-channel="wechat_article">公众号</button>`;
+            return `
             <div class="pub-row">
-              ${coverImg(r.cover_path, r.brief_title, 'pub-cover')}
-              <div class="pub-main"><div class="pub-title">${esc(r.brief_title)}</div><div class="pub-meta"><span>v${r.spec_version}</span><span>${fmtDate(r.updated_at)}</span></div></div>
-              <div class="pub-actions"><button class="btn btn-sm btn-primary" data-action="create-kit" data-render="${esc(r.id)}" data-channel="wechat_channels">视频号包</button><button class="btn btn-sm" data-action="create-kit" data-render="${esc(r.id)}" data-channel="xiaohongshu">小红书包</button><button class="btn btn-sm" data-action="create-kit" data-render="${esc(r.id)}" data-channel="wechat_article">公众号</button></div>
-            </div>`).join('')}</div>` : `<div class="empty"><div class="empty-icon">✓</div><h3>没有待创建任务</h3><p>审批通过一条成片后，这里会出现渠道按钮。</p><a class="btn btn-sm" href="#/review">去审批</a></div>`}
+              ${coverImg(r.media_cover, r.brief_title, 'pub-cover')}
+              <div class="pub-main"><div class="pub-title">${esc(r.brief_title)}</div><div class="pub-meta">${isVibe ? `<span class="tag">VibeMotion</span><span>${modeLabel(r.mode)}</span>` : `<span>v${r.spec_version}</span>`}<span>${fmtDate(r.updated_at)}</span></div></div>
+              <div class="pub-actions">${actions}</div>
+            </div>`;
+          }).join('')}</div>` : `<div class="empty"><div class="empty-icon">✓</div><h3>没有待创建任务</h3><p>审批通过一条成片后，这里会出现渠道按钮。</p><a class="btn btn-sm" href="#/review">去审批</a></div>`}
         </div>
       </div>
       <div class="card">
@@ -1281,7 +1287,12 @@ async function renderPublish() {
             <div class="pub-row">
               ${coverImg(p.media_cover, p.title, 'pub-cover')}
               <div class="pub-main"><div class="pub-title">${esc(p.title)}</div><div class="pub-meta"><span class="channel-badge ${esc(p.channel)}">${p.channel === 'wechat_channels' ? '视频号' : '公众号'}</span><span class="tag">VibeMotion</span>${statusChip(p.status)}<span>${fmtDate(p.updated_at || p.created_at)}</span></div></div>
-              <div class="pub-actions"><a class="btn btn-sm" href="${esc(p.kit_video)}" target="_blank" rel="noreferrer">发布包</a></div>
+              <div class="pub-actions">${
+                p.raw_status === 'ready' ? `<button class="btn btn-sm btn-primary" data-action="open-vtask-publish" data-id="${esc(p.id)}">生成发布包</button>`
+                : p.raw_status === 'packaged' ? `<a class="btn btn-sm" href="${esc(p.kit_video)}" target="_blank" rel="noreferrer">发布包</a>`
+                : p.raw_status === 'draft_created' ? `<a class="btn btn-sm" href="https://mp.weixin.qq.com/" target="_blank" rel="noreferrer">打开后台</a>`
+                : `<a class="btn btn-sm" href="${esc(p.kit_video)}" target="_blank" rel="noreferrer">发布包</a>`
+              }</div>
             </div>` : `
             <div class="pub-row">
               ${coverImg(p.media_cover, p.title, 'pub-cover')}
@@ -1705,7 +1716,7 @@ async function openVtaskPublish(id) {
             const r = await post(`/api/video-tasks/${encodeURIComponent(id)}/publish`, { channel });
             toast('发布包已生成：' + r.kit);
           }
-          closeModal(); renderWorkbench();
+          closeModal(); route();
         } catch (err) { toast(err.message, 'error'); }
       });
     }
