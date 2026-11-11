@@ -1508,7 +1508,7 @@ async function route(req, res) {
       const pub = db.prepare('SELECT * FROM publications WHERE id=?').get(id);
       if (!pub) return fail(res, 404, '发布任务不存在');
       try {
-        const result = await publishWechat(pub, { dryRun: body.dryRun, accountId: body.account_id || pub.account_id || '' });
+        const result = await publishWechat(pub, { dryRun: body.dryRun, accountId: body.account_id || pub.account_id || '', submit: body.submit });
         return send(res, 200, result);
       } catch (e) {
         return fail(res, 500, e.message);
