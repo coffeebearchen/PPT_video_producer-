@@ -11,7 +11,7 @@ import {
 } from './lib/db.mjs';
 import { generateAngles, generateSpec, llmConfigured, testLLM, draftBriefFromDirection, draftAnalogyFromNote, draftSoulFromDirection, diagnoseStructures, checkDirection, checkStructure, draftQuoteCandidates, draftElementSvg, draftAutoScript } from './lib/generator.mjs';
 import { publishWechat, testWechat, publishVtaskWechat } from './lib/wechat.mjs';
-import { renderVibeMotion, buildTimeline, ENGINE_DIR } from './lib/vibemotion.mjs';import { synthesizeSpeech, ttsConfigured } from './lib/tts.mjs';
+import { renderVibeMotion, buildTimeline, ENGINE_DIR, activeVibeChildren } from './lib/vibemotion.mjs';import { synthesizeSpeech, ttsConfigured } from './lib/tts.mjs';
 import { ELEMENT_CATALOG, PALETTES, FONT_PAIRS, TEMPLATES } from './lib/element-catalog.mjs';
 import { listElementAssets } from './lib/element-assets.mjs';
 import { checkCompliance } from './lib/compliance.mjs';
@@ -343,6 +343,8 @@ async function processVideoTask(id) {
       cover_path: outRel.replaceAll('\\', '/') + '/cover.png'
     });
   } catch (e) {
+    const cur = db.prepare('SELECT status FROM video_tasks WHERE id=?').get(id);
+    if (cur?.status === 'canceled') return;
     updateVideoTask(id, { status: 'failed', progress: 0, error: String(e.message || e).slice(-900) });
   }
 }
@@ -1905,7 +1907,11 @@ async function route(req, res) {
       const id = p.split('/')[3];
       const task = db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id);
       if (!task) return fail(res, 404, '任务不存在');
-      if (['queued', 'running'].includes(task.status)) updateVideoTask(id, { status: 'canceled' });
+      if (['queued', 'running'].includes(task.status)) {
+        updateVideoTask(id, { status: 'canceled' });
+        const child = activeVibeChildren.get(id);
+        if (child) { try { child.kill(); } catch {} activeVibeChildren.delete(id); }
+      }
       return send(res, 200, db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id));
     }
     if (method === 'POST' && /^\/api\/video-tasks\/[^/]+\/retry$/.test(p)) {
