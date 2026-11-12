@@ -492,6 +492,47 @@ async function generateCoursewareTask(id, opts = {}) {
   return { renderId, totalDurationSeconds: props.totalDurationSeconds };
 }
 
+async function autoCoursewareOne(topic, style, assetId) {
+  const topicText = String(topic || '').trim();
+  if (!topicText) throw new Error('请填写主题');
+  const { draftCoursewareStoryboard } = await import('./lib/generator.mjs');
+  const gen = await draftCoursewareStoryboard(topicText, style);
+  const slides = (gen.slides || []).map((s, i) => {
+    const sid = 's' + i;
+    const narration = String(s.narration || s.text || '').trim();
+    const base = { id: sid, caption: narration || undefined, narration: narration ? { mode: 'tts', text: narration } : { mode: 'none' } };
+    if (s.kind === 'flow') {
+      const labels = (s.nodes || []).filter(Boolean).slice(0, 4);
+      return { ...base, kind: 'flow', text: String(s.text || ''), nodes: labels.map((l, j) => ({ id: 'n' + j, label: String(l) })), edgePolicy: 'sequential' };
+    }
+    if (s.kind === 'bullet') {
+      return { ...base, kind: 'bullet', text: String(s.text || ''), bullets: (s.bullets || []).filter(Boolean).slice(0, 5) };
+    }
+    if (s.kind === 'quote') return { ...base, kind: 'quote', text: String(s.text || ''), body: s.body ? String(s.body) : undefined };
+    return { ...base, kind: 'title', text: String(s.text || ''), body: s.body ? String(s.body) : undefined };
+  });
+  if (assetId) {
+    slides.splice(1, 0, { id: 'shot', kind: 'screenshot', text: '看这里', assetId, highlight: { x: 0.1, y: 0.3, w: 0.8, h: 0.15 }, annotation: 'arrow', dim: 0.35, caption: '在界面上圈出这一步。', narration: { mode: 'tts', text: '在界面上圈出这一步。' } });
+  }
+  const title = String(gen.title || topicText).slice(0, 60);
+  const id = newId('vtask');
+  const t = now();
+  const project = {
+    schemaVersion: 'courseware/1', taskId: id, draftRevision: 1, assetManifestRevision: 0,
+    storyboard: { title, style, canvas: { width: 1080, height: 1920, fps: 30 }, slides },
+    currentRender: null
+  };
+  db.prepare(`INSERT INTO video_tasks
+    (id,title,engine,mode,template,style,avatar,structure_type,structure_name,script,voice_path,voice_provider,timeline_json,palette,duration_ms,status,progress,video_path,cover_path,error,retry_count,user_id,source,created_at,updated_at)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(
+    id, title, 'vibemotion', 'courseware', '', style, 0, 'causal', '', '', '', '',
+    JSON.stringify(project), 'cream', 30000, 'draft', 0, '', '', '', 0, '', 'courseware', t, t
+  );
+  event('courseware_auto', id, 'created', title);
+  const r = await generateCoursewareTask(id);
+  return { taskId: id, slides: slides.length, ...r };
+}
+
 async function processVideoTask(id) {
   const task = db.prepare('SELECT * FROM video_tasks WHERE id=?').get(id);
   if (!task || task.status === 'canceled') return;
@@ -2305,52 +2346,30 @@ async function route(req, res) {
       const topic = String(body.topic || '').trim();
       if (!topic) return fail(res, 400, '请填写主题');
       const style = ['industrial', 'clean', 'dynamic', 'dynamicflow'].includes(body.style) ? body.style : 'industrial';
-      let gen;
       try {
-        const { draftCoursewareStoryboard } = await import('./lib/generator.mjs');
-        gen = await draftCoursewareStoryboard(topic, style);
+        const r = await autoCoursewareOne(topic, style, String(body.assetId || ''));
+        return send(res, 201, r);
       } catch (e) {
         return fail(res, 400, '一键编排失败：' + e.message);
       }
-      const slides = (gen.slides || []).map((s, i) => {
-        const sid = 's' + i;
-        const narration = String(s.narration || s.text || '').trim();
-        const base = { id: sid, caption: narration || undefined, narration: narration ? { mode: 'tts', text: narration } : { mode: 'none' } };
-        if (s.kind === 'flow') {
-          const labels = (s.nodes || []).filter(Boolean).slice(0, 4);
-          return { ...base, kind: 'flow', text: String(s.text || ''), nodes: labels.map((l, j) => ({ id: 'n' + j, label: String(l) })), edgePolicy: 'sequential' };
+    }
+
+    // 批量出片：一个主题列表 → 多条视频
+    if (method === 'POST' && p === '/api/courseware/batch') {
+      const body = await readBody(req);
+      const topics = (Array.isArray(body.topics) ? body.topics : []).map(t => String(t || '').trim()).filter(Boolean).slice(0, 20);
+      if (!topics.length) return fail(res, 400, '请提供主题列表（topics，最多 20 条）');
+      const style = ['industrial', 'clean', 'dynamic', 'dynamicflow'].includes(body.style) ? body.style : 'industrial';
+      const results = [];
+      for (const topic of topics) {
+        try {
+          const r = await autoCoursewareOne(topic, style, '');
+          results.push({ topic, ok: true, taskId: r.taskId, slides: r.slides, totalDurationSeconds: r.totalDurationSeconds });
+        } catch (e) {
+          results.push({ topic, ok: false, error: e.message });
         }
-        if (s.kind === 'bullet') {
-          return { ...base, kind: 'bullet', text: String(s.text || ''), bullets: (s.bullets || []).filter(Boolean).slice(0, 5) };
-        }
-        if (s.kind === 'quote') return { ...base, kind: 'quote', text: String(s.text || ''), body: s.body ? String(s.body) : undefined };
-        return { ...base, kind: 'title', text: String(s.text || ''), body: s.body ? String(s.body) : undefined };
-      });
-      const assetId = String(body.assetId || '');
-      if (assetId) {
-        slides.splice(1, 0, { id: 'shot', kind: 'screenshot', text: '看这里', assetId, highlight: { x: 0.1, y: 0.3, w: 0.8, h: 0.15 }, annotation: 'arrow', dim: 0.35, caption: '在界面上圈出这一步。', narration: { mode: 'tts', text: '在界面上圈出这一步。' } });
       }
-      const title = String(gen.title || topic).slice(0, 60);
-      const id = newId('vtask');
-      const t = now();
-      const project = {
-        schemaVersion: 'courseware/1', taskId: id, draftRevision: 1, assetManifestRevision: 0,
-        storyboard: { title, style, canvas: { width: 1080, height: 1920, fps: 30 }, slides },
-        currentRender: null
-      };
-      db.prepare(`INSERT INTO video_tasks
-        (id,title,engine,mode,template,style,avatar,structure_type,structure_name,script,voice_path,voice_provider,timeline_json,palette,duration_ms,status,progress,video_path,cover_path,error,retry_count,user_id,source,created_at,updated_at)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(
-        id, title, 'vibemotion', 'courseware', '', style, 0, 'causal', '', '', '', '',
-        JSON.stringify(project), 'cream', 30000, 'draft', 0, '', '', '', 0, '', 'courseware', t, t
-      );
-      event('courseware_auto', id, 'created', title);
-      try {
-        const r = await generateCoursewareTask(id);
-        return send(res, 201, { taskId: id, slides: slides.length, ...r });
-      } catch (e) {
-        return fail(res, 400, '编译失败：' + e.message);
-      }
+      return send(res, 201, { count: results.length, results });
     }
 
     // 文案分镜：一段展示思路 + 已传截图 → 自动拆镜头 + 定位 + 生成
