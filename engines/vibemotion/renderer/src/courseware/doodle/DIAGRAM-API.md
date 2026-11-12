@@ -40,7 +40,7 @@ npx remotion render src/courseware/doodle/demo.tsx SuperAgentDoodle ../../../out
 
 ## 适配说明
 
-仅做组件化、数据绑定、语义色归一和安全区适配。原脚本 surface/muted/额外灰色映射到指定背景/灰；保留脚本 grain、文字位移 1.1 与粉笔线条位移 3.2。roughjs 基准 roughness 2.2 / bowing 1.6 / 固定种子；保留原函数中对特殊数据图笔画的局部设定。C08 修正为实际 300 点/20 亮点；B05 扩成三泳道。标题换为内容标题，不显示 A02 等内部编号。黑体栈雅黑/苹方/Noto Sans CJK SC；Linux 实际使用 Noto Sans CJK SC。
+仅做组件化、数据绑定、语义色归一和安全区适配。色板遵循 docs/DIRECTOR-MANUAL.md 2.1.1；区域使用 hatch（-41°，默认间距 8px，D01 为 9px），文字块和线条框不加斜线；全页暗角中心透明、外沿 28% 黑；保留脚本 grain、文字位移 1.1 与粉笔线条位移 3.2。roughjs 基准 roughness 2.2 / bowing 1.6 / 固定种子；保留原函数中对特殊数据图笔画的局部设定。C08 修正为实际 300 点/20 亮点；B05 扩成三泳道。标题换为内容标题，不显示 A02 等内部编号。黑体栈雅黑/苹方/Noto Sans CJK SC；Linux 实际使用 Noto Sans CJK SC。
 
 动画完全由 frame/fps 推导：strokeDashoffset 逐笔、节点文字从 0.91 缩放至 1（无往复弹跳）、网格先逐点出现再逐点点亮。约 3.5 秒完成，余下时间静止阅读。
 

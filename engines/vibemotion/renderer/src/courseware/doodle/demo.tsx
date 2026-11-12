@@ -2,7 +2,8 @@ import React from 'react';
 import {Composition,registerRoot} from 'remotion';
 import {Courseware} from '../Courseware';
 import {validateResolved} from '../model';
-import {DEFINITIONS} from './catalog';
+import {DEFINITIONS,type DiagramSpec} from './catalog';
+import {DiagramPage} from './DiagramPage';
 export const demoProject=validateResolved({
  schemaVersion:'courseware/1',taskId:'super-agent',renderId:'doodle-demo',draftRevision:1,title:'Super-Agent 是怎么工作的',style:'dynamicflow',canvas:{width:1080,height:1920,fps:30},publicRoot:'renderer/public',stagingDir:'courseware/super-agent/doodle-demo',totalFrames:1440,totalDurationSeconds:48,brand:{show:false},aiLabel:{show:false},
  slides:[
@@ -16,4 +17,7 @@ export const demoProject=validateResolved({
  {kind:'quote',text:'让对话保持流动\n让任务有始有终',body:'清楚地派活，持续地验证\n完成后，再把结果带回来'},
  ].map((s,i)=>({...s,id:'scene-'+i,fromFrame:i*180,durationInFrames:180}))
 });
-registerRoot(()=> <Composition id="SuperAgentDoodle" component={Courseware} defaultProps={demoProject} durationInFrames={1440} fps={30} width={1080} height={1920}/>);
+registerRoot(()=> <>
+ <Composition id="SuperAgentDoodle" component={Courseware} defaultProps={demoProject} durationInFrames={1440} fps={30} width={1080} height={1920}/>
+ {(['D01','C04','B06'] as const).map(layout=><Composition key={layout} id={'Hatch-'+layout} component={DiagramPage} defaultProps={{spec:{layout,data:DEFINITIONS[layout].data} as DiagramSpec,title:{D01:'不同想法，聚成不同区域',C04:'用斜线区分数值区域',B06:'逐项检查能力关系'}[layout]}} durationInFrames={180} fps={30} width={1080} height={1920}/>)}
+</>);

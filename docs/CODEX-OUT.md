@@ -1,8 +1,38 @@
-# CODEX-OUT：image 照片 / 插图页
+# CODEX-OUT：涂鸦色板与 hatch 同步
+
+依据 `docs/DIRECTOR-MANUAL.md` 的 2.1.1 / 2.1.2 / 2.1.3，本次仅修改 `renderer/src/courseware/` 下的涂鸦组件与检查脚本；此交付记录按用户最新指定放入 `docs/CODEX-OUT.md`。未修改导演手册、生成器源脚本、server、lib、public 或 graphics/styles.ts。
+
+## 变更
+
+- `doodle/source.js` 导出并集中维护十色：bg `#282828` / ink `#EDE6D6` / muted `#8A8A80` / yellow `#DCBC62` / green `#90C380` / red `#E06B6B` / pink `#D38796` / orange `#F08419` / line `#6E6E68` / surface `#2E2E2E`。
+- 图形、标题、字幕、网格底色、首尾页图标与背景均引用同一色板，避免渲染组件残留旧值。
+- 图元支持可选 hatch：`hachureAngle: -41`，默认间距 8px；D01 五个椭圆全部使用自身语义色斜线，间距 9px；内部小点保留实色。
+- C04 热力格、B06 关系矩阵、P01 集合范围，以及已有数据填充的雷达/面积区域使用斜线。文字卡片与普通线框不加 hatch，整体背景不铺斜线。
+- `DoodleVignette.tsx` 为图解页、标题页和收尾页叠加 radial gradient：中心透明、外侧 stop-opacity 0.28；位置沿用已确认脚本 `cx=50% / cy=45% / r=75%`。
+- roughness 2.2 / bowing 1.6 基准、3.2 粉笔位移、黑体和固定种子保持原设置。8 页顺序与每页 6 秒保持不变；D01 单独出预览，不插入原 48 秒样片。
+
+## 检查与交付
+
+`node src/courseware/doodle/check.mjs` 检查色值完全一致、45 种布局无旧色残留、种子确定性、D01/C04/B06/P01 的 hatch 区域数、文字块/线框不使用 hatch、暗角首尾透明度，以及真实 300 点/20 亮点。新增入口的 TypeScript 通过。
+
+重渲命令（renderer 目录）：`node src/courseware/doodle/render.mjs`。
+
+成片与抽帧位于 `out/super-agent-doodle/`：
+
+- `super-agent-48s-palette.mp4`：新版色板 48 秒视频。
+- `page-1.png` 至 `page-8.png`：8 页抽帧；`contact.png` 为总览。
+- `D01-hatch.png`：点群斜线填充预览。
+- `C04-hatch.png` / `B06-hatch.png`：热力与矩阵填充预览。
+- `metadata.json`：最终视频时长、分辨率与帧数。
+
+
+---
+
+# 上一项交付：image 照片 / 插图页
 
 已完成 renderer 层 `kind: "image"`，四种风格均可使用。截图页、视频页和无 image 的课件继续使用原路径。此次变更仅在 `renderer/src/courseware/`，照片和抽帧位于忽略的 `out/image-page/`。
 
-未找到既有 CODEX-OUT，因此按本次目录边界将交付记录放在这里。
+交付记录已按用户指定从 renderer/src/courseware/CODEX-OUT.md 移至 docs/CODEX-OUT.md。
 
 ## 调用
 
