@@ -1,3 +1,4 @@
+import {CoursewareImage} from './ImagePage';
 import {DoodleCourseware} from './doodle/DoodleCourseware';
 import React, {useMemo} from 'react';
 import {DynamicFlowCourseware, DynamicFlowCover} from './dynamicflow/DynamicFlowCourseware';
@@ -41,6 +42,7 @@ const Page: React.FC<{slide: Slide; project: ResolvedProps; last?: boolean; firs
     {slide.text && <div data-cw-content data-cw-text="heading" style={{position: 'absolute', left: 128, top: hero ? 480 : e?.chapter ? 330 : 306, width: 824, fontFamily: `"${t.heading}"`, fontSize: cover ? Math.min(68, headingSize(slide.text, hero)) : headingSize(slide.text, hero), lineHeight: 1.3, whiteSpace: 'pre-line', textWrap: 'balance', textAlign: 'center', overflowWrap: 'anywhere', ...(e?.reveal?.type === 'stagger' ? {opacity: headingReveal, transform: `translateY(${8 * (1 - headingReveal)}px)`} : {})}}><AnimatedCopy text={slide.text} slide={slide} rootHook={hook}/></div>}
     {hero && <div data-cw-content style={{position: 'absolute', left: 440, top: 850, width: 200 * (e?.reveal ? 1 : progress), height: 6, background: t.accent, borderRadius: 6}}/>}
     {slide.body && <div data-cw-content data-cw-text="note" style={{position: 'absolute', left: 148, top: hero ? 950 : 1368, width: 784, fontSize: hero ? 36 : 30, lineHeight: 1.4, whiteSpace: 'pre-line', textAlign: 'center', color: t.muted, ...(e?.reveal?.type === 'stagger' ? {opacity: bodyReveal, transform: `translateY(${8 * (1 - bodyReveal)}px)`} : {})}}>{slide.body}</div>}
+    {slide.kind === 'image' && <CoursewareImage slide={slide} project={project}/>}
     {slide.kind === 'screenshot' && <Screenshot slide={slide} project={project}/>}
     {slide.kind === 'video' && <CoursewareVideo slide={slide} project={project} forceMuted={ghost}/>}
     {slide.kind === 'flow' && <CoursewareFlow slide={slide} project={project} progress={progress}/>}
