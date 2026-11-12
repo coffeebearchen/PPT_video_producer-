@@ -82,7 +82,7 @@ export function validateResolved(input: unknown): ResolvedProps {
   ensure(b.publicRoot === 'renderer/public', '本入口使用默认 renderer/public；不接受任意 publicRoot');
   ensure(['industrial', 'clean', 'dynamic', 'dynamicflow'].includes(String(b.style)), 'style 不支持');
   const canvas = record(b.canvas);
-  ensure(canvas.width === 1080 && canvas.height === 1920 && canvas.fps === 30, '画布须为 1080×1920 / 30fps');
+  ensure(((canvas.width === 1080 && canvas.height === 1920) || (canvas.width === 1920 && canvas.height === 1080)) && canvas.fps === 30, '画布须为 1080×1920 或 1920×1080 / 30fps');
   const fps = 30;
   const totalFrames = num(b.totalFrames, 'totalFrames', 1, 108000, true);
   const totalDurationSeconds = num(b.totalDurationSeconds, 'totalDurationSeconds', 0, 3600);
@@ -170,7 +170,7 @@ export function validateResolved(input: unknown): ResolvedProps {
     return slide;
   });
   ensure(next === totalFrames, '最后一页末尾与 totalFrames 不符');
-  const result: ResolvedProps = {schemaVersion: 'courseware/1', taskId, renderId, draftRevision: num(b.draftRevision, 'draftRevision', 0, 1e9, true), title: label(b.title, 'title', 40), style: b.style as CoursewareStyle, canvas: {width: 1080, height: 1920, fps}, publicRoot: 'renderer/public', stagingDir, totalFrames, totalDurationSeconds, slides, audit: b.audit === true};
+  const result: ResolvedProps = {schemaVersion: 'courseware/1', taskId, renderId, draftRevision: num(b.draftRevision, 'draftRevision', 0, 1e9, true), title: label(b.title, 'title', 40), style: b.style as CoursewareStyle, canvas: {width: canvas.width, height: canvas.height, fps}, publicRoot: 'renderer/public', stagingDir, totalFrames, totalDurationSeconds, slides, audit: b.audit === true};
   result.brand = displayLabel(b.brand, 'brand', DEFAULT_BRAND, 30);
   result.aiLabel = displayLabel(b.aiLabel, 'aiLabel', DEFAULT_AI_LABEL, 16);
   if (b.progress !== undefined) result.progress = validateProgress(b.progress);

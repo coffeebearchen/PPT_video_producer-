@@ -13,8 +13,8 @@ void Promise.all(Object.entries(fonts).map(async ([family, file]) => {
 const Root = () => {
   const props = validateResolved(getInputProps());
   return <>
-    <Composition id="Courseware" component={Courseware} width={1080} height={1920} fps={30} durationInFrames={props.totalFrames} defaultProps={props}/>
-    <Still id="CoursewareCover" component={CoursewareCover} width={1080} height={1920} defaultProps={props}/>
+    <Composition id="Courseware" component={Courseware} width={props.canvas.width} height={props.canvas.height} fps={30} durationInFrames={props.totalFrames} defaultProps={props}/>
+    <Still id="CoursewareCover" component={CoursewareCover} width={props.canvas.width} height={props.canvas.height} defaultProps={props}/>
   </>;
 };
 registerRoot(Root);

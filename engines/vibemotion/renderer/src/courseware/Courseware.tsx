@@ -99,14 +99,29 @@ const LegacyCoursewareCover: React.FC<ResolvedProps> = input => {
   return <AbsoluteFill className="cw-root" data-cw-root style={{width: 1080, height: 1920}}><style>{CSS}</style><Page slide={slide} project={project} cover/><AiLabel project={project}/>{project.audit && <LayoutAudit project={project} cover/>}</AbsoluteFill>;
 };
 
+// 横屏：把 1080×1920 内容按高度等比缩放、水平居中，两侧由底色填充。
+const LandscapeWrap: React.FC<{project: ResolvedProps; children: React.ReactNode}> = ({project, children}) => {
+  const {width, height} = project.canvas;
+  if (width <= height) return <>{children}</>;
+  const scale = height / 1920;
+  const x = (width - 1080 * scale) / 2;
+  return <AbsoluteFill style={{background: '#1c1c1c'}}>
+    <div style={{position: 'absolute', left: x, top: 0, width: 1080 * scale, height: 1920 * scale, transform: `scale(${scale})`, transformOrigin: 'top left'}}>{children}</div>
+  </AbsoluteFill>;
+};
+
 // Keep the legacy page/transition trees intact; only the new style takes this branch.
 export const Courseware: React.FC<ResolvedProps> = input => {
   const project = useMemo(() => validateResolved(input), [input]);
-  if(project.slides.some(slide=>slide.kind==='diagram'))return <DoodleCourseware {...project}/>;
-  return project.style === 'dynamicflow' ? <DynamicFlowCourseware {...project}/> : <LegacyCourseware {...project}/>;
+  const inner = project.slides.some(slide=>slide.kind==='diagram')
+    ? <DoodleCourseware {...project}/>
+    : project.style === 'dynamicflow' ? <DynamicFlowCourseware {...project}/> : <LegacyCourseware {...project}/>;
+  return <LandscapeWrap project={project}>{inner}</LandscapeWrap>;
 };
 export const CoursewareCover: React.FC<ResolvedProps> = input => {
   const project = useMemo(() => validateResolved(input), [input]);
-  if(project.slides.some(slide=>slide.kind==='diagram'))return <DoodleCover {...project}/>;
-  return project.style === 'dynamicflow' ? <DynamicFlowCover {...project}/> : <LegacyCoursewareCover {...project}/>;
+  const inner = project.slides.some(slide=>slide.kind==='diagram')
+    ? <DoodleCover {...project}/>
+    : project.style === 'dynamicflow' ? <DynamicFlowCover {...project}/> : <LegacyCoursewareCover {...project}/>;
+  return <LandscapeWrap project={project}>{inner}</LandscapeWrap>;
 };

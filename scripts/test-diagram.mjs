@@ -20,7 +20,7 @@ await j(`/api/courseware/drafts/${tid}`, {
   method: 'PUT', headers: { 'content-type': 'application/json' },
   body: JSON.stringify({
     storyboard: {
-      title: '图解页测试', style: 'dynamicflow', bgm: 'ambient',
+      title: '图解页测试', style: 'dynamicflow', bgm: 'ambient', canvas: { width: 1920, height: 1080, fps: 30 },
       slides: [
         { id: 's1', kind: 'title', text: '图解页测试', narration: { mode: 'tts', text: '这是一条图解测试。' } },
         { id: 's2', kind: 'diagram', layout: 'D01', text: '不同方案挤在不同区域', caption: '点群把相似结果放一起。', data: { label: 'idea basin', translation: '想法盆地', counts: [8, 8, 8, 8, 8] }, narration: { mode: 'tts', text: '不同方案会挤在不同区域。' } },
@@ -47,3 +47,4 @@ for (let i = 0; i < 40; i++) {
 }
 console.log('TIMEOUT');
 process.exit(1);
+
