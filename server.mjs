@@ -2276,7 +2276,7 @@ async function route(req, res) {
     if (method === 'POST' && p === '/api/courseware/drafts') {
       const body = await readBody(req);
       const title = String(body.title || '未命名课件').slice(0, 60);
-      const style = ['industrial', 'clean', 'dynamic'].includes(body.style) ? body.style : 'industrial';
+      const style = ['industrial', 'clean', 'dynamic', 'dynamicflow'].includes(body.style) ? body.style : 'industrial';
       const id = newId('vtask');
       const t = now();
       const project = {
@@ -2302,7 +2302,7 @@ async function route(req, res) {
       const body = await readBody(req);
       const topic = String(body.topic || '').trim();
       if (!topic) return fail(res, 400, '请填写主题');
-      const style = ['industrial', 'clean', 'dynamic'].includes(body.style) ? body.style : 'industrial';
+      const style = ['industrial', 'clean', 'dynamic', 'dynamicflow'].includes(body.style) ? body.style : 'industrial';
       let gen;
       try {
         const { draftCoursewareStoryboard } = await import('./lib/generator.mjs');
@@ -2678,6 +2678,7 @@ server.listen(PORT, HOST, () => {
   const queued = db.prepare("SELECT id FROM video_tasks WHERE status='queued'").all();
   for (const q of queued) enqueueVideoTask(q.id);
 });
+
 
 
 
