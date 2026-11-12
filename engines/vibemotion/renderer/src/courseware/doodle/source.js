@@ -1,9 +1,10 @@
 // Authored geometry from scripts/gen-handdrawn-samples.mjs @ 2fe3858.
+// Palette and area hatch follow docs/DIRECTOR-MANUAL.md 2.1.1–2.1.3.
 // SVG serialization replaced by scene data; only data binding/cardinality/safe-area adaptations.
 import rough from 'roughjs';
 const gen = rough.generator();
 
-const C = {
+export const C = {
   bg: '#282828', ink: '#EDE6D6', muted: '#8A8A80',
   yellow: '#DCBC62', green: '#90C380', red: '#E06B6B',
   pink: '#D38796', orange: '#F08419', line: '#6E6E68', surface: '#2E2E2E'
@@ -12,12 +13,12 @@ const FONT = '"Microsoft YaHei","PingFang SC","SimHei",sans-serif';
 const W = 1080, H = 1920;
 
 let markSerial=0;
-function P(d) { const group=markSerial++; return gen.toPaths(d).map(p => ({ group, d: p.d, stroke: p.stroke || C.line, sw: p.strokeWidth || 3, fill: p.fill || 'none' })); }
+function P(d) { const group=markSerial++; return gen.toPaths(d).map(p => ({ group, hatch: !!d.options.fill && d.options.fill !== 'none' && d.options.fillStyle === 'hachure', d: p.d, stroke: p.stroke || C.line, sw: p.strokeWidth || 3, fill: p.fill || 'none' })); }
 const DR = 2.2, DB = 1.6;
-const rect = (x, y, w, h, o = {}) => P(gen.rectangle(x, y, w, h, { seed: o.seed || 1, roughness: o.r ?? DR, bowing: DB, stroke: o.c || C.line, strokeWidth: o.sw || 3, fill: o.fill, fillStyle: 'solid' }));
-const ell = (cx, cy, w, h, o = {}) => P(gen.ellipse(cx, cy, w, h, { seed: o.seed || 1, roughness: o.r ?? DR, stroke: o.c || C.line, strokeWidth: o.sw || 3, fill: o.fill, fillStyle: o.hatch ? 'hachure' : 'solid', hachureGap: o.gap || 9, hachureAngle: -41 }));
+const rect = (x, y, w, h, o = {}) => P(gen.rectangle(x, y, w, h, { seed: o.seed || 1, roughness: o.r ?? DR, bowing: DB, stroke: o.c || C.line, strokeWidth: o.sw || 3, fill: o.fill, fillStyle: o.hatch ? 'hachure' : 'solid', hachureGap: o.gap || 8, hachureAngle: -41 }));
+const ell = (cx, cy, w, h, o = {}) => P(gen.ellipse(cx, cy, w, h, { seed: o.seed || 1, roughness: o.r ?? DR, stroke: o.c || C.line, strokeWidth: o.sw || 3, fill: o.fill, fillStyle: o.hatch ? 'hachure' : 'solid', hachureGap: o.gap || 8, hachureAngle: -41 }));
 const line = (x1, y1, x2, y2, o = {}) => P(gen.line(x1, y1, x2, y2, { seed: o.seed || 1, roughness: o.r ?? DR, stroke: o.c || C.line, strokeWidth: o.sw || 3 }));
-const poly = (pts, o = {}) => P(gen.polygon(pts, { seed: o.seed || 1, roughness: o.r ?? DR, bowing: DB, stroke: o.c || C.line, strokeWidth: o.sw || 3, fill: o.fill, fillStyle: 'solid' }));
+const poly = (pts, o = {}) => P(gen.polygon(pts, { seed: o.seed || 1, roughness: o.r ?? DR, bowing: DB, stroke: o.c || C.line, strokeWidth: o.sw || 3, fill: o.fill, fillStyle: o.hatch ? 'hachure' : 'solid', hachureGap: o.gap || 8, hachureAngle: -41 }));
 
 function arrow(x1, y1, x2, y2, o = {}) {
   const out = line(x1, y1, x2, y2, o);
@@ -209,7 +210,7 @@ L.B06 = (data = {}) => { const p = [], t = [];
   rows.forEach((r, i) => {
     const y = 400 + i * 260;
     t.push(T(240, y + 140, r, { size: 30, c: C.ink }));
-    cols.forEach((c, j) => { const x = 330 + j * 260; p.push(...rect(x, y, 220, 240, { c: C.line, seed: 180 + i * 2 + j })); p.push(...icon(cells[i][j] === C.red ? 'cross' : 'check', x + 110, y + 120, 90, cells[i][j])); });
+    cols.forEach((c, j) => { const x = 330 + j * 260; p.push(...rect(x, y, 220, 240, { c: C.line, seed: 180 + i * 2 + j, fill: cells[i][j], hatch: true, gap: 12 })); p.push(...icon(cells[i][j] === C.red ? 'cross' : 'check', x + 110, y + 120, 90, cells[i][j])); });
   });
   return svg('B06 关系矩阵', '对象之间是否依赖、兼容、负责', p, t, '一行一行对照，谁行谁不行'); };
 
@@ -263,7 +264,7 @@ L.C04 = (data = {}) => { const p = [], t = [];
   for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
     const v = data.values?.[r]?.[c] ?? (Math.sin((r + 1) * 1.7 + (c + 1) * 0.9) + 1) / 2;
     const col = v > 0.66 ? C.red : v > 0.33 ? C.yellow : C.green;
-    p.push(...rect(x0 + c * cw, y0 + r * ch, cw - 4, ch - 4, { c: col, fill: col, seed: 440 + r * 10 + c, r: 0.7 }));
+    p.push(...rect(x0 + c * cw, y0 + r * ch, cw - 4, ch - 4, { c: col, fill: col, seed: 440 + r * 10 + c, r: 0.7, hatch: true, gap: 9 }));
   }
   t.push(T(560, 1560, '低 → 高', { size: 28, c: C.muted }));
   return svg('C04 热力图', '数值在两个维度上的强弱分布', p, t, '颜色越暖，数值越高'); };
@@ -283,7 +284,7 @@ L.C06 = (data = {}) => { const p = [], t = [];
   const axes = [];
   for (let i = 0; i < n; i++) { const a = -Math.PI / 2 + i * 2 * Math.PI / n; axes.push(a); }
   axes.forEach((a, i) => { p.push(...line(cx, cy, cx + Math.cos(a) * R, cy + Math.sin(a) * R, { c: C.line, sw: 2 })); t.push(T(cx + Math.cos(a) * (R + 40), cy + Math.sin(a) * (R + 40), ['速度', '质量', '成本', '稳定', '易用'][i], { size: 26, c: C.muted })); });
-  [0.5, 0.75].forEach((rr, gi) => { const pts = axes.map((a, i) => [cx + Math.cos(a) * R * (data.series?.[gi]?.[i] ?? (rr + (gi === 0 ? 0.05 : -0.05) * ((i % 2) ? 1 : -1))), cy + Math.sin(a) * R * (data.series?.[gi]?.[i] ?? (rr + (gi === 0 ? 0.05 : -0.05) * ((i % 2) ? 1 : -1)))]); p.push(...poly(pts, { c: gi === 0 ? C.green : C.pink, sw: 3, fill: gi === 0 ? `${C.green}22` : 'none', seed: 460 + gi })); });
+  [0.5, 0.75].forEach((rr, gi) => { const pts = axes.map((a, i) => [cx + Math.cos(a) * R * (data.series?.[gi]?.[i] ?? (rr + (gi === 0 ? 0.05 : -0.05) * ((i % 2) ? 1 : -1))), cy + Math.sin(a) * R * (data.series?.[gi]?.[i] ?? (rr + (gi === 0 ? 0.05 : -0.05) * ((i % 2) ? 1 : -1)))]); p.push(...poly(pts, { c: gi === 0 ? C.green : C.pink, sw: 3, fill: gi === 0 ? `${C.green}22` : 'none', seed: 460 + gi, hatch: true, gap: 9 })); });
   return svg('C06 雷达图', '同量纲归一化后比较多维能力', p, t, '主对象 vs 对照'); };
 
 L.C07 = (data = {}) => { const p = [], t = [];
@@ -312,7 +313,7 @@ L.C10 = (data = {}) => { const p = [], t = [];
   p.push(...line(160, 1300, 160, 340, { c: C.line, sw: 3 }), ...line(160, 1300, 940, 1300, { c: C.line, sw: 3 }));
   const pts = (data.values ?? [.2,.4,.35,.6,.78]).map((v,i)=>[240+i*165,1300-v*1000]);
   const area = 'M240 1300 '+pts.map(([x,y])=>`L${x} ${y}`).join(' ')+' L900 1300 Z';
-  p.push(...P(gen.path(area, { seed: 510, roughness: 1.05, stroke: 'none', strokeWidth: 0, fill: `${C.green}33`, fillStyle: 'solid' })));
+  p.push(...P(gen.path(area, { seed: 510, roughness: 1.05, stroke: 'none', strokeWidth: 0, fill: `${C.green}33`, fillStyle: 'hachure', hachureGap: 9, hachureAngle: -41 })));
   for (let i = 1; i < pts.length; i++) p.push(...line(pts[i - 1][0], pts[i - 1][1], pts[i][0], pts[i][1], { c: C.green, sw: 4 }));
   return svg('C10 面积图', '展示数量随时间累计或组成变化', p, t, '整体趋势一眼看到'); };
 
@@ -320,7 +321,7 @@ L.C10 = (data = {}) => { const p = [], t = [];
 L.D01 = (data = {}) => { const p = [], t = [];
   p.push(...rect(70, 260, 940, 760, { c: C.line, seed: 520 }));
   [{ x: 300, y: 450, c: C.green }, { x: 780, y: 450, c: C.pink }, { x: 200, y: 760, c: C.orange }, { x: 540, y: 760, c: C.green }, { x: 860, y: 760, c: C.yellow }].forEach((c, i) => {
-    p.push(...ell(c.x, c.y, 300, 200, { c: c.c, seed: 530 + i, sw: 3, fill: c.c, hatch: true }));
+    p.push(...ell(c.x, c.y, 300, 200, { c: c.c, seed: 530 + i, sw: 3, fill: c.c, hatch: true, gap: 9 }));
     for (let k = 0; k < (data.counts?.[i] ?? 8); k++) { const a = (k / (data.counts?.[i] ?? 8)) * Math.PI * 2, r = 20 + (k % 3) * 18; p.push(...ell(c.x + Math.cos(a) * r * 2.2, c.y + Math.sin(a) * r, 20, 20, { c: c.c, sw: 2, seed: 540 + i * 10 + k, fill: c.c })); }
   });
   t.push(T(540, 1200, 'idea basin', { size: 56, c: C.yellow, weight: 600 }), T(540, 1270, '想法盆地', { size: 36, c: C.muted }));
@@ -420,7 +421,7 @@ L.E06 = (data = {}) => { const p = [], t = [];
 
 // ===== 补充 3 种 =====
 L.P01 = (data = {}) => { const p = [], t = [];
-  p.push(...ell(420, 800, 460, 460, { c: C.green, seed: 690 })); p.push(...ell(660, 800, 460, 460, { c: C.pink, seed: 691 })); t.push(T(340, 700, 'A', { size: 34, c: C.green }), T(740, 700, 'B', { size: 34, c: C.pink })); t.push(T(540, 820, '交集', { size: 32, c: C.yellow }));
+  p.push(...ell(420, 800, 460, 460, { c: C.green, seed: 690, fill: C.green, hatch: true, gap: 9 })); p.push(...ell(660, 800, 460, 460, { c: C.pink, seed: 691, fill: C.pink, hatch: true, gap: 9 })); t.push(T(340, 700, 'A', { size: 34, c: C.green }), T(740, 700, 'B', { size: 34, c: C.pink })); t.push(T(540, 820, '交集', { size: 32, c: C.yellow }));
   return svg('P01 交集图（Venn）', '两个集合的重叠、共同点', p, t, '重叠的就是交集'); };
 
 L.P02 = (data = {}) => { const p = [], t = [];
