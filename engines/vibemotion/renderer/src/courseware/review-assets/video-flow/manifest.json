@@ -1,0 +1,111 @@
+{
+  "method": "Full timeline at 2fps plus final frame; five motion ranges rechecked at 8fps from original 24fps frames. Visual and burned-in subtitle analysis; no word-level audio alignment.",
+  "sources": [
+    {
+      "id": "A",
+      "file": "11月12日(1).mp4",
+      "sha256": "3cba017afad176368615d533a752ae8182e36c9a856e119015df5263a946bdd2",
+      "video_seconds": 61.333333,
+      "container_seconds": 61.347007,
+      "width": 480,
+      "height": 650,
+      "fps": 24
+    },
+    {
+      "id": "B",
+      "file": "11月12日.mp4",
+      "sha256": "43bcb3009e91d86d0fe542e1c7b2cc523d7d66fd4680e3a5659bb663b0563d09",
+      "video_seconds": 60.625,
+      "container_seconds": 60.625,
+      "width": 480,
+      "height": 650,
+      "fps": 24
+    }
+  ],
+  "figures": [
+    {
+      "file": "value-swap.jpg",
+      "source": "A",
+      "times_seconds": [
+        0.125,
+        2.25,
+        4.25
+      ],
+      "frames": [
+        3,
+        54,
+        102
+      ]
+    },
+    {
+      "file": "heading-move.jpg",
+      "source": "A",
+      "times_seconds": [
+        27,
+        27.5,
+        28
+      ],
+      "frames": [
+        648,
+        660,
+        672
+      ]
+    },
+    {
+      "file": "semantic-focus.jpg",
+      "source": "A",
+      "times_seconds": [
+        38.5,
+        39.75,
+        42.75
+      ],
+      "frames": [
+        924,
+        954,
+        1026
+      ]
+    },
+    {
+      "file": "edge-relay.jpg",
+      "source": "A",
+      "times_seconds": [
+        52.75,
+        53.25,
+        53.75
+      ],
+      "frames": [
+        1266,
+        1278,
+        1290
+      ]
+    },
+    {
+      "file": "filter-flow.jpg",
+      "source": "B",
+      "times_seconds": [
+        19.25,
+        20.75,
+        25.75
+      ],
+      "frames": [
+        462,
+        498,
+        618
+      ]
+    },
+    {
+      "file": "number-state.jpg",
+      "source": "B",
+      "times_seconds": [
+        1,
+        2.5,
+        3.25
+      ],
+      "frames": [
+        24,
+        60,
+        78
+      ]
+    }
+  ]
+}
