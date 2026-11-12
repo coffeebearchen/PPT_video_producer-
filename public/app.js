@@ -1680,7 +1680,9 @@ async function renderCoursewareEditor(taskId) {
   } catch {}
   const assets = (await api(`/api/courseware/drafts/${encodeURIComponent(taskId)}/assets`)).assets || [];
   const imgAssets = assets.filter(a => a.kind === 'image');
-  const kinds = [['title','标题页'],['screenshot','截图页'],['flow','流程页'],['bullet','要点页'],['quote','金句页']];
+  const vidAssets = assets.filter(a => a.kind === 'video');
+  const kinds = [['title','标题页'],['screenshot','截图页'],['video','视频页'],['image','图片页'],['flow','流程页'],['bullet','要点页'],['quote','金句页'],['diagram','图解页']];
+  const diagramLayouts = ['A01','A02','A03','A04','A05','A06','A07','A08','A09','B01','B02','B03','B04','B05','B06','B07','B08','B09','C01','C02','C03','C04','C05','C06','C07','C08','C09','C10','D01','D02','D03','D04','D05','D06','D07','D08','E01','E02','E03','E04','E05','E06','P01','P02','P03'];
   const assetOpts = imgAssets.map(a => `<option value="${esc(a.id)}">${esc(a.name || a.id)}</option>`).join('');
 
   const slideCard = (s, i) => {
@@ -1719,6 +1721,24 @@ async function renderCoursewareEditor(taskId) {
     }
     if (s.kind === 'bullet') {
       extra = `<div class="field"><label>要点（每行一条，1–5 条）</label><textarea data-f="bullets" rows="3">${esc((s.bullets || []).join('\n'))}</textarea></div>`;
+    }
+    if (s.kind === 'video') {
+      const vOpts = vidAssets.map(a => `<option value="${esc(a.id)}" ${s.assetId === a.id ? 'selected' : ''}>${esc(a.name || a.id)}</option>`).join('');
+      extra = `<div class="field"><label>视频素材</label><select data-f="assetId">${vOpts || '<option value="">（先上传视频）</option>'}</select></div>`;
+    }
+    if (s.kind === 'image') {
+      const iOpts = imgAssets.map(x => `<option value="${esc(x.id)}" ${(s.assetId || imgAssets[0]?.id) === x.id ? 'selected' : ''}>${esc(x.name || x.id)}</option>`).join('');
+      extra = `<div class="form-grid">
+        <div class="field"><label>图片素材</label><select data-f="assetId">${iOpts || '<option value="">（先上传图片）</option>'}</select></div>
+        <div class="field"><label>缓慢推近（Ken Burns）</label><select data-f="kenBurns"><option value="0" ${!s.kenBurns ? 'selected' : ''}>关</option><option value="1" ${s.kenBurns ? 'selected' : ''}>开</option></select></div>
+      </div>`;
+    }
+    if (s.kind === 'diagram') {
+      const lOpts = diagramLayouts.map(k => `<option value="${k}" ${s.layout === k ? 'selected' : ''}>${k}</option>`).join('');
+      extra = `<div class="form-grid">
+        <div class="field"><label>图解布局</label><select data-f="layout">${lOpts}</select></div>
+        <div class="field full"><label>数据（JSON）</label><textarea data-f="data" rows="3">${esc(JSON.stringify(s.data || {}, null, 2))}</textarea></div>
+      </div>`;
     }
     return `<div class="card" data-slide="${i}" data-id="${esc(s.id || '')}">
       <div class="card-head">
@@ -1866,6 +1886,20 @@ async function renderCoursewareEditor(taskId) {
     }
     if (kind === 'bullet') {
       slide.bullets = String(v('bullets') || '').split('\n').map((x) => x.trim()).filter(Boolean).slice(0, 5);
+    }
+    if (kind === 'video') {
+      slide.assetId = v('assetId');
+      slide.muted = true;
+      slide.fit = 'contain';
+    }
+    if (kind === 'image') {
+      slide.assetId = v('assetId');
+      slide.kenBurns = v('kenBurns') === '1';
+      slide.fit = 'contain';
+    }
+    if (kind === 'diagram') {
+      slide.layout = v('layout') || 'D01';
+      try { slide.data = JSON.parse(v('data') || '{}'); } catch { slide.data = {}; }
     }
     return slide;
   }).filter((s) => s.text);
