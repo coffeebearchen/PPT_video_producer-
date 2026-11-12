@@ -1,5 +1,5 @@
 import {CoursewareImage} from './ImagePage';
-import {DoodleCourseware} from './doodle/DoodleCourseware';
+import {DoodleCourseware, DoodleCover} from './doodle/DoodleCourseware';
 import React, {useMemo} from 'react';
 import {DynamicFlowCourseware, DynamicFlowCover} from './dynamicflow/DynamicFlowCourseware';
 import {AbsoluteFill, Audio, Freeze, Sequence, interpolate, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
@@ -107,5 +107,6 @@ export const Courseware: React.FC<ResolvedProps> = input => {
 };
 export const CoursewareCover: React.FC<ResolvedProps> = input => {
   const project = useMemo(() => validateResolved(input), [input]);
+  if(project.slides.some(slide=>slide.kind==='diagram'))return <DoodleCover {...project}/>;
   return project.style === 'dynamicflow' ? <DynamicFlowCover {...project}/> : <LegacyCoursewareCover {...project}/>;
 };

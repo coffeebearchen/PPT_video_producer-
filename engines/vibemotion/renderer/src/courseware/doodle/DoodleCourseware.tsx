@@ -5,9 +5,10 @@ import type {ResolvedProps,Slide} from '../model';
 import {Courseware} from '../Courseware';
 import {Soundtrack} from '../Effects';
 import {DiagramPage,FONT,clamp,wrap} from './DiagramPage';
+import {AiLabel} from '../BrandChrome';
 import {C,icon} from './source';
-const Hero:React.FC<{slide:Slide;last:boolean}>=({slide,last})=>{
- const f=useCurrentFrame(),{fps}=useVideoConfig(),p=clamp(f/fps/.55);const lines=wrap(slide.text,13),notes=wrap(slide.body??'',20);
+const Hero:React.FC<{slide:Slide;last:boolean;still?:boolean}>=({slide,last,still})=>{
+ const raw=useCurrentFrame(),{fps}=useVideoConfig(),f=still?99999:raw,p=clamp(f/fps/.55);const lines=wrap(slide.text,13),notes=wrap(slide.body??'',20);
  return <svg width={1080} height={1920} style={{fontFamily:FONT,background:C.bg}}>
  <defs><filter id="heroChalk"><feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves={3} seed={7} result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale={3.2}/></filter></defs><rect width={1080} height={1920} fill={C.bg}/>
  <text data-doodle-text x={540} y={570} fill={C.yellow} textAnchor="middle" fontSize={64} opacity={p}>{lines.map((s,i)=><tspan key={i} x={540} dy={i?90:0}>{s}</tspan>)}</text>
@@ -16,6 +17,10 @@ const Hero:React.FC<{slide:Slide;last:boolean}>=({slide,last})=>{
  {last&&<text data-doodle-text x={966} y={1705} textAnchor="end" fontSize={26} fill={C.muted}>有问题，评论区问</text>}
  <DoodleVignette/>
  </svg>;
+};
+export const DoodleCover:React.FC<ResolvedProps>=project=>{
+ const slide:Slide={id:'cover',kind:'title',text:project.title,fromFrame:0,durationInFrames:1};
+ return <AbsoluteFill style={{background:C.bg}}><Hero slide={slide} last={false} still/><AiLabel project={project}/></AbsoluteFill>;
 };
 export const DoodleCourseware:React.FC<ResolvedProps>=project=>{
  const {fps}=useVideoConfig();
