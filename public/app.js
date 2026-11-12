@@ -1683,6 +1683,26 @@ async function renderCoursewareEditor(taskId) {
   const vidAssets = assets.filter(a => a.kind === 'video');
   const kinds = [['title','标题页'],['screenshot','截图页'],['video','视频页'],['image','图片页'],['flow','流程页'],['bullet','要点页'],['quote','金句页'],['diagram','图解页']];
   const diagramLayouts = ['A01','A02','A03','A04','A05','A06','A07','A08','A09','B01','B02','B03','B04','B05','B06','B07','B08','B09','C01','C02','C03','C04','C05','C06','C07','C08','C09','C10','D01','D02','D03','D04','D05','D06','D07','D08','E01','E02','E03','E04','E05','E06','P01','P02','P03'];
+  const templates = {
+    tutorial: { label: '教程三步', slides: [
+      { kind: 'title', text: '三步搞定', body: '一步接一步' },
+      { kind: 'screenshot', text: '第一步：看这里', annotation: 'arrow', highlight: { x: 0.1, y: 0.35, w: 0.8, h: 0.12 } },
+      { kind: 'flow', text: '整个流程', nodes: ['第一步', '第二步', '第三步'] },
+      { kind: 'quote', text: '顺序对了，就不折腾' }
+    ]},
+    concept: { label: '概念解释', slides: [
+      { kind: 'title', text: '一个概念', body: '一句话说清' },
+      { kind: 'diagram', layout: 'A02', text: '先试一条路', data: { decision: '先试一条路', success: { label: '对了 ✓', detail: '直接用' }, failure: { label: '错了 ✗', detail: '换一条' } } },
+      { kind: 'bullet', text: '三个要点', bullets: ['要点一', '要点二', '要点三'] },
+      { kind: 'quote', text: '记住这一句' }
+    ]},
+    compare: { label: '前后对比', slides: [
+      { kind: 'title', text: '改之前 vs 改之后' },
+      { kind: 'diagram', layout: 'B07', text: '机制变了', data: { before: { label: '改造前', nodes: ['消息', 'Router', 'Worker'] }, after: { label: '改造后', nodes: ['后续消息', 'Worker', '交付'] }, change: '改' } },
+      { kind: 'diagram', layout: 'D03', text: '结果变了', data: { before: '修复前', after: '修复后', passed: [false, true] } },
+      { kind: 'quote', text: '少绕一步' }
+    ]}
+  };
   const assetOpts = imgAssets.map(a => `<option value="${esc(a.id)}">${esc(a.name || a.id)}</option>`).join('');
 
   const slideCard = (s, i) => {
@@ -1791,7 +1811,7 @@ async function renderCoursewareEditor(taskId) {
       </div>
     </div>
     <div class="card">
-      <div class="card-head"><div><h2 class="section-title">页面（<span id="cw-count">${board.slides.length}</span>）</h2></div><div><button class="btn" data-action="cw-add">+ 添加页</button></div></div>
+      <div class="card-head"><div><h2 class="section-title">页面（<span id="cw-count">${board.slides.length}</span>）</h2></div><div class="flex" style="gap:8px;align-items:center"><select id="cw-template" style="font-size:12px;padding:4px 8px">${Object.entries(templates).map(([k, v]) => `<option value="${k}">${v.label}</option>`).join('')}</select><button class="btn" data-action="cw-apply-template">套用模板</button><button class="btn" data-action="cw-add">+ 添加页</button></div></div>
       <div class="card-body" id="cw-slides">${board.slides.map(slideCard).join('') || '<div class="empty"><p>还没有页，点「+ 添加页」。</p></div>'}</div>
     </div>
     <div class="flex" style="gap:10px;margin-top:16px">
@@ -2082,6 +2102,16 @@ async function renderCoursewareEditor(taskId) {
       list.insertAdjacentHTML('beforeend', slideCard(slide, list.querySelectorAll('[data-slide]').length));
       backupLocal();
       scheduleSnap();
+    } else if (act === 'cw-apply-template') {
+      const tpl = templates[$('#cw-template')?.value || ''];
+      if (!tpl) return;
+      if (!confirm(`套用「${tpl.label}」？会替换当前所有页。`)) return;
+      const list = $('#cw-slides');
+      const slides = tpl.slides.map((s) => ({ ...s, id: 's_' + Math.random().toString(36).slice(2, 8), narration: { mode: 'none' } }));
+      list.innerHTML = slides.map((s, i) => slideCard(s, i)).join('');
+      backupLocal();
+      scheduleSnap();
+      toast('已套用「' + tpl.label + '」');
     } else if (act === 'cw-preview') {
       const card = btn.closest('[data-slide]');
       if (card) cwPreview(card);
