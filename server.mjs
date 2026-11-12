@@ -451,15 +451,17 @@ async function processCoursewareTask(task) {
   }
   const outRel = path.join('video-tasks', id);
   const outDir = path.join(MEDIA_DIR, outRel);
+  let isPreview = false;
+  try { isPreview = JSON.parse(task.timeline_json || '{}').currentRender?.preview === true; } catch {}
   try {
     const { renderCourseware } = await import('./lib/courseware-render.mjs');
-    await renderCourseware(propsPath, outDir, (p) => {
+    const out = await renderCourseware(propsPath, outDir, (p) => {
       updateVideoTask(id, { progress: p, error: '' });
-    });
+    }, { preview: isPreview });
     updateVideoTask(id, {
       status: 'done', progress: 100,
-      video_path: outRel.replaceAll('\\', '/') + '/video.mp4',
-      cover_path: outRel.replaceAll('\\', '/') + '/cover.png'
+      video_path: outRel.replaceAll('\\', '/') + '/' + (isPreview ? 'preview.mp4' : 'video.mp4'),
+      cover_path: isPreview ? '' : outRel.replaceAll('\\', '/') + '/cover.png'
     });
   } catch (e) {
     const cur = db.prepare('SELECT status FROM video_tasks WHERE id=?').get(id);
@@ -469,7 +471,7 @@ async function processCoursewareTask(task) {
 }
 
 // 课件：编译当前草稿 → 冻结 resolved-props → 入队渲染
-async function generateCoursewareTask(id) {
+async function generateCoursewareTask(id, opts = {}) {
   const task = db.prepare("SELECT * FROM video_tasks WHERE id=? AND mode='courseware'").get(id);
   if (!task) throw new Error('课件不存在');
   if (['queued', 'running'].includes(task.status)) throw new Error('正在生成中，请稍候再试');
@@ -484,7 +486,7 @@ async function generateCoursewareTask(id) {
   const props = await compileStoryboard({ project, assets: listAssets(id), renderId, taskId: id, stagingDir });
   fs.writeFileSync(path.join(snapshotDir, 'source-storyboard.json'), JSON.stringify(project.storyboard, null, 2), 'utf8');
   fs.writeFileSync(path.join(snapshotDir, 'resolved-props.json'), JSON.stringify(props, null, 2), 'utf8');
-  project.currentRender = { renderId, draftRevision: project.draftRevision, status: 'compiled', at: now() };
+  project.currentRender = { renderId, draftRevision: project.draftRevision, status: 'compiled', preview: opts.preview === true, at: now() };
   db.prepare("UPDATE video_tasks SET timeline_json=?, status='queued', progress=0, error='', updated_at=? WHERE id=?").run(JSON.stringify(project), now(), id);
   enqueueVideoTask(id);
   return { renderId, totalDurationSeconds: props.totalDurationSeconds };
@@ -2460,6 +2462,17 @@ async function route(req, res) {
       const id = p.split('/')[4];
       try {
         const r = await generateCoursewareTask(id);
+        return send(res, 201, r);
+      } catch (e) {
+        return fail(res, 400, e.message);
+      }
+    }
+
+    // 低清预览：0.5 倍分辨率、无封面，快出片
+    if (method === 'POST' && /^\/api\/courseware\/drafts\/[A-Za-z0-9_-]+\/preview$/.test(p)) {
+      const id = p.split('/')[4];
+      try {
+        const r = await generateCoursewareTask(id, { preview: true });
         return send(res, 201, r);
       } catch (e) {
         return fail(res, 400, e.message);

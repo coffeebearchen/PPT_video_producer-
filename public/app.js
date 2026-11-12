@@ -1796,6 +1796,7 @@ async function renderCoursewareEditor(taskId) {
     </div>
     <div class="flex" style="gap:10px;margin-top:16px">
       <button class="btn btn-primary" data-action="cw-save">保存草稿</button>
+      <button class="btn" data-action="cw-preview-video">低清预览</button>
       <button class="btn" data-action="cw-generate">生成课件</button>
     </div>
     </div>
@@ -1995,7 +1996,7 @@ async function renderCoursewareEditor(taskId) {
     const btn = e.target.closest('[data-action]');
     if (!btn) return;
     const act = btn.dataset.action;
-    const release = ['cw-save', 'cw-generate', 'cw-compose', 'cw-detect', 'cw-asset-del'].includes(act) ? setBusy(btn) : () => {};
+    const release = ['cw-save', 'cw-generate', 'cw-compose', 'cw-detect', 'cw-asset-del', 'cw-preview-video'].includes(act) ? setBusy(btn) : () => {};
     try {
     if (act === 'cw-asset-del') {
       e.stopPropagation();
@@ -2066,6 +2067,12 @@ async function renderCoursewareEditor(taskId) {
         await doSave(true);
         const r = await post(`/api/courseware/drafts/${encodeURIComponent(taskId)}/generate`, {});
         toast(`已生成：${r.renderId}（${r.totalDurationSeconds}s）`);
+      } catch (err) { toast(err.message, 'error'); }
+    } else if (act === 'cw-preview-video') {
+      try {
+        await doSave(true);
+        const r = await post(`/api/courseware/drafts/${encodeURIComponent(taskId)}/preview`, {});
+        toast(`预览生成中：${r.renderId}（半分辨率，约 1 分钟）`);
       } catch (err) { toast(err.message, 'error'); }
     }
     } finally { release(); }
