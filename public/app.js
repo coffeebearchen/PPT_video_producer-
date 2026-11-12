@@ -1759,7 +1759,7 @@ async function renderCoursewareEditor(taskId) {
     <div id="cw-root">
     <div class="page-head">
       <div><p class="eyebrow">COURSEWARE / 课件编辑器</p><h1 class="page-title">${esc(board.title || '未命名课件')}</h1><p class="page-sub">本主题素材 + 五类页；保存后生成。</p></div>
-      <div class="head-actions"><span class="muted tiny" id="cw-save-status" style="margin-right:8px"></span> <button class="btn" data-action="cw-back">返回</button></div>
+      <div class="head-actions"><label class="muted tiny" style="margin-right:6px">背景音乐</label><select id="cw-bgm" style="margin-right:8px;font-size:12px;padding:4px 8px"><option value="" ${!board.bgm ? 'selected' : ''}>无</option><option value="ambient" ${board.bgm === 'ambient' ? 'selected' : ''}>舒缓（bg_pad）</option><option value="pulse" ${board.bgm === 'pulse' ? 'selected' : ''}>节奏（pulse）</option></select><span class="muted tiny" id="cw-save-status" style="margin-right:8px"></span> <button class="btn" data-action="cw-back">返回</button></div>
     </div>
     <div class="card">
       <div class="card-head"><div><h2 class="section-title">本主题素材</h2><p class="section-sub">只服务这一条内容，不进共用库。</p></div></div>
@@ -1913,7 +1913,7 @@ async function renderCoursewareEditor(taskId) {
     const status = $('#cw-save-status');
     if (status) status.textContent = '保存中…';
     const doPut = () => put(`/api/courseware/drafts/${encodeURIComponent(taskId)}`, {
-      storyboard: { title: board.title, style: board.style, slides },
+      storyboard: { title: board.title, style: board.style, slides, bgm: $('#cw-bgm')?.value || undefined },
       draftRevision: project.draftRevision
     });
     try {
