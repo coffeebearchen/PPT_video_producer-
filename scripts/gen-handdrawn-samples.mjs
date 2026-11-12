@@ -7,9 +7,9 @@ const { default: rough } = await import(roughUrl);
 const gen = rough.generator();
 
 const C = {
-  bg: '#262725', ink: '#F0EBD4', muted: '#BDBAA8',
-  yellow: '#E7C85B', green: '#A8C9B4', red: '#EF8581',
-  pink: '#E39BB0', orange: '#DBA36D', line: '#858C80', surface: '#30312D'
+  bg: '#282828', ink: '#EDE6D6', muted: '#8A8A80',
+  yellow: '#DCBC62', green: '#90C380', red: '#E06B6B',
+  pink: '#D38796', orange: '#F08419', line: '#6E6E68', surface: '#2E2E2E'
 };
 const FONT = '"Microsoft YaHei","PingFang SC","SimHei",sans-serif';
 const W = 1080, H = 1920;
@@ -17,9 +17,9 @@ const W = 1080, H = 1920;
 function P(d) { return gen.toPaths(d).map(p => ({ d: p.d, stroke: p.stroke || C.line, sw: p.strokeWidth || 3, fill: p.fill || 'none' })); }
 const DR = 2.2, DB = 1.6;
 const rect = (x, y, w, h, o = {}) => P(gen.rectangle(x, y, w, h, { seed: o.seed || 1, roughness: o.r ?? DR, bowing: DB, stroke: o.c || C.line, strokeWidth: o.sw || 3, fill: o.fill, fillStyle: 'solid' }));
-const ell = (cx, cy, w, h, o = {}) => P(gen.ellipse(cx, cy, w, h, { seed: o.seed || 1, roughness: o.r ?? DR, stroke: o.c || C.line, strokeWidth: o.sw || 3, fill: o.fill, fillStyle: 'solid' }));
+const ell = (cx, cy, w, h, o = {}) => P(gen.ellipse(cx, cy, w, h, { seed: o.seed || 1, roughness: o.r ?? DR, stroke: o.c || C.line, strokeWidth: o.sw || 3, fill: o.fill, fillStyle: o.hatch ? 'hachure' : 'solid', hachureGap: o.gap || 8, hachureAngle: -41 }));
 const line = (x1, y1, x2, y2, o = {}) => P(gen.line(x1, y1, x2, y2, { seed: o.seed || 1, roughness: o.r ?? DR, stroke: o.c || C.line, strokeWidth: o.sw || 3 }));
-const poly = (pts, o = {}) => P(gen.polygon(pts, { seed: o.seed || 1, roughness: o.r ?? DR, bowing: DB, stroke: o.c || C.line, strokeWidth: o.sw || 3, fill: o.fill, fillStyle: 'solid' }));
+const poly = (pts, o = {}) => P(gen.polygon(pts, { seed: o.seed || 1, roughness: o.r ?? DR, bowing: DB, stroke: o.c || C.line, strokeWidth: o.sw || 3, fill: o.fill, fillStyle: o.hatch ? 'hachure' : 'solid', hachureGap: o.gap || 8, hachureAngle: -41 }));
 
 function arrow(x1, y1, x2, y2, o = {}) {
   const out = line(x1, y1, x2, y2, o);
@@ -81,10 +81,12 @@ function svg(title, sub, paths, texts, foot) {
       <feDisplacementMap in="SourceGraphic" in2="n" scale="1.1" xChannelSelector="R" yChannelSelector="G"/>
     </filter>
     <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" seed="3" result="n"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope="0.10"/></feComponentTransfer></filter>
+    <radialGradient id="vig" cx="50%" cy="45%" r="75%"><stop offset="0%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity="0.28"/></radialGradient>
   </defs>
   <g filter="url(#chalk)">${ps}</g>
   <g filter="url(#ct)">${ts}</g>
   <rect width="${W}" height="${H}" filter="url(#grain)" opacity="0.55"/>
+  <rect width="${W}" height="${H}" fill="url(#vig)"/>
   <text x="540" y="150" fill="${C.ink}" font-size="54" text-anchor="middle" font-family='${FONT}' font-weight="600" filter="url(#ct)">${title}</text>
   <text x="540" y="212" fill="${C.muted}" font-size="30" text-anchor="middle" font-family='${FONT}' filter="url(#ct)">${sub}</text>
   ${foot ? `<text x="540" y="1790" fill="${C.yellow}" font-size="34" text-anchor="middle" font-family='${FONT}' filter="url(#ct)">${foot}</text>` : ''}
@@ -342,7 +344,7 @@ L.C10 = () => { const p = [], t = [];
 L.D01 = () => { const p = [], t = [];
   p.push(...rect(70, 260, 940, 760, { c: C.line, seed: 520 }));
   [{ x: 300, y: 450, c: C.green }, { x: 780, y: 450, c: C.pink }, { x: 200, y: 760, c: C.orange }, { x: 540, y: 760, c: C.green }, { x: 860, y: 760, c: C.yellow }].forEach((c, i) => {
-    p.push(...ell(c.x, c.y, 300, 200, { c: c.c, seed: 530 + i, sw: 3 }));
+    p.push(...ell(c.x, c.y, 300, 200, { c: c.c, seed: 530 + i, sw: 3, fill: c.c, hatch: true, gap: 9 }));
     for (let k = 0; k < 8; k++) { const a = (k / 8) * Math.PI * 2, r = 20 + (k % 3) * 18; p.push(...ell(c.x + Math.cos(a) * r * 2.2, c.y + Math.sin(a) * r, 20, 20, { c: c.c, sw: 2, seed: 540 + i * 10 + k, fill: c.c })); }
   });
   t.push(T(540, 1200, 'idea basin', { size: 56, c: C.yellow, weight: 600 }), T(540, 1270, '想法盆地', { size: 36, c: C.muted }));
