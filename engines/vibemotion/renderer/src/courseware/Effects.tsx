@@ -1,6 +1,6 @@
 import React from 'react';
 import {AbsoluteFill, Audio, Img, Sequence, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
-import {styleTokens} from '../graphics/styles';
+import {coursewareStyleTokens as styleTokens} from './styles';
 import {effectPlan, effectUnit} from './model';
 import type {Rect, ResolvedProps, Slide} from './model';
 

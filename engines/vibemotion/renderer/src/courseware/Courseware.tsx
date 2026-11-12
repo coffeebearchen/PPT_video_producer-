@@ -1,7 +1,8 @@
 import React, {useMemo} from 'react';
+import {DynamicFlowCourseware, DynamicFlowCover} from './dynamicflow/DynamicFlowCourseware';
 import {AbsoluteFill, Audio, Freeze, Sequence, interpolate, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {SubtitleTrack} from '../engine/SubtitleTrack';
-import {styleTokens} from '../graphics/styles';
+import {coursewareStyleTokens as styleTokens} from './styles';
 import {activeSubtitle, effectPlan, effectTilt, effectUnit, subtitleCues, validateResolved} from './model';
 import type {ResolvedProps, Slide} from './model';
 import {CoursewareFlow, Screenshot} from './layers';
@@ -72,7 +73,7 @@ const SlideVisual: React.FC<{slide: Slide; previous?: Slide; project: ResolvedPr
   </AbsoluteFill>;
 };
 
-export const Courseware: React.FC<ResolvedProps> = input => {
+const LegacyCourseware: React.FC<ResolvedProps> = input => {
   const project = useMemo(() => validateResolved(input), [input]);
   const frame = useCurrentFrame(); const {fps} = useVideoConfig(); const t = styleTokens(project.style);
   const cues = useMemo(() => subtitleCues(project), [project]); const cue = activeSubtitle(cues, frame, fps);
@@ -89,8 +90,18 @@ export const Courseware: React.FC<ResolvedProps> = input => {
     {project.audit && <LayoutAudit project={project}/>}
   </AbsoluteFill>;
 };
-export const CoursewareCover: React.FC<ResolvedProps> = input => {
+const LegacyCoursewareCover: React.FC<ResolvedProps> = input => {
   const project = useMemo(() => validateResolved(input), [input]);
   const slide: Slide = {id: 'cover', kind: 'title', text: project.title, fromFrame: 0, durationInFrames: 1};
   return <AbsoluteFill className="cw-root" data-cw-root style={{width: 1080, height: 1920}}><style>{CSS}</style><Page slide={slide} project={project} cover/><AiLabel project={project}/>{project.audit && <LayoutAudit project={project} cover/>}</AbsoluteFill>;
+};
+
+// Keep the legacy page/transition trees intact; only the new style takes this branch.
+export const Courseware: React.FC<ResolvedProps> = input => {
+  const project = useMemo(() => validateResolved(input), [input]);
+  return project.style === 'dynamicflow' ? <DynamicFlowCourseware {...project}/> : <LegacyCourseware {...project}/>;
+};
+export const CoursewareCover: React.FC<ResolvedProps> = input => {
+  const project = useMemo(() => validateResolved(input), [input]);
+  return project.style === 'dynamicflow' ? <DynamicFlowCover {...project}/> : <LegacyCoursewareCover {...project}/>;
 };

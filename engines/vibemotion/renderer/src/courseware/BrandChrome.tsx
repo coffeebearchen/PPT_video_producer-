@@ -1,5 +1,5 @@
 import React from 'react';
-import {styleTokens} from '../graphics/styles';
+import {coursewareStyleTokens as styleTokens} from './styles';
 import {DEFAULT_AI_LABEL, DEFAULT_BRAND} from './model';
 import type {ResolvedProps} from './model';
 

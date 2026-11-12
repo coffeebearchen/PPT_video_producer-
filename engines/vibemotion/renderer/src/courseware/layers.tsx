@@ -2,7 +2,7 @@ import React from 'react';
 import {useCurrentFrame, useVideoConfig} from 'remotion';
 import {BrowserDOMSpotlight} from '../components/BrowserDOMSpotlight';
 import {rectPaths} from '../engine/sketch';
-import {styleTokens} from '../graphics/styles';
+import {coursewareStyleTokens as styleTokens} from './styles';
 import {cameraPoint, containTarget, effectPlan, effectTilt, effectUnit, flowBoxes, flowEdgePath, screenshotCamera} from './model';
 import type {AnnotationKind, Rect, ResolvedProps, Slide} from './model';
 import {revealValue, ScreenshotEmphasis} from './Effects';

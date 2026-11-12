@@ -1,5 +1,5 @@
 import type {Subtitle} from '../types';
-import type {ExplanationStyle} from '../graphics/styles';
+import type {CoursewareStyle} from './styles';
 
 export type Rect = {x: number; y: number; w: number; h: number};
 export type Cue = {startSeconds: number; endSeconds: number; text: string};
@@ -39,7 +39,7 @@ export type Slide = {
 };
 export type ResolvedProps = {
   schemaVersion: 'courseware/1'; taskId: string; renderId: string; draftRevision: number;
-  title: string; style: ExplanationStyle; canvas: {width: number; height: number; fps: number};
+  title: string; style: CoursewareStyle; canvas: {width: number; height: number; fps: number};
   publicRoot: string; stagingDir: string; totalFrames: number; totalDurationSeconds: number;
   slides: Slide[]; audit?: boolean;
   bgm?: {src: string; volume: number; fadeInMs: number; fadeOutMs: number};
@@ -77,7 +77,7 @@ export function validateResolved(input: unknown): ResolvedProps {
   const stagingDir = `courseware/${taskId}/${renderId}`;
   ensure(b.stagingDir === stagingDir, 'stagingDir 与 taskId/renderId 不符');
   ensure(b.publicRoot === 'renderer/public', '本入口使用默认 renderer/public；不接受任意 publicRoot');
-  ensure(['industrial', 'clean', 'dynamic'].includes(String(b.style)), 'style 不支持');
+  ensure(['industrial', 'clean', 'dynamic', 'dynamicflow'].includes(String(b.style)), 'style 不支持');
   const canvas = record(b.canvas);
   ensure(canvas.width === 1080 && canvas.height === 1920 && canvas.fps === 30, '画布须为 1080×1920 / 30fps');
   const fps = 30;
@@ -159,7 +159,7 @@ export function validateResolved(input: unknown): ResolvedProps {
     return slide;
   });
   ensure(next === totalFrames, '最后一页末尾与 totalFrames 不符');
-  const result: ResolvedProps = {schemaVersion: 'courseware/1', taskId, renderId, draftRevision: num(b.draftRevision, 'draftRevision', 0, 1e9, true), title: label(b.title, 'title', 40), style: b.style as ExplanationStyle, canvas: {width: 1080, height: 1920, fps}, publicRoot: 'renderer/public', stagingDir, totalFrames, totalDurationSeconds, slides, audit: b.audit === true};
+  const result: ResolvedProps = {schemaVersion: 'courseware/1', taskId, renderId, draftRevision: num(b.draftRevision, 'draftRevision', 0, 1e9, true), title: label(b.title, 'title', 40), style: b.style as CoursewareStyle, canvas: {width: 1080, height: 1920, fps}, publicRoot: 'renderer/public', stagingDir, totalFrames, totalDurationSeconds, slides, audit: b.audit === true};
   result.brand = displayLabel(b.brand, 'brand', DEFAULT_BRAND, 30);
   result.aiLabel = displayLabel(b.aiLabel, 'aiLabel', DEFAULT_AI_LABEL, 16);
   if (b.progress !== undefined) result.progress = validateProgress(b.progress);
