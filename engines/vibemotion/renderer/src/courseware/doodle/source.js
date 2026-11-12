@@ -4,9 +4,9 @@ import rough from 'roughjs';
 const gen = rough.generator();
 
 const C = {
-  bg: '#262725', ink: '#F0EBD4', muted: '#858C80',
-  yellow: '#E7C85B', green: '#A8C9B4', red: '#EF8581',
-  pink: '#E39BB0', orange: '#DBA36D', line: '#858C80', surface: '#262725'
+  bg: '#282828', ink: '#EDE6D6', muted: '#8A8A80',
+  yellow: '#DCBC62', green: '#90C380', red: '#E06B6B',
+  pink: '#D38796', orange: '#F08419', line: '#6E6E68', surface: '#2E2E2E'
 };
 const FONT = '"Microsoft YaHei","PingFang SC","SimHei",sans-serif';
 const W = 1080, H = 1920;
@@ -15,7 +15,7 @@ let markSerial=0;
 function P(d) { const group=markSerial++; return gen.toPaths(d).map(p => ({ group, d: p.d, stroke: p.stroke || C.line, sw: p.strokeWidth || 3, fill: p.fill || 'none' })); }
 const DR = 2.2, DB = 1.6;
 const rect = (x, y, w, h, o = {}) => P(gen.rectangle(x, y, w, h, { seed: o.seed || 1, roughness: o.r ?? DR, bowing: DB, stroke: o.c || C.line, strokeWidth: o.sw || 3, fill: o.fill, fillStyle: 'solid' }));
-const ell = (cx, cy, w, h, o = {}) => P(gen.ellipse(cx, cy, w, h, { seed: o.seed || 1, roughness: o.r ?? DR, stroke: o.c || C.line, strokeWidth: o.sw || 3, fill: o.fill, fillStyle: 'solid' }));
+const ell = (cx, cy, w, h, o = {}) => P(gen.ellipse(cx, cy, w, h, { seed: o.seed || 1, roughness: o.r ?? DR, stroke: o.c || C.line, strokeWidth: o.sw || 3, fill: o.fill, fillStyle: o.hatch ? 'hachure' : 'solid', hachureGap: o.gap || 9, hachureAngle: -41 }));
 const line = (x1, y1, x2, y2, o = {}) => P(gen.line(x1, y1, x2, y2, { seed: o.seed || 1, roughness: o.r ?? DR, stroke: o.c || C.line, strokeWidth: o.sw || 3 }));
 const poly = (pts, o = {}) => P(gen.polygon(pts, { seed: o.seed || 1, roughness: o.r ?? DR, bowing: DB, stroke: o.c || C.line, strokeWidth: o.sw || 3, fill: o.fill, fillStyle: 'solid' }));
 
@@ -320,7 +320,7 @@ L.C10 = (data = {}) => { const p = [], t = [];
 L.D01 = (data = {}) => { const p = [], t = [];
   p.push(...rect(70, 260, 940, 760, { c: C.line, seed: 520 }));
   [{ x: 300, y: 450, c: C.green }, { x: 780, y: 450, c: C.pink }, { x: 200, y: 760, c: C.orange }, { x: 540, y: 760, c: C.green }, { x: 860, y: 760, c: C.yellow }].forEach((c, i) => {
-    p.push(...ell(c.x, c.y, 300, 200, { c: c.c, seed: 530 + i, sw: 3 }));
+    p.push(...ell(c.x, c.y, 300, 200, { c: c.c, seed: 530 + i, sw: 3, fill: c.c, hatch: true }));
     for (let k = 0; k < (data.counts?.[i] ?? 8); k++) { const a = (k / (data.counts?.[i] ?? 8)) * Math.PI * 2, r = 20 + (k % 3) * 18; p.push(...ell(c.x + Math.cos(a) * r * 2.2, c.y + Math.sin(a) * r, 20, 20, { c: c.c, sw: 2, seed: 540 + i * 10 + k, fill: c.c })); }
   });
   t.push(T(540, 1200, 'idea basin', { size: 56, c: C.yellow, weight: 600 }), T(540, 1270, '想法盆地', { size: 36, c: C.muted }));
@@ -435,3 +435,4 @@ L.P03 = (data = {}) => { const p = [], t = [];
 
 
 export function drawLayout(id,data){markSerial=0;return rawLayouts[id](data);}
+
