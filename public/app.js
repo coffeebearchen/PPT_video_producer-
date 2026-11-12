@@ -1758,7 +1758,7 @@ async function renderCoursewareEditor(taskId) {
   $('#view').innerHTML = `
     <div id="cw-root">
     <div class="page-head">
-      <div><p class="eyebrow">COURSEWARE / 课件编辑器</p><h1 class="page-title">${esc(board.title || '未命名课件')}</h1><p class="page-sub">本主题素材 + 五类页；保存后生成。</p></div>
+      <div><p class="eyebrow">COURSEWARE / 课件编辑器</p><h1 class="page-title">${esc(board.title || '未命名课件')}</h1><p class="page-sub">本主题素材 + 八类页；Ctrl+Z 撤销 / Ctrl+Shift+Z 重做。</p></div>
       <div class="head-actions"><label class="muted tiny" style="margin-right:6px">背景音乐</label><select id="cw-bgm" style="margin-right:8px;font-size:12px;padding:4px 8px"><option value="" ${!board.bgm ? 'selected' : ''}>无</option><option value="ambient" ${board.bgm === 'ambient' ? 'selected' : ''}>舒缓（bg_pad）</option><option value="pulse" ${board.bgm === 'pulse' ? 'selected' : ''}>节奏（pulse）</option></select><label class="muted tiny" style="margin-right:6px">旁白音色</label><select id="cw-voice" style="margin-right:8px;font-size:12px;padding:4px 8px"><option value="" ${!board.voice ? 'selected' : ''}>默认（设置里的）</option><option value="Microsoft Huihui Desktop" ${board.voice === 'Microsoft Huihui Desktop' ? 'selected' : ''}>慧慧 · 中文</option><option value="Microsoft Zira Desktop" ${board.voice === 'Microsoft Zira Desktop' ? 'selected' : ''}>Zira · 英文</option></select><span class="muted tiny" id="cw-save-status" style="margin-right:8px"></span> <button class="btn" data-action="cw-back">返回</button></div>
     </div>
     <div class="card">
@@ -1907,6 +1907,39 @@ async function renderCoursewareEditor(taskId) {
 
   let autoSaveTimer = null;
   let saveChain = Promise.resolve();
+
+  // 撤销/重做（快照 collectSlides 的结果，50 步）
+  const history = [];
+  let histIndex = -1;
+  const snapshot = () => {
+    try {
+      const slides = collectSlides();
+      const json = JSON.stringify(slides);
+      if (histIndex >= 0 && JSON.stringify(history[histIndex]) === json) return;
+      history.splice(histIndex + 1);
+      history.push(slides);
+      if (history.length > 50) history.shift();
+      histIndex = history.length - 1;
+    } catch {}
+  };
+  const restoreSnap = (slides) => {
+    const list = $('#cw-slides');
+    if (!list) return;
+    if (!slides || !slides.length) { list.innerHTML = '<div class="empty"><p>还没有页，点「+ 添加页」。</p></div>'; return; }
+    list.innerHTML = slides.map((s, i) => slideCard(s, i)).join('');
+  };
+  const undo = () => { if (histIndex <= 0) return; histIndex--; restoreSnap(history[histIndex]); backupLocal(); toast('撤销'); };
+  const redo = () => { if (histIndex >= history.length - 1) return; histIndex++; restoreSnap(history[histIndex]); backupLocal(); toast('重做'); };
+  let snapTimer = null;
+  const scheduleSnap = () => { clearTimeout(snapTimer); snapTimer = setTimeout(snapshot, 350); };
+  const onKey = (e) => {
+    if (!(e.ctrlKey || e.metaKey)) return;
+    if (e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
+    else if ((e.key === 'z' && e.shiftKey) || e.key === 'y') { e.preventDefault(); redo(); }
+  };
+  window.addEventListener('keydown', onKey);
+  snapshot();
+
   async function realSave(silent) {
     const slides = collectSlides();
     if (!slides.length) { if (!silent) toast('至少加一页再保存', 'error'); return false; }
@@ -1948,8 +1981,8 @@ async function renderCoursewareEditor(taskId) {
   const backupLocal = () => {
     try { localStorage.setItem('cw_draft_' + taskId, JSON.stringify({ storyboard: { title: board.title, style: board.style, slides: collectSlides() }, at: Date.now() })); } catch {}
   };
-  $('#cw-root').addEventListener('input', () => { backupLocal(); scheduleSave(); });
-  $('#cw-root').addEventListener('change', () => { backupLocal(); scheduleSave(); });
+  $('#cw-root').addEventListener('input', () => { backupLocal(); scheduleSave(); scheduleSnap(); });
+  $('#cw-root').addEventListener('change', () => { backupLocal(); scheduleSave(); scheduleSnap(); });
 
   function cwPreview(card) {
     const v = (f) => card.querySelector(`[data-f="${f}"]`)?.value ?? '';
@@ -2048,6 +2081,7 @@ async function renderCoursewareEditor(taskId) {
       const slide = { id: 's_' + Math.random().toString(36).slice(2, 8), kind: 'title', text: '新页面', narration: { mode: 'none' } };
       list.insertAdjacentHTML('beforeend', slideCard(slide, list.querySelectorAll('[data-slide]').length));
       backupLocal();
+      scheduleSnap();
     } else if (act === 'cw-preview') {
       const card = btn.closest('[data-slide]');
       if (card) cwPreview(card);
@@ -2056,6 +2090,7 @@ async function renderCoursewareEditor(taskId) {
       const list = $('#cw-slides');
       if (!list.querySelector('[data-slide]')) list.innerHTML = '<div class="empty"><p>还没有页，点「+ 添加页」。</p></div>';
       backupLocal();
+      scheduleSnap();
     } else if (act === 'cw-save') {
       const ok = await doSave();
       if (ok) toast('已保存');
