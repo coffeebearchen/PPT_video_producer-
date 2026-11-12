@@ -1,3 +1,4 @@
+import {CoursewareImage} from '../ImagePage';
 import React, {useMemo} from 'react';
 import {AbsoluteFill, Audio, Freeze, Sequence, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {activeSubtitle, subtitleCues, type ResolvedProps, type Slide} from '../model';
@@ -33,6 +34,7 @@ const Page: React.FC<{slide: Slide; project: ResolvedProps; last?: boolean; cove
     {slide.text && <div data-cw-content data-cw-text="heading" style={{position: 'absolute', left: 128, top: hero ? 530 : 320, width: 824, fontSize: hero ? 72 : 64, lineHeight: 1.25, textAlign: 'center', whiteSpace: 'pre-line', overflowWrap: 'anywhere', textWrap: 'balance', color: hero ? t.accent : t.ink, opacity: p, transform: `translateY(${8 * (1 - p)}px)`}}>{slide.text}</div>}
     {hero && <svg data-cw-content width={340} height={24} style={{position: 'absolute', left: 370, top: 888}}><path d="M5 15 Q115 6 330 12" stroke={t.accent} strokeWidth={4} fill="none" strokeLinecap="round" pathLength={1} strokeDasharray={1} strokeDashoffset={1 - draw} opacity={draw === 0 ? 0 : 1}/></svg>}
     {slide.body && <div data-cw-content data-cw-text="note" style={{position: 'absolute', left: 148, top: hero ? 1000 : 1370, width: 784, fontSize: hero ? 38 : 30, lineHeight: 1.35, color: t.muted, textAlign: 'center', whiteSpace: 'pre-line', overflowWrap: 'anywhere', opacity: p}}>{slide.body}</div>}
+    {slide.kind === 'image' && <CoursewareImage slide={slide} project={project}/>}
     {slide.kind === 'flow' && <Flow slide={slide}/>}
     {slide.kind === 'bullet' && <Bullets slide={slide}/>}
     {slide.kind === 'screenshot' && <Screenshot slide={shot} project={project}/>}

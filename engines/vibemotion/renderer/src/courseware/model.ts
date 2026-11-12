@@ -29,7 +29,7 @@ export type SlideEffects = {
   hook?: Hook; chapter?: {label: string}; tilt?: {deg: number};
 };
 export type Slide = {
-  id: string; kind: 'title' | 'screenshot' | 'video' | 'flow' | 'bullet' | 'quote' | 'diagram';
+  id: string; kind: 'title' | 'screenshot' | 'video' | 'flow' | 'bullet' | 'quote' | 'diagram' | 'image';
   layout?: DiagramSpec['layout']; data?: DiagramSpec['data'];
   text: string; body?: string; caption?: string; fromFrame: number; durationInFrames: number;
   narration?: {src: string; durationSeconds: number}; cues?: Cue[];
@@ -37,6 +37,7 @@ export type Slide = {
   motion?: ZoomMotion;
   effects?: SlideEffects;
   nodes?: Node[]; edges?: Edge[]; bullets?: string[];
+  kenBurns?: boolean;
   trim?: {startSeconds: number; endSeconds: number}; muted?: boolean; fit?: 'contain' | 'cover';
 };
 export type ResolvedProps = {
@@ -92,7 +93,7 @@ export function validateResolved(input: unknown): ResolvedProps {
   const slides: Slide[] = b.slides.map(raw => {
     const s = record(raw); const slideId = id(s.id);
     ensure(!slideIds.has(slideId), 'slide.id 重复'); slideIds.add(slideId);
-    ensure(['title', 'screenshot', 'video', 'flow', 'bullet', 'quote', 'diagram'].includes(String(s.kind)), 'kind 不支持');
+    ensure(['title', 'screenshot', 'video', 'flow', 'bullet', 'quote', 'diagram', 'image'].includes(String(s.kind)), 'kind 不支持');
     const fromFrame = num(s.fromFrame, 'fromFrame', 0, totalFrames - 1, true);
     const durationInFrames = num(s.durationInFrames, 'durationInFrames', 1, totalFrames, true);
     ensure(fromFrame === next, '页面必须按冻结帧无缝相接'); next += durationInFrames;
@@ -120,9 +121,15 @@ export function validateResolved(input: unknown): ResolvedProps {
         return {startSeconds, endSeconds, text: label(c.text, 'cue.text', 180)};
       });
     }
-    if (s.kind === 'screenshot' || s.kind === 'video') {
+    if (s.kind === 'screenshot' || s.kind === 'video' || s.kind === 'image') {
       const a = record(s.asset);
       slide.asset = {src: publicPath(a.src, stagingDir), width: num(a.width, 'asset.width', 1, 20000, true), height: num(a.height, 'asset.height', 1, 20000, true)};
+    }
+    if (s.kind === 'image') {
+      ensure(s.fit === undefined || s.fit === 'contain', 'image.fit 仅支持 contain');
+      ensure(s.kenBurns === undefined || typeof s.kenBurns === 'boolean', 'image.kenBurns 须为布尔值');
+      ensure(s.highlight === undefined && s.annotation === undefined && s.dim === undefined, 'image 不支持 highlight/annotation/dim；UI 标注请用 screenshot');
+      slide.fit = 'contain'; slide.kenBurns = s.kenBurns ?? false;
     }
     if (s.kind === 'video') {
       ensure(/\.(mp4|webm|m4v|mov)$/i.test(slide.asset!.src), 'video.asset.src 须为本地 mp4/webm/m4v/mov 文件');
@@ -347,7 +354,7 @@ export type EffectPlan = {transition: EffectWindow; hook: EffectWindow; reveal: 
 export const effectUnit = (time: number, window: EffectWindow) => window.end <= window.start ? (time >= window.end ? 1 : 0) : Math.max(0, Math.min(1, (time - window.start) / (window.end - window.start)));
 export function effectPlan(slide: Slide, fps: number, rootHook?: Hook): EffectPlan {
   const e = slide.effects; const durationMs = Math.max(0, (slide.durationInFrames - 1) / fps * 1000);
-  const count = Math.max(1, Number(Boolean(slide.text)) + Number(Boolean(slide.body)) + (slide.nodes?.length ?? slide.bullets?.length ?? (slide.kind === 'screenshot' || slide.kind === 'video' ? 1 : 0)));
+  const count = Math.max(1, Number(Boolean(slide.text)) + Number(Boolean(slide.body)) + (slide.nodes?.length ?? slide.bullets?.length ?? (slide.kind === 'screenshot' || slide.kind === 'video' || slide.kind === 'image' ? 1 : 0)));
   const units = e?.reveal?.by === 'char' ? Array.from(slide.text + (slide.bullets ?? []).join('')).length : slide.text.split('\n').length + (slide.bullets?.length ?? 0);
   const reveal = e?.reveal ? e.reveal.type === 'stagger' ? 400 + (e.reveal.from === 'all' ? count - 1 : 0) * e.reveal.staggerMs! : e.reveal.type === 'typewriter' ? Math.max(1, units) * e.reveal.speedMs! : e.reveal.durationMs! : 0;
   const hook = e?.hook ?? rootHook;
