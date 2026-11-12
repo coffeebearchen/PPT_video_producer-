@@ -85,6 +85,18 @@ export const LayoutAudit: React.FC<{project: ResolvedProps; cover?: boolean}> = 
         highlightErrorPx = Math.max(Math.abs(expected.x - actual.x), Math.abs(expected.y - actual.y), Math.abs(expected.x + expected.w - actual.x - actual.w), Math.abs(expected.y + expected.h - actual.y - actual.h));
         check(highlightErrorPx <= 2, `highlight error ${highlightErrorPx}px`);
       }
+      let imageState: {fit: string; scale: number; width: number; height: number} | undefined;
+      if (active?.kind === 'image') {
+        const viewport = page.querySelector<HTMLElement>('[data-cw-image-viewport]');
+        const image = viewport?.querySelector<HTMLImageElement>('[data-cw-image]');
+        check(viewport && image, 'image viewport missing');
+        check(image.naturalWidth === active.asset!.width && image.naturalHeight === active.asset!.height, 'image dimensions differ from asset');
+        const fit = getComputedStyle(image).objectFit; check(fit === 'contain', 'image must use contain');
+        const v = rect(viewport), r = rect(image);
+        check(r.x >= v.x - .5 && r.y >= v.y - .5 && r.x + r.w <= v.x + v.w + .5 && r.y + r.h <= v.y + v.h + .5, 'image zoom crops source pixels');
+        check(!viewport.querySelector('svg, .cw-shot, [data-cw-zoom-overlay]'), 'image has screenshot chrome');
+        imageState = {fit, scale: Number(image.dataset.cwImageScale), width: image.naturalWidth, height: image.naturalHeight};
+      }
       let videoState: {fit: string; muted: boolean; currentTime: number; expectedTime: number; duration: number; width: number; height: number} | undefined;
       if (active?.kind === 'video') {
         const viewport = page.querySelector<HTMLElement>('[data-cw-video-viewport]');
@@ -116,7 +128,7 @@ export const LayoutAudit: React.FC<{project: ResolvedProps; cover?: boolean}> = 
       if (!cover && active?.id === project.slides[project.slides.length - 1].id) check(cta?.textContent === '有问题，评论区问', 'last-page CTA missing');
       const cue = cover ? undefined : activeSubtitle(subtitleCues(project), frame, project.canvas.fps);
       if (!cover) check(root.querySelector('.cw-subtitles')?.getAttribute('data-cue-id') === (cue?.id ?? ''), 'active caption differs from frozen cues');
-      console.log(`COURSEWARE_AUDIT=${JSON.stringify({frame, slideId, kind: cover ? 'cover' : active?.kind, style: project.style, issueCount: 0, transient, highlightErrorPx, video: videoState, nodes, text: measured, cueId: cue?.id ?? '', edgeCount: page.querySelectorAll('[data-cw-edge]').length, cameraScale: page.querySelector('[data-cw-camera]')?.getAttribute('data-cw-zoom-scale') ?? page.querySelector('[data-cw-video-camera]')?.getAttribute('data-cw-video-scale'), effects: Array.from(page.querySelectorAll<HTMLElement>('[data-effect]')).map(el => ({type: el.dataset.effect, opacity: getComputedStyle(el).opacity, transform: getComputedStyle(el).transform}))})}`);
+      console.log(`COURSEWARE_AUDIT=${JSON.stringify({frame, slideId, kind: cover ? 'cover' : active?.kind, style: project.style, issueCount: 0, transient, highlightErrorPx, video: videoState, image: imageState, nodes, text: measured, cueId: cue?.id ?? '', edgeCount: page.querySelectorAll('[data-cw-edge]').length, cameraScale: page.querySelector('[data-cw-camera]')?.getAttribute('data-cw-zoom-scale') ?? page.querySelector('[data-cw-video-camera]')?.getAttribute('data-cw-video-scale'), effects: Array.from(page.querySelectorAll<HTMLElement>('[data-effect]')).map(el => ({type: el.dataset.effect, opacity: getComputedStyle(el).opacity, transform: getComputedStyle(el).transform}))})}`);
     })().then(() => continueRender(handle), e => {if (!disposed) cancelRender(e);}).catch(cancelRender);
     return () => {disposed = true; continueRender(handle);};
   }, [frame, project, cover]);

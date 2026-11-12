@@ -1680,7 +1680,29 @@ async function renderCoursewareEditor(taskId) {
   } catch {}
   const assets = (await api(`/api/courseware/drafts/${encodeURIComponent(taskId)}/assets`)).assets || [];
   const imgAssets = assets.filter(a => a.kind === 'image');
-  const kinds = [['title','标题页'],['screenshot','截图页'],['flow','流程页'],['bullet','要点页'],['quote','金句页']];
+  const vidAssets = assets.filter(a => a.kind === 'video');
+  const kinds = [['title','标题页'],['screenshot','截图页'],['video','视频页'],['image','图片页'],['flow','流程页'],['bullet','要点页'],['quote','金句页'],['diagram','图解页']];
+  const diagramLayouts = ['A01','A02','A03','A04','A05','A06','A07','A08','A09','B01','B02','B03','B04','B05','B06','B07','B08','B09','C01','C02','C03','C04','C05','C06','C07','C08','C09','C10','D01','D02','D03','D04','D05','D06','D07','D08','E01','E02','E03','E04','E05','E06','P01','P02','P03'];
+  const templates = {
+    tutorial: { label: '教程三步', slides: [
+      { kind: 'title', text: '三步搞定', body: '一步接一步' },
+      { kind: 'screenshot', text: '第一步：看这里', annotation: 'arrow', highlight: { x: 0.1, y: 0.35, w: 0.8, h: 0.12 } },
+      { kind: 'flow', text: '整个流程', nodes: ['第一步', '第二步', '第三步'] },
+      { kind: 'quote', text: '顺序对了，就不折腾' }
+    ]},
+    concept: { label: '概念解释', slides: [
+      { kind: 'title', text: '一个概念', body: '一句话说清' },
+      { kind: 'diagram', layout: 'A02', text: '先试一条路', data: { decision: '先试一条路', success: { label: '对了 ✓', detail: '直接用' }, failure: { label: '错了 ✗', detail: '换一条' } } },
+      { kind: 'bullet', text: '三个要点', bullets: ['要点一', '要点二', '要点三'] },
+      { kind: 'quote', text: '记住这一句' }
+    ]},
+    compare: { label: '前后对比', slides: [
+      { kind: 'title', text: '改之前 vs 改之后' },
+      { kind: 'diagram', layout: 'B07', text: '机制变了', data: { before: { label: '改造前', nodes: ['消息', 'Router', 'Worker'] }, after: { label: '改造后', nodes: ['后续消息', 'Worker', '交付'] }, change: '改' } },
+      { kind: 'diagram', layout: 'D03', text: '结果变了', data: { before: '修复前', after: '修复后', passed: [false, true] } },
+      { kind: 'quote', text: '少绕一步' }
+    ]}
+  };
   const assetOpts = imgAssets.map(a => `<option value="${esc(a.id)}">${esc(a.name || a.id)}</option>`).join('');
 
   const slideCard = (s, i) => {
@@ -1720,6 +1742,24 @@ async function renderCoursewareEditor(taskId) {
     if (s.kind === 'bullet') {
       extra = `<div class="field"><label>要点（每行一条，1–5 条）</label><textarea data-f="bullets" rows="3">${esc((s.bullets || []).join('\n'))}</textarea></div>`;
     }
+    if (s.kind === 'video') {
+      const vOpts = vidAssets.map(a => `<option value="${esc(a.id)}" ${s.assetId === a.id ? 'selected' : ''}>${esc(a.name || a.id)}</option>`).join('');
+      extra = `<div class="field"><label>视频素材</label><select data-f="assetId">${vOpts || '<option value="">（先上传视频）</option>'}</select></div>`;
+    }
+    if (s.kind === 'image') {
+      const iOpts = imgAssets.map(x => `<option value="${esc(x.id)}" ${(s.assetId || imgAssets[0]?.id) === x.id ? 'selected' : ''}>${esc(x.name || x.id)}</option>`).join('');
+      extra = `<div class="form-grid">
+        <div class="field"><label>图片素材</label><select data-f="assetId">${iOpts || '<option value="">（先上传图片）</option>'}</select></div>
+        <div class="field"><label>缓慢推近（Ken Burns）</label><select data-f="kenBurns"><option value="0" ${!s.kenBurns ? 'selected' : ''}>关</option><option value="1" ${s.kenBurns ? 'selected' : ''}>开</option></select></div>
+      </div>`;
+    }
+    if (s.kind === 'diagram') {
+      const lOpts = diagramLayouts.map(k => `<option value="${k}" ${s.layout === k ? 'selected' : ''}>${k}</option>`).join('');
+      extra = `<div class="form-grid">
+        <div class="field"><label>图解布局</label><select data-f="layout">${lOpts}</select></div>
+        <div class="field full"><label>数据（JSON）</label><textarea data-f="data" rows="3">${esc(JSON.stringify(s.data || {}, null, 2))}</textarea></div>
+      </div>`;
+    }
     return `<div class="card" data-slide="${i}" data-id="${esc(s.id || '')}">
       <div class="card-head">
         <div><h3 class="section-title" style="font-size:16px">第 ${i + 1} 页</h3></div>
@@ -1738,8 +1778,8 @@ async function renderCoursewareEditor(taskId) {
   $('#view').innerHTML = `
     <div id="cw-root">
     <div class="page-head">
-      <div><p class="eyebrow">COURSEWARE / 课件编辑器</p><h1 class="page-title">${esc(board.title || '未命名课件')}</h1><p class="page-sub">本主题素材 + 五类页；保存后生成。</p></div>
-      <div class="head-actions"><span class="muted tiny" id="cw-save-status" style="margin-right:8px"></span> <button class="btn" data-action="cw-back">返回</button></div>
+      <div><p class="eyebrow">COURSEWARE / 课件编辑器</p><h1 class="page-title">${esc(board.title || '未命名课件')}</h1><p class="page-sub">本主题素材 + 八类页；Ctrl+Z 撤销 / Ctrl+Shift+Z 重做。</p></div>
+      <div class="head-actions"><label class="muted tiny" style="margin-right:6px">画幅</label><select id="cw-canvas" style="margin-right:8px;font-size:12px;padding:4px 8px"><option value="portrait" ${(!board.canvas || board.canvas.width === 1080) ? 'selected' : ''}>竖屏 1080×1920</option><option value="landscape" ${board.canvas && board.canvas.width === 1920 ? 'selected' : ''}>横屏 1920×1080</option></select><label class="muted tiny" style="margin-right:6px">背景音乐</label><select id="cw-bgm" style="margin-right:8px;font-size:12px;padding:4px 8px"><option value="" ${!board.bgm ? 'selected' : ''}>无</option><option value="ambient" ${board.bgm === 'ambient' ? 'selected' : ''}>舒缓（bg_pad）</option><option value="pulse" ${board.bgm === 'pulse' ? 'selected' : ''}>节奏（pulse）</option></select><label class="muted tiny" style="margin-right:6px">旁白音色</label><select id="cw-voice" style="margin-right:8px;font-size:12px;padding:4px 8px"><option value="" ${!board.voice ? 'selected' : ''}>默认（设置里的）</option><option value="Microsoft Huihui Desktop" ${board.voice === 'Microsoft Huihui Desktop' ? 'selected' : ''}>慧慧 · 中文</option><option value="Microsoft Zira Desktop" ${board.voice === 'Microsoft Zira Desktop' ? 'selected' : ''}>Zira · 英文</option></select><span class="muted tiny" id="cw-save-status" style="margin-right:8px"></span> <button class="btn" data-action="cw-back">返回</button></div>
     </div>
     <div class="card">
       <div class="card-head"><div><h2 class="section-title">本主题素材</h2><p class="section-sub">只服务这一条内容，不进共用库。</p></div></div>
@@ -1771,11 +1811,12 @@ async function renderCoursewareEditor(taskId) {
       </div>
     </div>
     <div class="card">
-      <div class="card-head"><div><h2 class="section-title">页面（<span id="cw-count">${board.slides.length}</span>）</h2></div><div><button class="btn" data-action="cw-add">+ 添加页</button></div></div>
+      <div class="card-head"><div><h2 class="section-title">页面（<span id="cw-count">${board.slides.length}</span>）</h2></div><div class="flex" style="gap:8px;align-items:center"><select id="cw-template" style="font-size:12px;padding:4px 8px">${Object.entries(templates).map(([k, v]) => `<option value="${k}">${v.label}</option>`).join('')}</select><button class="btn" data-action="cw-apply-template">套用模板</button><button class="btn" data-action="cw-add">+ 添加页</button></div></div>
       <div class="card-body" id="cw-slides">${board.slides.map(slideCard).join('') || '<div class="empty"><p>还没有页，点「+ 添加页」。</p></div>'}</div>
     </div>
     <div class="flex" style="gap:10px;margin-top:16px">
       <button class="btn btn-primary" data-action="cw-save">保存草稿</button>
+      <button class="btn" data-action="cw-preview-video">低清预览</button>
       <button class="btn" data-action="cw-generate">生成课件</button>
     </div>
     </div>
@@ -1867,18 +1908,65 @@ async function renderCoursewareEditor(taskId) {
     if (kind === 'bullet') {
       slide.bullets = String(v('bullets') || '').split('\n').map((x) => x.trim()).filter(Boolean).slice(0, 5);
     }
+    if (kind === 'video') {
+      slide.assetId = v('assetId');
+      slide.muted = true;
+      slide.fit = 'contain';
+    }
+    if (kind === 'image') {
+      slide.assetId = v('assetId');
+      slide.kenBurns = v('kenBurns') === '1';
+      slide.fit = 'contain';
+    }
+    if (kind === 'diagram') {
+      slide.layout = v('layout') || 'D01';
+      try { slide.data = JSON.parse(v('data') || '{}'); } catch { slide.data = {}; }
+    }
     return slide;
   }).filter((s) => s.text);
 
   let autoSaveTimer = null;
   let saveChain = Promise.resolve();
+
+  // 撤销/重做（快照 collectSlides 的结果，50 步）
+  const history = [];
+  let histIndex = -1;
+  const snapshot = () => {
+    try {
+      const slides = collectSlides();
+      const json = JSON.stringify(slides);
+      if (histIndex >= 0 && JSON.stringify(history[histIndex]) === json) return;
+      history.splice(histIndex + 1);
+      history.push(slides);
+      if (history.length > 50) history.shift();
+      histIndex = history.length - 1;
+    } catch {}
+  };
+  const restoreSnap = (slides) => {
+    const list = $('#cw-slides');
+    if (!list) return;
+    if (!slides || !slides.length) { list.innerHTML = '<div class="empty"><p>还没有页，点「+ 添加页」。</p></div>'; return; }
+    list.innerHTML = slides.map((s, i) => slideCard(s, i)).join('');
+  };
+  const undo = () => { if (histIndex <= 0) return; histIndex--; restoreSnap(history[histIndex]); backupLocal(); toast('撤销'); };
+  const redo = () => { if (histIndex >= history.length - 1) return; histIndex++; restoreSnap(history[histIndex]); backupLocal(); toast('重做'); };
+  let snapTimer = null;
+  const scheduleSnap = () => { clearTimeout(snapTimer); snapTimer = setTimeout(snapshot, 350); };
+  const onKey = (e) => {
+    if (!(e.ctrlKey || e.metaKey)) return;
+    if (e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
+    else if ((e.key === 'z' && e.shiftKey) || e.key === 'y') { e.preventDefault(); redo(); }
+  };
+  window.addEventListener('keydown', onKey);
+  snapshot();
+
   async function realSave(silent) {
     const slides = collectSlides();
     if (!slides.length) { if (!silent) toast('至少加一页再保存', 'error'); return false; }
     const status = $('#cw-save-status');
     if (status) status.textContent = '保存中…';
     const doPut = () => put(`/api/courseware/drafts/${encodeURIComponent(taskId)}`, {
-      storyboard: { title: board.title, style: board.style, slides },
+      storyboard: { title: board.title, style: board.style, slides, bgm: $('#cw-bgm')?.value || undefined, voice: $('#cw-voice')?.value || undefined, canvas: $('#cw-canvas')?.value === 'landscape' ? { width: 1920, height: 1080, fps: 30 } : { width: 1080, height: 1920, fps: 30 } },
       draftRevision: project.draftRevision
     });
     try {
@@ -1913,8 +2001,8 @@ async function renderCoursewareEditor(taskId) {
   const backupLocal = () => {
     try { localStorage.setItem('cw_draft_' + taskId, JSON.stringify({ storyboard: { title: board.title, style: board.style, slides: collectSlides() }, at: Date.now() })); } catch {}
   };
-  $('#cw-root').addEventListener('input', () => { backupLocal(); scheduleSave(); });
-  $('#cw-root').addEventListener('change', () => { backupLocal(); scheduleSave(); });
+  $('#cw-root').addEventListener('input', () => { backupLocal(); scheduleSave(); scheduleSnap(); });
+  $('#cw-root').addEventListener('change', () => { backupLocal(); scheduleSave(); scheduleSnap(); });
 
   function cwPreview(card) {
     const v = (f) => card.querySelector(`[data-f="${f}"]`)?.value ?? '';
@@ -1961,7 +2049,7 @@ async function renderCoursewareEditor(taskId) {
     const btn = e.target.closest('[data-action]');
     if (!btn) return;
     const act = btn.dataset.action;
-    const release = ['cw-save', 'cw-generate', 'cw-compose', 'cw-detect', 'cw-asset-del'].includes(act) ? setBusy(btn) : () => {};
+    const release = ['cw-save', 'cw-generate', 'cw-compose', 'cw-detect', 'cw-asset-del', 'cw-preview-video'].includes(act) ? setBusy(btn) : () => {};
     try {
     if (act === 'cw-asset-del') {
       e.stopPropagation();
@@ -2013,6 +2101,17 @@ async function renderCoursewareEditor(taskId) {
       const slide = { id: 's_' + Math.random().toString(36).slice(2, 8), kind: 'title', text: '新页面', narration: { mode: 'none' } };
       list.insertAdjacentHTML('beforeend', slideCard(slide, list.querySelectorAll('[data-slide]').length));
       backupLocal();
+      scheduleSnap();
+    } else if (act === 'cw-apply-template') {
+      const tpl = templates[$('#cw-template')?.value || ''];
+      if (!tpl) return;
+      if (!confirm(`套用「${tpl.label}」？会替换当前所有页。`)) return;
+      const list = $('#cw-slides');
+      const slides = tpl.slides.map((s) => ({ ...s, id: 's_' + Math.random().toString(36).slice(2, 8), narration: { mode: 'none' } }));
+      list.innerHTML = slides.map((s, i) => slideCard(s, i)).join('');
+      backupLocal();
+      scheduleSnap();
+      toast('已套用「' + tpl.label + '」');
     } else if (act === 'cw-preview') {
       const card = btn.closest('[data-slide]');
       if (card) cwPreview(card);
@@ -2021,6 +2120,7 @@ async function renderCoursewareEditor(taskId) {
       const list = $('#cw-slides');
       if (!list.querySelector('[data-slide]')) list.innerHTML = '<div class="empty"><p>还没有页，点「+ 添加页」。</p></div>';
       backupLocal();
+      scheduleSnap();
     } else if (act === 'cw-save') {
       const ok = await doSave();
       if (ok) toast('已保存');
@@ -2032,6 +2132,12 @@ async function renderCoursewareEditor(taskId) {
         await doSave(true);
         const r = await post(`/api/courseware/drafts/${encodeURIComponent(taskId)}/generate`, {});
         toast(`已生成：${r.renderId}（${r.totalDurationSeconds}s）`);
+      } catch (err) { toast(err.message, 'error'); }
+    } else if (act === 'cw-preview-video') {
+      try {
+        await doSave(true);
+        const r = await post(`/api/courseware/drafts/${encodeURIComponent(taskId)}/preview`, {});
+        toast(`预览生成中：${r.renderId}（半分辨率，约 1 分钟）`);
       } catch (err) { toast(err.message, 'error'); }
     }
     } finally { release(); }

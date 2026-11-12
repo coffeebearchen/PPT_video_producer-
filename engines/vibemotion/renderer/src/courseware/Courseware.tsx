@@ -1,7 +1,10 @@
+import {CoursewareImage} from './ImagePage';
+import {DoodleCourseware, DoodleCover} from './doodle/DoodleCourseware';
 import React, {useMemo} from 'react';
+import {DynamicFlowCourseware, DynamicFlowCover} from './dynamicflow/DynamicFlowCourseware';
 import {AbsoluteFill, Audio, Freeze, Sequence, interpolate, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {SubtitleTrack} from '../engine/SubtitleTrack';
-import {styleTokens} from '../graphics/styles';
+import {coursewareStyleTokens as styleTokens} from './styles';
 import {activeSubtitle, effectPlan, effectTilt, effectUnit, subtitleCues, validateResolved} from './model';
 import type {ResolvedProps, Slide} from './model';
 import {CoursewareFlow, Screenshot} from './layers';
@@ -39,6 +42,7 @@ const Page: React.FC<{slide: Slide; project: ResolvedProps; last?: boolean; firs
     {slide.text && <div data-cw-content data-cw-text="heading" style={{position: 'absolute', left: 128, top: hero ? 480 : e?.chapter ? 330 : 306, width: 824, fontFamily: `"${t.heading}"`, fontSize: cover ? Math.min(68, headingSize(slide.text, hero)) : headingSize(slide.text, hero), lineHeight: 1.3, whiteSpace: 'pre-line', textWrap: 'balance', textAlign: 'center', overflowWrap: 'anywhere', ...(e?.reveal?.type === 'stagger' ? {opacity: headingReveal, transform: `translateY(${8 * (1 - headingReveal)}px)`} : {})}}><AnimatedCopy text={slide.text} slide={slide} rootHook={hook}/></div>}
     {hero && <div data-cw-content style={{position: 'absolute', left: 440, top: 850, width: 200 * (e?.reveal ? 1 : progress), height: 6, background: t.accent, borderRadius: 6}}/>}
     {slide.body && <div data-cw-content data-cw-text="note" style={{position: 'absolute', left: 148, top: hero ? 950 : 1368, width: 784, fontSize: hero ? 36 : 30, lineHeight: 1.4, whiteSpace: 'pre-line', textAlign: 'center', color: t.muted, ...(e?.reveal?.type === 'stagger' ? {opacity: bodyReveal, transform: `translateY(${8 * (1 - bodyReveal)}px)`} : {})}}>{slide.body}</div>}
+    {slide.kind === 'image' && <CoursewareImage slide={slide} project={project}/>}
     {slide.kind === 'screenshot' && <Screenshot slide={slide} project={project}/>}
     {slide.kind === 'video' && <CoursewareVideo slide={slide} project={project} forceMuted={ghost}/>}
     {slide.kind === 'flow' && <CoursewareFlow slide={slide} project={project} progress={progress}/>}
@@ -72,7 +76,7 @@ const SlideVisual: React.FC<{slide: Slide; previous?: Slide; project: ResolvedPr
   </AbsoluteFill>;
 };
 
-export const Courseware: React.FC<ResolvedProps> = input => {
+const LegacyCourseware: React.FC<ResolvedProps> = input => {
   const project = useMemo(() => validateResolved(input), [input]);
   const frame = useCurrentFrame(); const {fps} = useVideoConfig(); const t = styleTokens(project.style);
   const cues = useMemo(() => subtitleCues(project), [project]); const cue = activeSubtitle(cues, frame, fps);
@@ -89,8 +93,35 @@ export const Courseware: React.FC<ResolvedProps> = input => {
     {project.audit && <LayoutAudit project={project}/>}
   </AbsoluteFill>;
 };
-export const CoursewareCover: React.FC<ResolvedProps> = input => {
+const LegacyCoursewareCover: React.FC<ResolvedProps> = input => {
   const project = useMemo(() => validateResolved(input), [input]);
   const slide: Slide = {id: 'cover', kind: 'title', text: project.title, fromFrame: 0, durationInFrames: 1};
   return <AbsoluteFill className="cw-root" data-cw-root style={{width: 1080, height: 1920}}><style>{CSS}</style><Page slide={slide} project={project} cover/><AiLabel project={project}/>{project.audit && <LayoutAudit project={project} cover/>}</AbsoluteFill>;
+};
+
+// 横屏：把 1080×1920 内容按高度等比缩放、水平居中，两侧由底色填充。
+const LandscapeWrap: React.FC<{project: ResolvedProps; children: React.ReactNode}> = ({project, children}) => {
+  const {width, height} = project.canvas;
+  if (width <= height) return <>{children}</>;
+  const scale = height / 1920;
+  const x = (width - 1080 * scale) / 2;
+  return <AbsoluteFill style={{background: '#1c1c1c'}}>
+    <div style={{position: 'absolute', left: x, top: 0, width: 1080 * scale, height: 1920 * scale, transform: `scale(${scale})`, transformOrigin: 'top left'}}>{children}</div>
+  </AbsoluteFill>;
+};
+
+// Keep the legacy page/transition trees intact; only the new style takes this branch.
+export const Courseware: React.FC<ResolvedProps> = input => {
+  const project = useMemo(() => validateResolved(input), [input]);
+  const inner = project.slides.some(slide=>slide.kind==='diagram')
+    ? <DoodleCourseware {...project}/>
+    : project.style === 'dynamicflow' ? <DynamicFlowCourseware {...project}/> : <LegacyCourseware {...project}/>;
+  return <LandscapeWrap project={project}>{inner}</LandscapeWrap>;
+};
+export const CoursewareCover: React.FC<ResolvedProps> = input => {
+  const project = useMemo(() => validateResolved(input), [input]);
+  const inner = project.slides.some(slide=>slide.kind==='diagram')
+    ? <DoodleCover {...project}/>
+    : project.style === 'dynamicflow' ? <DynamicFlowCover {...project}/> : <LegacyCoursewareCover {...project}/>;
+  return <LandscapeWrap project={project}>{inner}</LandscapeWrap>;
 };

@@ -1,6 +1,6 @@
 import React from 'react';
 import {Video, cancelRender, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
-import {styleTokens} from '../graphics/styles';
+import {coursewareStyleTokens as styleTokens} from './styles';
 import {effectTilt, videoCamera, videoTiming} from './model';
 import type {ResolvedProps, Slide} from './model';
 import {revealValue} from './Effects';

@@ -1,5 +1,6 @@
+import {parseDiagram,type DiagramSpec} from './doodle/catalog';
 import type {Subtitle} from '../types';
-import type {ExplanationStyle} from '../graphics/styles';
+import type {CoursewareStyle} from './styles';
 
 export type Rect = {x: number; y: number; w: number; h: number};
 export type Cue = {startSeconds: number; endSeconds: number; text: string};
@@ -28,18 +29,20 @@ export type SlideEffects = {
   hook?: Hook; chapter?: {label: string}; tilt?: {deg: number};
 };
 export type Slide = {
-  id: string; kind: 'title' | 'screenshot' | 'video' | 'flow' | 'bullet' | 'quote';
+  id: string; kind: 'title' | 'screenshot' | 'video' | 'flow' | 'bullet' | 'quote' | 'diagram' | 'image';
+  layout?: DiagramSpec['layout']; data?: DiagramSpec['data'];
   text: string; body?: string; caption?: string; fromFrame: number; durationInFrames: number;
   narration?: {src: string; durationSeconds: number}; cues?: Cue[];
   asset?: Asset; highlight?: Rect; annotation?: AnnotationKind; dim?: number;
   motion?: ZoomMotion;
   effects?: SlideEffects;
   nodes?: Node[]; edges?: Edge[]; bullets?: string[];
+  kenBurns?: boolean;
   trim?: {startSeconds: number; endSeconds: number}; muted?: boolean; fit?: 'contain' | 'cover';
 };
 export type ResolvedProps = {
   schemaVersion: 'courseware/1'; taskId: string; renderId: string; draftRevision: number;
-  title: string; style: ExplanationStyle; canvas: {width: number; height: number; fps: number};
+  title: string; style: CoursewareStyle; canvas: {width: number; height: number; fps: number};
   publicRoot: string; stagingDir: string; totalFrames: number; totalDurationSeconds: number;
   slides: Slide[]; audit?: boolean;
   bgm?: {src: string; volume: number; fadeInMs: number; fadeOutMs: number};
@@ -77,9 +80,9 @@ export function validateResolved(input: unknown): ResolvedProps {
   const stagingDir = `courseware/${taskId}/${renderId}`;
   ensure(b.stagingDir === stagingDir, 'stagingDir 与 taskId/renderId 不符');
   ensure(b.publicRoot === 'renderer/public', '本入口使用默认 renderer/public；不接受任意 publicRoot');
-  ensure(['industrial', 'clean', 'dynamic'].includes(String(b.style)), 'style 不支持');
+  ensure(['industrial', 'clean', 'dynamic', 'dynamicflow'].includes(String(b.style)), 'style 不支持');
   const canvas = record(b.canvas);
-  ensure(canvas.width === 1080 && canvas.height === 1920 && canvas.fps === 30, '画布须为 1080×1920 / 30fps');
+  ensure(((canvas.width === 1080 && canvas.height === 1920) || (canvas.width === 1920 && canvas.height === 1080)) && canvas.fps === 30, '画布须为 1080×1920 或 1920×1080 / 30fps');
   const fps = 30;
   const totalFrames = num(b.totalFrames, 'totalFrames', 1, 108000, true);
   const totalDurationSeconds = num(b.totalDurationSeconds, 'totalDurationSeconds', 0, 3600);
@@ -90,11 +93,12 @@ export function validateResolved(input: unknown): ResolvedProps {
   const slides: Slide[] = b.slides.map(raw => {
     const s = record(raw); const slideId = id(s.id);
     ensure(!slideIds.has(slideId), 'slide.id 重复'); slideIds.add(slideId);
-    ensure(['title', 'screenshot', 'video', 'flow', 'bullet', 'quote'].includes(String(s.kind)), 'kind 不支持');
+    ensure(['title', 'screenshot', 'video', 'flow', 'bullet', 'quote', 'diagram', 'image'].includes(String(s.kind)), 'kind 不支持');
     const fromFrame = num(s.fromFrame, 'fromFrame', 0, totalFrames - 1, true);
     const durationInFrames = num(s.durationInFrames, 'durationInFrames', 1, totalFrames, true);
     ensure(fromFrame === next, '页面必须按冻结帧无缝相接'); next += durationInFrames;
-    const title = s.text === undefined && s.kind !== 'title' && s.kind !== 'quote' ? '' : label(s.text, 'text', 40);
+    const copy = s.text ?? (s.kind === 'diagram' ? s.title : undefined);
+    const title = copy === undefined && s.kind !== 'title' && s.kind !== 'quote' && s.kind !== 'diagram' ? '' : label(copy, 'text', 40);
     ensure(title.split('\n').length <= 3, '标题最多三行');
     const slide: Slide = {id: slideId, kind: s.kind as Slide['kind'], text: title, fromFrame, durationInFrames};
     if (s.body !== undefined) {slide.body = label(s.body, 'body', s.kind === 'title' || s.kind === 'quote' ? 80 : 40); ensure(slide.body.split('\n').length <= 2, 'body 最多两行');}
@@ -117,9 +121,15 @@ export function validateResolved(input: unknown): ResolvedProps {
         return {startSeconds, endSeconds, text: label(c.text, 'cue.text', 180)};
       });
     }
-    if (s.kind === 'screenshot' || s.kind === 'video') {
+    if (s.kind === 'screenshot' || s.kind === 'video' || s.kind === 'image') {
       const a = record(s.asset);
       slide.asset = {src: publicPath(a.src, stagingDir), width: num(a.width, 'asset.width', 1, 20000, true), height: num(a.height, 'asset.height', 1, 20000, true)};
+    }
+    if (s.kind === 'image') {
+      ensure(s.fit === undefined || s.fit === 'contain', 'image.fit 仅支持 contain');
+      ensure(s.kenBurns === undefined || typeof s.kenBurns === 'boolean', 'image.kenBurns 须为布尔值');
+      ensure(s.highlight === undefined && s.annotation === undefined && s.dim === undefined, 'image 不支持 highlight/annotation/dim；UI 标注请用 screenshot');
+      slide.fit = 'contain'; slide.kenBurns = s.kenBurns ?? false;
     }
     if (s.kind === 'video') {
       ensure(/\.(mp4|webm|m4v|mov)$/i.test(slide.asset!.src), 'video.asset.src 须为本地 mp4/webm/m4v/mov 文件');
@@ -154,12 +164,13 @@ export function validateResolved(input: unknown): ResolvedProps {
       ensure(Array.isArray(s.edges) && s.edges.length <= 12, 'flow 须携带冻结 edges'); const seen = new Set<string>();
       slide.edges = s.edges.map(rawEdge => {const e = record(rawEdge); const from = id(e.from); const to = id(e.to); const key = `${from}/${to}`; ensure(from !== to && nodeIds.has(from) && nodeIds.has(to) && !seen.has(key), 'edges 自环、重复或悬空'); seen.add(key); return {from, to};});
     }
+    if (s.kind === 'diagram') {const diagram = parseDiagram(s.layout,s.data);slide.layout=diagram.layout;slide.data=diagram.data;}
     if (s.kind === 'bullet') {ensure(Array.isArray(s.bullets) && s.bullets.length >= 1 && s.bullets.length <= 5, 'bullets 须为 1–5 条'); slide.bullets = s.bullets.map(v => label(v, 'bullet', 32));}
     if (s.effects !== undefined) slide.effects = validateEffects(s.effects, slide);
     return slide;
   });
   ensure(next === totalFrames, '最后一页末尾与 totalFrames 不符');
-  const result: ResolvedProps = {schemaVersion: 'courseware/1', taskId, renderId, draftRevision: num(b.draftRevision, 'draftRevision', 0, 1e9, true), title: label(b.title, 'title', 40), style: b.style as ExplanationStyle, canvas: {width: 1080, height: 1920, fps}, publicRoot: 'renderer/public', stagingDir, totalFrames, totalDurationSeconds, slides, audit: b.audit === true};
+  const result: ResolvedProps = {schemaVersion: 'courseware/1', taskId, renderId, draftRevision: num(b.draftRevision, 'draftRevision', 0, 1e9, true), title: label(b.title, 'title', 40), style: b.style as CoursewareStyle, canvas: {width: canvas.width, height: canvas.height, fps}, publicRoot: 'renderer/public', stagingDir, totalFrames, totalDurationSeconds, slides, audit: b.audit === true};
   result.brand = displayLabel(b.brand, 'brand', DEFAULT_BRAND, 30);
   result.aiLabel = displayLabel(b.aiLabel, 'aiLabel', DEFAULT_AI_LABEL, 16);
   if (b.progress !== undefined) result.progress = validateProgress(b.progress);
@@ -343,7 +354,7 @@ export type EffectPlan = {transition: EffectWindow; hook: EffectWindow; reveal: 
 export const effectUnit = (time: number, window: EffectWindow) => window.end <= window.start ? (time >= window.end ? 1 : 0) : Math.max(0, Math.min(1, (time - window.start) / (window.end - window.start)));
 export function effectPlan(slide: Slide, fps: number, rootHook?: Hook): EffectPlan {
   const e = slide.effects; const durationMs = Math.max(0, (slide.durationInFrames - 1) / fps * 1000);
-  const count = Math.max(1, Number(Boolean(slide.text)) + Number(Boolean(slide.body)) + (slide.nodes?.length ?? slide.bullets?.length ?? (slide.kind === 'screenshot' || slide.kind === 'video' ? 1 : 0)));
+  const count = Math.max(1, Number(Boolean(slide.text)) + Number(Boolean(slide.body)) + (slide.nodes?.length ?? slide.bullets?.length ?? (slide.kind === 'screenshot' || slide.kind === 'video' || slide.kind === 'image' ? 1 : 0)));
   const units = e?.reveal?.by === 'char' ? Array.from(slide.text + (slide.bullets ?? []).join('')).length : slide.text.split('\n').length + (slide.bullets?.length ?? 0);
   const reveal = e?.reveal ? e.reveal.type === 'stagger' ? 400 + (e.reveal.from === 'all' ? count - 1 : 0) * e.reveal.staggerMs! : e.reveal.type === 'typewriter' ? Math.max(1, units) * e.reveal.speedMs! : e.reveal.durationMs! : 0;
   const hook = e?.hook ?? rootHook;
