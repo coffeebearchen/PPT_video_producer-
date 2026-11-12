@@ -83,6 +83,7 @@ function svg(title, sub, paths, texts, foot) {
     <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" seed="3" result="n"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope="0.10"/></feComponentTransfer></filter>
     <radialGradient id="vig" cx="50%" cy="45%" r="75%"><stop offset="0%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity="0.28"/></radialGradient>
   </defs>
+  <rect width="${W}" height="${H}" fill="${C.bg}"/>
   <g filter="url(#chalk)">${ps}</g>
   <g filter="url(#ct)">${ts}</g>
   <rect width="${W}" height="${H}" filter="url(#grain)" opacity="0.55"/>
