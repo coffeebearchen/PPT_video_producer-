@@ -1598,7 +1598,7 @@ async function renderAutogen() {
             </div>
             <div class="field"><label>结构</label><select name="structure_type"><option value="causal">因果 / 流程</option><option value="contrast">对照</option><option value="misconception">误区修正</option><option value="checklist">清单</option><option value="timeline">时间演进</option></select></div>
             <div class="field"><label>时长（秒）</label><input name="duration_sec" type="number" value="30" min="5" max="60"></div>
-            <div class="field"><label>模式</label><select name="mode"><option value="auto">自动：直接出片</option><option value="manual">人工：先确认分镜</option><option value="courseware">课件式（截图+标注+流程）</option></select><p class="muted tiny" style="margin-top:4px">选「课件式」会建草稿并跳到课件编辑器</p></div>
+            <div class="field"><label>模式</label><select name="mode"><option value="auto">自动：直接出片</option><option value="manual">人工：先确认分镜</option><option value="courseware">课件式（截图+标注+流程）</option><option value="courseware-doodle">课件式（手绘涂鸦）</option></select><p class="muted tiny" style="margin-top:4px">选「课件式」会建草稿并跳到课件编辑器</p></div>
             <div class="field"><label>批量</label><label class="check-row"><input type="checkbox" name="batch_styles"> 同文案出 3 种风格</label></div>
             <div class="field"><label>口播头像</label><label class="check-row"><input type="checkbox" name="avatar"> 加数字人口播（可选）</label></div>
           </div>
@@ -1625,9 +1625,10 @@ async function renderAutogen() {
     e.preventDefault();
     const fd = new FormData(form);
     const mode = fd.get('mode') || 'auto';
-    if (mode === 'courseware') {
+    if (mode === 'courseware' || mode === 'courseware-doodle') {
+      const cwStyle = mode === 'courseware-doodle' ? 'dynamicflow' : (fd.get('style') || 'industrial');
       try {
-        const d = await post('/api/courseware/auto', { topic: fd.get('title') || '未命名课件', style: fd.get('style') || 'industrial' });
+        const d = await post('/api/courseware/auto', { topic: fd.get('title') || '未命名课件', style: cwStyle });
         toast(`已生成课件：${d.slides} 页 / ${d.totalDurationSeconds}s`); location.hash = '#/courseware/' + d.taskId;
       } catch (err) { toast(err.message, 'error'); }
       return;
