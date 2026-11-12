@@ -1,3 +1,4 @@
+import {DoodleCourseware} from './doodle/DoodleCourseware';
 import React, {useMemo} from 'react';
 import {DynamicFlowCourseware, DynamicFlowCover} from './dynamicflow/DynamicFlowCourseware';
 import {AbsoluteFill, Audio, Freeze, Sequence, interpolate, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
@@ -99,6 +100,7 @@ const LegacyCoursewareCover: React.FC<ResolvedProps> = input => {
 // Keep the legacy page/transition trees intact; only the new style takes this branch.
 export const Courseware: React.FC<ResolvedProps> = input => {
   const project = useMemo(() => validateResolved(input), [input]);
+  if(project.slides.some(slide=>slide.kind==='diagram'))return <DoodleCourseware {...project}/>;
   return project.style === 'dynamicflow' ? <DynamicFlowCourseware {...project}/> : <LegacyCourseware {...project}/>;
 };
 export const CoursewareCover: React.FC<ResolvedProps> = input => {

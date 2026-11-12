@@ -1,3 +1,4 @@
+import {parseDiagram,type DiagramSpec} from './doodle/catalog';
 import type {Subtitle} from '../types';
 import type {CoursewareStyle} from './styles';
 
@@ -28,7 +29,8 @@ export type SlideEffects = {
   hook?: Hook; chapter?: {label: string}; tilt?: {deg: number};
 };
 export type Slide = {
-  id: string; kind: 'title' | 'screenshot' | 'video' | 'flow' | 'bullet' | 'quote';
+  id: string; kind: 'title' | 'screenshot' | 'video' | 'flow' | 'bullet' | 'quote' | 'diagram';
+  layout?: DiagramSpec['layout']; data?: DiagramSpec['data'];
   text: string; body?: string; caption?: string; fromFrame: number; durationInFrames: number;
   narration?: {src: string; durationSeconds: number}; cues?: Cue[];
   asset?: Asset; highlight?: Rect; annotation?: AnnotationKind; dim?: number;
@@ -90,11 +92,12 @@ export function validateResolved(input: unknown): ResolvedProps {
   const slides: Slide[] = b.slides.map(raw => {
     const s = record(raw); const slideId = id(s.id);
     ensure(!slideIds.has(slideId), 'slide.id 重复'); slideIds.add(slideId);
-    ensure(['title', 'screenshot', 'video', 'flow', 'bullet', 'quote'].includes(String(s.kind)), 'kind 不支持');
+    ensure(['title', 'screenshot', 'video', 'flow', 'bullet', 'quote', 'diagram'].includes(String(s.kind)), 'kind 不支持');
     const fromFrame = num(s.fromFrame, 'fromFrame', 0, totalFrames - 1, true);
     const durationInFrames = num(s.durationInFrames, 'durationInFrames', 1, totalFrames, true);
     ensure(fromFrame === next, '页面必须按冻结帧无缝相接'); next += durationInFrames;
-    const title = s.text === undefined && s.kind !== 'title' && s.kind !== 'quote' ? '' : label(s.text, 'text', 40);
+    const copy = s.text ?? (s.kind === 'diagram' ? s.title : undefined);
+    const title = copy === undefined && s.kind !== 'title' && s.kind !== 'quote' && s.kind !== 'diagram' ? '' : label(copy, 'text', 40);
     ensure(title.split('\n').length <= 3, '标题最多三行');
     const slide: Slide = {id: slideId, kind: s.kind as Slide['kind'], text: title, fromFrame, durationInFrames};
     if (s.body !== undefined) {slide.body = label(s.body, 'body', s.kind === 'title' || s.kind === 'quote' ? 80 : 40); ensure(slide.body.split('\n').length <= 2, 'body 最多两行');}
@@ -154,6 +157,7 @@ export function validateResolved(input: unknown): ResolvedProps {
       ensure(Array.isArray(s.edges) && s.edges.length <= 12, 'flow 须携带冻结 edges'); const seen = new Set<string>();
       slide.edges = s.edges.map(rawEdge => {const e = record(rawEdge); const from = id(e.from); const to = id(e.to); const key = `${from}/${to}`; ensure(from !== to && nodeIds.has(from) && nodeIds.has(to) && !seen.has(key), 'edges 自环、重复或悬空'); seen.add(key); return {from, to};});
     }
+    if (s.kind === 'diagram') {const diagram = parseDiagram(s.layout,s.data);slide.layout=diagram.layout;slide.data=diagram.data;}
     if (s.kind === 'bullet') {ensure(Array.isArray(s.bullets) && s.bullets.length >= 1 && s.bullets.length <= 5, 'bullets 须为 1–5 条'); slide.bullets = s.bullets.map(v => label(v, 'bullet', 32));}
     if (s.effects !== undefined) slide.effects = validateEffects(s.effects, slide);
     return slide;
